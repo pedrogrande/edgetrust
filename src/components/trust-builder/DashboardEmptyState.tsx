@@ -1,0 +1,42 @@
+/**
+ * Dashboard Empty State Component
+ * Shown when member has no claims yet
+ */
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
+
+export default function DashboardEmptyState() {
+  return (
+    <Card className="border-dashed">
+      <CardContent className="pt-12 pb-12 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="rounded-full bg-primary/10 p-3">
+            <Sparkles className="h-8 w-8 text-primary" />
+          </div>
+        </div>
+
+        <h3 className="text-lg font-semibold mb-2">Start Your Trust Journey</h3>
+        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+          You haven't claimed any tasks yet. Complete tasks to earn trust points
+          and contribute to Future's Edge missions!
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <Button asChild size="lg">
+            <a href="/trust-builder/tasks">Browse Available Tasks</a>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <a href="/trust-builder/events">View Event Log</a>
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground mt-6">
+          Every task you complete builds trust and earns points toward role
+          promotions
+        </p>
+      </CardContent>
+    </Card>
+  );
+}

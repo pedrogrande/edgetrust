@@ -362,7 +362,7 @@ export async function hasClaimedTask(
  */
 export async function getApprovedPointsByMember(
   memberId: string
-): Promise<{ total: number; dimensions: DimensionBreakdown }> {
+): Promise<{ total: number; dimensions: Record<string, number> }> {
   const dimensions = (await sql`
     SELECT
       i.name as dimension,
@@ -375,22 +375,13 @@ export async function getApprovedPointsByMember(
     GROUP BY i.name
   `) as Array<{ dimension: string; total: number }>;
 
-  const breakdown: DimensionBreakdown = {
-    participation: 0,
-    collaboration: 0,
-    innovation: 0,
-    leadership: 0,
-    impact: 0,
-  };
-
+  const breakdown: Record<string, number> = {};
   let total = 0;
 
   for (const { dimension, total: dimTotal } of dimensions) {
-    const key = dimension.toLowerCase() as keyof DimensionBreakdown;
-    if (key in breakdown) {
-      breakdown[key] = Number(dimTotal);
-      total += Number(dimTotal);
-    }
+    const key = dimension.toLowerCase();
+    breakdown[key] = Number(dimTotal);
+    total += Number(dimTotal);
   }
 
   return { total, dimensions: breakdown };
@@ -404,4 +395,85 @@ export function getMemberRank(trustScore: number): string {
   if (trustScore >= 500) return 'steward';
   if (trustScore >= 250) return 'contributor';
   return 'explorer';
+}
+
+// ============================================================================
+// DASHBOARD QUERIES (S1-05)
+// ============================================================================
+
+/**
+ * Get dimension breakdown from events (event-sourced approach)
+ * Aggregates trust.updated events to show how member earned points across dimensions
+ */
+export async function getDimensionBreakdown(
+  memberId: string
+): Promise<{ total: number; dimensions: Record<string, number> }> {
+  const result = await sql`
+    SELECT 
+      metadata->>'dimensions' as dimensions
+    FROM events
+    WHERE actor_id = ${memberId}
+      AND event_type = 'trust.updated'
+      AND metadata ? 'dimensions'
+    ORDER BY timestamp DESC
+  `;
+
+  const breakdown: Record<string, number> = {};
+  let total = 0;
+
+  for (const row of result) {
+    if (!row.dimensions) continue;
+    try {
+      const dims = JSON.parse(row.dimensions as string);
+      for (const [key, value] of Object.entries(dims)) {
+        breakdown[key] = (breakdown[key] || 0) + (value as number);
+        total += value as number;
+      }
+    } catch (error) {
+      console.error('Failed to parse dimensions from event:', error);
+      continue;
+    }
+  }
+
+  return { total, dimensions: breakdown };
+}
+
+/**
+ * Get recent claims with task and mission details
+ * Used for dashboard "Recent Claims" section
+ */
+export async function getRecentClaims(memberId: string, limit: number = 5) {
+  const result = await sql`
+    SELECT 
+      c.id,
+      c.status,
+      c.submitted_at,
+      c.reviewed_at,
+      t.id as task_id,
+      t.title as task_title,
+      g.name as mission_name,
+      COALESCE(
+        (SELECT SUM(ti.points) 
+         FROM task_incentives ti 
+         WHERE ti.task_id = t.id),
+        0
+      ) as points_earned
+    FROM claims c
+    INNER JOIN tasks t ON c.task_id = t.id
+    INNER JOIN groups g ON t.group_id = g.id
+    WHERE c.member_id = ${memberId}
+    ORDER BY c.submitted_at DESC
+    LIMIT ${limit}
+  `;
+
+  return result as Array<{
+    id: string;
+    status: string;
+    submitted_at: Date;
+    reviewed_at: Date | null;
+    task_id: string;
+    task_title: string;
+    mission_name: string;
+    points_earned: number;
+  }>;
 }

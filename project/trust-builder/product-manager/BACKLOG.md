@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-02-09
 **Season 0 window**: February 10 – March 31, 2026
-**Status**: Sprint 1 — In Progress (S1-01 ✅, S1-02 ✅, S1-03 ✅, S1-04 🧪 Testing)
+**Status**: Sprint 1 — In Progress (S1-01 ✅, S1-02 ✅, S1-03 ✅, S1-04 ✅, S1-05 ✅)
 
 ---
 
@@ -202,19 +202,19 @@ And the Events table has no UPDATE or DELETE permissions
 
 ## Sprint 1 Summary
 
-| Story                | Points | Dependency              | Status                                            |
-| -------------------- | ------ | ----------------------- | ------------------------------------------------- |
-| 1.1 Schema & Seed    | 3      | None                    | ✅ DONE                                           |
-| 1.2 Auth & Identity  | 5      | 1.1                     | ✅ DONE                                           |
-| 1.3 Public Task List | 3      | 1.1                     | ✅ DONE                                           |
-| 1.4 Claim Submission | 5      | 1.1, 1.2, 1.3           | 🧪 TESTING (ready for QA)                         |
-| 1.5 Member Dashboard | 3      | 1.1, 1.2, 1.4           | ⏳ Blocked                                        |
-| 1.6 Event Ledger     | 3      | 1.1 (woven through all) | ⏳ Blocked                                        |
-| **Total**            | **22** | **Completed: 11/22**    |                                                   |
+| Story                | Points | Dependency              | Status                            |
+| -------------------- | ------ | ----------------------- | --------------------------------- |
+| 1.1 Schema & Seed    | 3      | None                    | ✅ DONE (Grade A)                 |
+| 1.2 Auth & Identity  | 5      | 1.1                     | ✅ DONE (Grade A-)                |
+| 1.3 Public Task List | 3      | 1.1                     | ✅ DONE (Grade A)                 |
+| 1.4 Claim Submission | 5      | 1.1, 1.2, 1.3           | ✅ DONE (Grade A, retro complete) |
+| 1.5 Member Dashboard | 3      | 1.1, 1.2, 1.4           | ✅ DONE (Grade A, retro complete) |
+| 1.6 Event Ledger     | 3      | 1.1 (woven through all) | ⏳ Ready to start                 |
+| **Total**            | **22** | **Completed: 19/22**    |                                   |
 
-**Sprint 1 Progress**: 11 of 22 points complete (50%)
-**Velocity**: 3.7 points/day (based on 3 days elapsed)
-**Projection**: On track to complete Sprint 1 by Feb 15 (6 days remaining)
+**Sprint 1 Progress**: 19 of 22 points complete (86%)
+**Velocity**: 6.3 points/day (based on 3 days elapsed)
+**Projection**: Sprint 1 completion by Feb 10 (1 story remaining, ~90 minutes estimated)
 
 ---
 

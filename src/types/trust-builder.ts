@@ -244,13 +244,12 @@ export interface ClaimWithTask extends Claim {
 
 /**
  * Trust score breakdown by dimension
+ * Aggregated from events.metadata->>'dimensions'
+ * Flexible structure supports any dimension names from task incentives
  */
 export interface DimensionBreakdown {
-  participation: number;
-  collaboration: number;
-  innovation: number;
-  leadership: number;
-  impact: number;
+  total: number;
+  dimensions: Record<string, number>;
 }
 
 /**

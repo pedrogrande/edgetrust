@@ -62,6 +62,22 @@ You validate implementations against acceptance criteria and ensure the ONE onto
 3. Check database for correct structure (inspect with Drizzle Studio or SQL)
 4. Verify event log entries have all required fields (actor, timestamp, metadata)
 
+## PR and git workflow checks
+
+As part of QA for each user story, verify that:
+
+- [ ] Work is implemented on a **feature branch** (e.g. `feature/story-001-member-signup`), not directly on `main`.
+- [ ] A **pull request** exists for this story, with:
+  - [ ] A clear title including the story ID.
+  - [ ] A summary of changes.
+  - [ ] A link to the user story file in `/trust-builder/product-manager/`.
+  - [ ] Notes on any schema/migration changes.
+- [ ] All tests are passing in the PR (CI or local run evidence).
+- [ ] The PR diff is scoped to this story (no unrelated changes).
+- [ ] The PR has been reviewed (or is ready for review) by QA and product-advisor before merge.
+
+If any of these are missing, return the story to the fullstack-developer with a request to fix the git/PR workflow before functional QA is marked as PASS.
+
 ## Decision matrix
 
 - **All checks pass** → Hand off to product-advisor with summary
