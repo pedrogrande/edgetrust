@@ -1,8 +1,8 @@
 # Trust Builder — Season 0 Backlog
 
-**Last updated**: 2026-02-09
+**Last updated**: 2026-02-10
 **Season 0 window**: February 10 – March 31, 2026
-**Status**: Sprint 1 — In Progress (S1-01 ✅, S1-02 ✅, S1-03 ✅, S1-04 ✅, S1-05 ✅)
+**Status**: Sprint 1 — Complete ✅ (22/22 points) | Sprint 2 — Planning
 
 ---
 
@@ -209,12 +209,13 @@ And the Events table has no UPDATE or DELETE permissions
 | 1.3 Public Task List | 3      | 1.1                     | ✅ DONE (Grade A)                 |
 | 1.4 Claim Submission | 5      | 1.1, 1.2, 1.3           | ✅ DONE (Grade A, retro complete) |
 | 1.5 Member Dashboard | 3      | 1.1, 1.2, 1.4           | ✅ DONE (Grade A, retro complete) |
-| 1.6 Event Ledger     | 3      | 1.1 (woven through all) | ⏳ Ready to start                 |
-| **Total**            | **22** | **Completed: 19/22**    |                                   |
+| 1.6 Event Ledger     | 3      | 1.1 (woven through all) | ✅ DONE (Grade A, retro complete) |
+| **Total**            | **22** | **Completed: 22/22**    | **100% COMPLETE** 🎉              |
 
-**Sprint 1 Progress**: 19 of 22 points complete (86%)
-**Velocity**: 6.3 points/day (based on 3 days elapsed)
-**Projection**: Sprint 1 completion by Feb 10 (1 story remaining, ~90 minutes estimated)
+**Sprint 1 Status**: COMPLETE ✅ (22/22 points, 100%)
+**Final Story**: S1-06 Event Ledger UI merged to main on 2026-02-10
+**Blockchain Migration Narrative**: Complete (S1-04 capture → S1-05 derive → S1-06 audit)
+**Next**: Sprint 2 planning
 
 ---
 
