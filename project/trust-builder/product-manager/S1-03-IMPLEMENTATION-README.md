@@ -43,24 +43,24 @@
 
 ## Acceptance Criteria Met
 
-| AC    | Description                        | Status |
-| ----- | ---------------------------------- | ------ |
-| AC-1  | Data accuracy (Open tasks only)    | ✅ PASS |
-| AC-2  | Incentive clarity (badges + total) | ✅ PASS |
-| AC-3  | Mission filter works               | ✅ PASS |
-| AC-4  | Public access (no auth gate)       | ✅ PASS |
-| AC-5  | Progressive enhancement (auth)     | ✅ PASS |
-| OC-1  | Groups table for missions          | ✅ PASS |
-| OC-2  | Task types from DB enum            | ✅ PASS |
-| OC-3  | 5 canonical dimensions             | ✅ PASS |
-| TQ-1  | TypeScript types centralized       | ✅ PASS |
-| TQ-2  | Proper HTTP status codes           | ✅ PASS |
-| TQ-3  | Minimal client:load usage          | ✅ PASS |
-| TQ-4  | Astro SSR fetching                 | ✅ PASS |
-| UX-1  | Mobile-responsive                  | ✅ PASS |
-| UX-2  | Hover states                       | ✅ PASS |
-| UX-3  | Loading states (SSR fast)          | ✅ PASS |
-| UX-4  | Empty state messages               | ✅ PASS |
+| AC   | Description                        | Status  |
+| ---- | ---------------------------------- | ------- |
+| AC-1 | Data accuracy (Open tasks only)    | ✅ PASS |
+| AC-2 | Incentive clarity (badges + total) | ✅ PASS |
+| AC-3 | Mission filter works               | ✅ PASS |
+| AC-4 | Public access (no auth gate)       | ✅ PASS |
+| AC-5 | Progressive enhancement (auth)     | ✅ PASS |
+| OC-1 | Groups table for missions          | ✅ PASS |
+| OC-2 | Task types from DB enum            | ✅ PASS |
+| OC-3 | 5 canonical dimensions             | ✅ PASS |
+| TQ-1 | TypeScript types centralized       | ✅ PASS |
+| TQ-2 | Proper HTTP status codes           | ✅ PASS |
+| TQ-3 | Minimal client:load usage          | ✅ PASS |
+| TQ-4 | Astro SSR fetching                 | ✅ PASS |
+| UX-1 | Mobile-responsive                  | ✅ PASS |
+| UX-2 | Hover states                       | ✅ PASS |
+| UX-3 | Loading states (SSR fast)          | ✅ PASS |
+| UX-4 | Empty state messages               | ✅ PASS |
 
 **All 16 acceptance criteria validated** ✅
 
