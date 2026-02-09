@@ -1,0 +1,32 @@
+---
+/**
+ * Trust Builder Sign-In Page
+ * Email-based authentication with magic codes
+ */
+
+import Layout from '@/layouts/Layout.astro';
+import { SignInForm } from '@/components/trust-builder/SignInForm';
+---
+
+<Layout title="Sign In - Trust Builder">
+  <main class="min-h-screen flex items-center justify-center bg-background p-4">
+    <div class="w-full max-w-md space-y-8">
+      {/* Header */}
+      <div class="text-center space-y-2">
+        <h1 class="text-4xl font-bold tracking-tight">Trust Builder</h1>
+        <p class="text-muted-foreground">
+          Sign in with your email to get started
+        </p>
+      </div>
+
+      {/* Sign-In Form */}
+      <SignInForm client:load />
+
+      {/* Footer */}
+      <div class="text-center text-sm text-muted-foreground space-y-2">
+        <p>By signing in, you agree to our terms and privacy policy.</p>
+        <p>Don't have an account? One will be created for you automatically.</p>
+      </div>
+    </div>
+  </main>
+</Layout>

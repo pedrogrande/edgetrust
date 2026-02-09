@@ -1,0 +1,173 @@
+---
+/**
+ * Task Detail Page
+ *
+ * Full task information with criteria and claim CTA
+ * Public access with progressive enhancement for authenticated users
+ */
+
+import Layout from '@/layouts/Layout.astro';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { IncentiveBadge } from '@/components/trust-builder/IncentiveBadge';
+import { sql } from '@/lib/db/connection';
+import { getCurrentUser } from '@/lib/auth';
+
+const { id } = Astro.params;
+
+// Fetch task details
+const taskResponse = await fetch(
+  `${Astro.url.origin}/api/trust-builder/tasks/${id}`
+);
+
+if (!taskResponse.ok) {
+  return Astro.redirect('/404');
+}
+
+const { task } = await taskResponse.json();
+
+// Check authentication
+const currentUser = await getCurrentUser(Astro.request, sql);
+const isAuthenticated = !!currentUser;
+---
+
+<Layout title={`${task.title} - Trust Builder`}>
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <a href="/trust-builder/tasks">
+        <Button variant="ghost" size="sm"> ← Back to Tasks </Button>
+      </a>
+    </div>
+
+    <!-- Task Header -->
+    <div class="mb-8">
+      <div class="flex items-start justify-between gap-4 mb-4 flex-wrap">
+        <div class="flex-1">
+          <h1 class="text-4xl font-bold mb-2">{task.title}</h1>
+          <p class="text-lg text-muted-foreground">
+            {task.mission.name}
+          </p>
+        </div>
+        <Badge variant="outline" className="capitalize text-lg px-4 py-2">
+          {task.task_type}
+        </Badge>
+      </div>
+
+      {
+        task.description && (
+          <p class="text-muted-foreground leading-relaxed">
+            {task.description}
+          </p>
+        )
+      }
+    </div>
+
+    <!-- Incentives Card -->
+    <Card class="mb-8">
+      <CardHeader>
+        <CardTitle>Rewards</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div class="flex flex-wrap gap-3 mb-4">
+          {
+            task.incentives.map((incentive: any) => (
+              <IncentiveBadge name={incentive.name} points={incentive.points} />
+            ))
+          }
+        </div>
+        <div class="text-2xl font-bold text-primary">
+          {task.total_points} points total
+        </div>
+        {
+          task.max_completions && (
+            <p class="text-sm text-muted-foreground mt-2">
+              Limited to {task.max_completions}{' '}
+              {task.max_completions === 1 ? 'completion' : 'completions'} per
+              member
+            </p>
+          )
+        }
+        {
+          !task.max_completions && (
+            <p class="text-sm text-muted-foreground mt-2">
+              Unlimited completions
+            </p>
+          )
+        }
+      </CardContent>
+    </Card>
+
+    <!-- Acceptance Criteria -->
+    <Card class="mb-8">
+      <CardHeader>
+        <CardTitle>Acceptance Criteria</CardTitle>
+        <p class="text-sm text-muted-foreground">
+          Submit proof for each criterion below
+        </p>
+      </CardHeader>
+      <CardContent>
+        <ol class="space-y-4">
+          {
+            task.criteria.map((criterion: any, index: number) => (
+              <li class="flex gap-4">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold">
+                  {index + 1}
+                </div>
+                <div class="flex-1">
+                  <p class="mb-2">{criterion.description}</p>
+                  <div class="flex gap-2 flex-wrap">
+                    <Badge variant="secondary" className="capitalize">
+                      {criterion.proof_type}
+                    </Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {criterion.verification_method.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </CardContent>
+    </Card>
+
+    <!-- CTA Section -->
+    <div class="text-center p-8 bg-muted/30 rounded-lg">
+      {
+        isAuthenticated ? (
+          <>
+            <h3 class="text-xl font-semibold mb-4">
+              Ready to claim this task?
+            </h3>
+            <p class="text-muted-foreground mb-6">
+              Submit your proof for each criterion and earn {task.total_points}{' '}
+              trust points
+            </p>
+            <Button size="lg" disabled>
+              Submit a Claim
+            </Button>
+            <p class="text-xs text-muted-foreground mt-2">
+              Claim submission coming in S1-04
+            </p>
+          </>
+        ) : (
+          <>
+            <h3 class="text-xl font-semibold mb-4">
+              Sign in to claim this task
+            </h3>
+            <p class="text-muted-foreground mb-6">
+              Create a free account to start building your Trust Score
+            </p>
+            <a
+              href={`/trust-builder/signin?redirect=/trust-builder/tasks/${task.id}`}
+            >
+              <Button size="lg">Sign In to Claim</Button>
+            </a>
+          </>
+        )
+      }
+    </div>
+  </div>
+</Layout>

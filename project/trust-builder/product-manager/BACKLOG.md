@@ -1,286 +1,249 @@
-# Trust Builder — Season 0 Backlog ✅
+# Trust Builder — Season 0 Backlog
 
-## Overview
-
-Trust Builder is the Season 0 "living lab" to validate the task-as-contract model, the Trust Score mechanics, and the end-to-end verification workflows. This backlog captures prioritized epics, Gherkin user stories (Season 0 scope), acceptance criteria, **Safety Checks**, and **Values Alignment** markers to ensure safety-first and youth-led principles.
+**Last updated**: 2026-02-09
+**Season 0 window**: February 10 – March 31, 2026
+**Status**: Sprint 1 — In Progress (S1-01 ✅, S1-02 ✅, S1-03 🏗️ Active)
 
 ---
 
-## Requirements (mapped from docs)
+## Tech Stack (Confirmed)
 
-- Groups: Missions and Colony scoping, mission metadata, filtering
-- People & Auth: Member ID, email-based magic-link auth, role-based permissions, Trust-threshold role promotion
-- Things: Task model, Criteria, Incentives, Proof artifacts, Task states
-- Connections: Memberships, Claims, Verifications, Reward distribution
-- Events: Append-only immutable Event log, content hashing, exportability
-- Knowledge: Trust Score aggregation, analytics, leaderboards, personalized suggestions
-- Non-functional: Performance (200ms UI), Security (SHA-256 hashing, file scanning), Availability, Accessibility (WCAG AA), Mobile-first, Localization-ready
+| Layer     | Technology                            | Notes                                           |
+| --------- | ------------------------------------- | ----------------------------------------------- |
+| Framework | Astro 5.14+ (`output: 'server'`)      | SSR via Cloudflare adapter — already configured |
+| UI        | React 19 + shadcn/ui (50+ components) | Islands architecture with `client:load`         |
+| Styling   | Tailwind CSS v4                       | HSL tokens, dark mode via `.dark` class         |
+| Database  | NeonDB (Postgres)                     | `@neondatabase/serverless` already installed    |
+| Auth      | Neon Auth or email magic-link         | Server-side, cookie-based sessions              |
+| Hosting   | Cloudflare Pages/Workers              | `@astrojs/cloudflare` adapter configured        |
+| State     | Nanostores                            | Cross-component reactivity                      |
+| Charts    | Recharts 2.15+                        | Already installed for dashboard visualizations  |
+
+### Project Paths (Canonical)
+
+```
+src/
+  pages/
+    trust-builder/         # Trust Builder UI pages
+    api/trust-builder/     # Server API endpoints
+  components/
+    trust-builder/         # React components for Trust Builder
+  lib/
+    db/                    # NeonDB connection, schema helpers, queries
+    auth/                  # Auth logic (magic-link, sessions)
+    contracts/             # Quasi-smart-contract business logic
+    events/                # Event logging utilities
+  types/
+    trust-builder.ts       # Shared TypeScript types
+```
+
+---
+
+## AI Agent Team
+
+| Agent                 | Role     | Responsibilities                                        |
+| --------------------- | -------- | ------------------------------------------------------- |
+| `fullstack-developer` | Builder  | Implements vertical feature slices (schema, API, UI)    |
+| `product-advisor`     | Reviewer | Grades ontology alignment, migration readiness          |
+| `qa-engineer`         | Tester   | Validates acceptance criteria, tests contract integrity |
+| `retro-facilitator`   | Process  | Captures lessons learned after each story/sprint        |
+
+**Workflow**: Product Owner writes story → `fullstack-developer` implements → `qa-engineer` validates → `product-advisor` grades → `retro-facilitator` captures lessons → next story.
+
+---
+
+## Ontology Requirements (mapped from docs 00–08)
+
+| Dimension       | Key Requirements                                                                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Groups**      | Colony (root), Missions as sub-groups, mission metadata, filtering                                                                                                             |
+| **People**      | Member ID (FE-M-XXXXX), email auth, roles (Explorer/Contributor/Steward/Guardian), Trust-threshold promotion                                                                   |
+| **Things**      | Tasks (Draft→Open→Complete), Criteria, Incentives (5 dimensions), Proof artifacts                                                                                              |
+| **Connections** | Memberships, TaskIncentives, Claims, Proofs, Verification links. **Note**: Mission Joining flow deferred to S2 — S1 members can claim tasks without formally joining a Mission |
+| **Events**      | Append-only immutable ledger, SHA-256 content hashing, exportable JSON/CSV                                                                                                     |
+| **Knowledge**   | Derived Trust Score, incentive breakdown charts, mission analytics, leaderboards                                                                                               |
 
 ---
 
 ## Prioritized Epics (Season 0)
 
-1. Core Task lifecycle & Claim verification (MVP) 🔧
-2. Event ledger & export (Genesis audit readiness) 📜
-3. Trust score calculation & progression rules (roles unlocking) ⭐
-4. Admin & Reviewer workflows (ops guide automation) 🛠️
-5. Data model + REST API (developer contract) 🔗
-6. Auth, roles & permissions (incl. Trust-threshold) 🔐
-7. Migration & Season-0 freeze + exports (Web3 bridge) 🌉
-8. Nonfunctional & security (performance, file hashing, malware scan) ⚠️
-9. UX, accessibility, and mobile optimizations 📱
-10. Tests, auditing, and red-team safety checks 🧪
+| #   | Epic                                           | Sprint | Why first                                      |
+| --- | ---------------------------------------------- | ------ | ---------------------------------------------- |
+| 1   | **Foundation: Schema + Auth + Seed Data**      | S1     | Nothing works without a database and identity  |
+| 2   | **Public Task List + Mission Browsing**        | S1     | Visible value for webinar attendees from day 1 |
+| 3   | **Claim Submission (rich text, auto-approve)** | S1     | First end-to-end "contract" loop               |
+| 4   | **Member Dashboard + Trust Score**             | S1     | Members see their reward immediately           |
+| 5   | **Event Ledger (append-only)**                 | S1     | Genesis audit trail from the start             |
+| 6   | **Admin Task Creation UI**                     | S2     | Admins can create new tasks without DB seeds   |
+| 7   | **Reviewer Workflows + Peer Review**           | S2     | Complex claims need human verification         |
+| 8   | **File Upload + SHA-256 Hashing**              | S2     | Rich proof types beyond text                   |
+| 9   | **Trust-Threshold Role Promotion**             | S2     | Automated progression unlocks                  |
+| 10  | **Admin Ops (Cancel, Slashing, Disputes)**     | S3     | Governance and error correction                |
+| 11  | **Migration Export + Merkle Proofs**           | S3     | Season 0 freeze and Web3 bridge                |
+| 12  | **Nonfunctional: Performance, A11y, Mobile**   | S3     | Polish and compliance                          |
 
 ---
 
-## User Stories & Tasks (Gherkin-style)
+## Sprint 1 Stories (Gherkin)
 
-### Epic: Core Task lifecycle & Claim verification ✅
+### Story 1.1: Database Schema & Seed Data
 
-Story: Publish a Task as a contract
+```gherkin
+Given the NeonDB project is provisioned
+When the fullstack-developer runs the schema migration
+Then all tables (groups, members, tasks, criteria, incentives,
+     task_incentives, memberships, claims, proofs, events)
+     are created with correct types, constraints, and indices
+And the "Webinar Series Season 0" mission is seeded
+And the "Attend Live Webinar" task is seeded with auto-approve
+     and 50 Participation points
+And a withTransaction() helper is exported for atomic multi-step operations
+And an EventType enum is exported with canonical event type taxonomy
+And a logEvent() utility is exported for the append-only event ledger
+```
 
-Given an Admin has created a Task in Draft with clear Acceptance Criteria and Incentives
-When the Admin clicks `Publish`
-Then the Task becomes `Open`, the core fields are locked, and an Event is appended to the log
-
-Safety Checks:
-- Publishing generates a locked-snapshot Event entry with old/new values recorded
-- UI warns about immutability before publishing
-
-Values Alignment: **Transparency**, **Legibility of work**, **Equity of opportunity**
-
-DoD:
-- Publish API endpoint implemented and validated
-- UI shows publish confirmation and immutability hint
-- Event record is written and exportable
-
----
-
-Story: Member submits a Claim with proofs
-
-Given a Member views an `Open` Task
-When they submit a Claim with required proofs (text or file)
-Then the Claim is saved as `Submitted`, content hash generated, and a `Submitted` Event is recorded
-
-Safety Checks:
-- File uploads generate SHA-256 hash and are virus-scanned before being accepted
-- Maximum file size enforced
-
-Values Alignment: **Human-centered design**, **Privacy**
-
-DoD:
-- Claim submission endpoint verifies proof format and stores proof metadata
-- Hash stored in Event log
-- Uploads scanned and encrypted in storage
+**Ontology**: Groups + Things + Connections + Events (schema + cross-cutting foundations)
+**Agent**: `fullstack-developer`
+**Points**: 3
 
 ---
 
-Story: Peer or Steward reviews a Claim
+### Story 1.2: Email Auth & Member Identity
 
-Given a Claim is `Submitted` and assigned to a Reviewer with enough Trust Score
-When the Reviewer Approves/Requests Revision/Rejects
-Then the Claim state transitions accordingly and an Event is recorded; approvals update Trust Score atomically
+```gherkin
+Given a visitor arrives at the Trust Builder
+When they sign in with their email
+Then a Member record is created (or found) with a permanent
+     Member ID (FE-M-XXXXX)
+And a secure session cookie is set
+And a "member.created" Event is logged (first sign-in only)
+```
 
-Safety Checks:
-- Reviewers cannot review their own claims
-- Two independent sign-offs for high-value claims (configurable)
-- Reviewer actions are audited in Events
-
-Values Alignment: **Safety-first**, **Fairness**, **Collective verification**
-
-DoD:
-- Review assignment and verification APIs in place
-- UI reviewer flows implemented with clear feedback templates
-- Trust score updates occur atomically and are visible in member dashboard
+**Ontology**: People + Events
+**Agent**: `fullstack-developer`
+**Points**: 5
 
 ---
 
-Story: Mission Joining (Membership connection)
+### Story 1.3: Public Task List & Mission Pages
 
-Given an Open Mission is visible to Members
-When a Member clicks `Join Mission`
-Then a `Membership` connection is recorded in the Events log and the Member is added to the Mission's membership list
+```gherkin
+Given the task list page is loaded (no auth required)
+When a visitor browses /trust-builder/tasks
+Then they see all Open tasks grouped by Mission
+And each task shows: title, mission, incentives offered,
+     total value, and brief description
+And they can filter by mission
+```
 
-Safety Checks:
-- Joining records an Event with timestamp and actor
-- Joining does not grant elevated privileges until role thresholds are met
-
-Values Alignment: **Equity of opportunity**, **Legibility**
-
-DoD:
-- `Join Mission` API and UI implemented
-- Membership Events are recorded and exportable
-- Mission filters reflect joined members
+**Ontology**: Groups + Things (read-only)
+**Agent**: `fullstack-developer`
+**Points**: 3
 
 ---
 
-Story: Role Promotion (Trust-threshold automation)
+### Story 1.4: Claim Submission (Rich Text + Auto-Approve)
 
-Given a Member's Trust Score reaches a promotion threshold (e.g., 500)
-When the scheduled background job runs
-Then the Member's role is automatically updated (e.g., to `Steward`) and an Event is recorded documenting the promotion
+```gherkin
+Given a signed-in Member views an Open task
+When they click "Submit Claim" and enter rich text proof
+Then a Claim is created with status "Submitted"
+And if the task's verification method is "auto-approve",
+     the Claim immediately transitions to "Approved"
+And the Member's Trust Score is updated atomically
+And Events are logged for both "claim.submitted" and
+     "claim.approved"
+```
 
-Safety Checks:
-- Promotions are logged in Events with before/after roles
-- Promotions are reversible via Admin review (with audit trail)
-
-Values Alignment: **Fairness**, **Transparency**
-
-DoD:
-- Background job for promotions implemented and tested
-- Automated promotion writes Event and notifies the Member
-- Admin override flow exists for disputes
-
----
-
-Refinement Story: Dynamic Proof Forms (Criterion-level proof types)
-
-Given an Admin is creating or editing a Task
-When they add a Criterion
-Then they can choose the proof type required (e.g., `Rich Text`, `File Upload`, `Video Link`) and the Claim form enforces that constraint
-
-Safety Checks:
-- Criterion-level proof types are enforced on submission and validated server-side
-- Proof-type changes after publishing require Task cancel/create v2 or an appended Event documenting the change
-
-Values Alignment: **Human-centered**, **Legibility**
-
-DoD:
-- Task creation UI supports selecting proof types per Criterion
-- Claim submission validates Criterion-level proof types
-- Server-side validation and Event logging for proof-type enforcement
+**Ontology**: Connections + Events + Knowledge
+**Agent**: `fullstack-developer`
+**Points**: 5
 
 ---
 
-### Epic: Event ledger & export (Genesis audit readiness) 📜
+### Story 1.5: Member Dashboard & Trust Score
 
-Story: Append-only Events for every state change
+```gherkin
+Given a signed-in Member navigates to /trust-builder/dashboard
+When the page loads
+Then they see their current Trust Score (derived from Events)
+And a breakdown by incentive dimension
+     (Participation, Collaboration, Innovation, Leadership, Impact)
+And a list of completed tasks with approval status
+And a list of pending claims
+```
 
-Given any state transition (Task publish, Claim submit, Claim approve, Trust update)
-When the action occurs
-Then an immutable Event record is appended with timestamp, actor, before/after states, and metadata
-
-Safety Checks:
-- Events are immutable via app-level restrictions (no updates/deletes)
-- Event log snapshot export reproducibly maps to on-chain Merkle roots
-
-Values Alignment: **Transparency**, **Auditability**
-
-DoD:
-- Events table/schema defined and writes validated
-- Application DB user has only `INSERT` and `SELECT` on the `Events` table (no `UPDATE`/`DELETE`)
-- Export endpoints produce JSON/CSV and Merkle root derivation documented
-- Automated tests validate immutability and export integrity
+**Ontology**: Knowledge + People
+**Agent**: `fullstack-developer`
+**Points**: 3
 
 ---
 
-### Epic: Trust Score calculation & progression rules ⭐
+### Story 1.6: Append-Only Event Ledger
 
-Story: Trust Score is derived from approved claims
+```gherkin
+Given any state transition occurs (member created, task published,
+     claim submitted, claim approved, trust score updated)
+When the action completes
+Then an immutable Event record is written with:
+     timestamp (UTC), actor_id, entity_type, entity_id,
+     event_type, and metadata (JSONB)
+And the Events table has no UPDATE or DELETE permissions
+     for the application database user
+```
 
-Given a member has Approved claims in the Event log
-When the dashboard is requested
-Then Trust Score is calculated by summing all approved incentive points across dimensions and returned
+**Note**: `logEvent()` utility is created in S1-01. This story covers the Events API endpoint, export function, verification utilities, and `qa-engineer` immutability testing.
 
-Safety Checks:
-- Trust Score is derived (not editable)
-- Slashing events are recorded and reversible only via Admin-reviewed Events
-
-Values Alignment: **Equity**, **Legibility**
-
-DoD:
-- Calculation logic implemented server-side and unit-tested
-- Dashboard shows incentive breakdown across five dimensions
-
----
-
-### Epic: Knowledge & Member visualization 📊
-
-Story: Member Profile Visualization
-
-Given a Member has completed tasks across multiple dimensions
-When they view their dashboard
-Then they see a visualization (e.g., spider chart or bar chart) showing their contribution profile across Participation, Collaboration, Innovation, Leadership, and Impact, with the ability to export their summary as JSON
-
-Safety Checks:
-- Visualizations use aggregated, non-PII data by default; exports only include PII with explicit consent
-- Charts reflect freshly-calculated Trust Scores and are consistent with Event-derived values
-
-Values Alignment: **Member sovereignty**, **Legibility**, **Learning**
-
-DoD:
-- Dashboard chart implemented and unit-tested with sample data
-- Export summary endpoint produces JSON matching migration specs
+**Ontology**: Events
+**Agent**: `fullstack-developer` + `qa-engineer` (immutability test)
+**Points**: 3
 
 ---
 
-### Epic: Admin & Reviewer workflows 🛠️
+## Sprint 1 Summary
 
-Story: Admin cancels a problematic Task
+| Story                | Points | Dependency              |
+| -------------------- | ------ | ----------------------- |
+| 1.1 Schema & Seed    | 3      | None                    |
+| 1.2 Auth & Identity  | 5      | 1.1                     |
+| 1.3 Public Task List | 3      | 1.1                     |
+| 1.4 Claim Submission | 5      | 1.1, 1.2                |
+| 1.5 Member Dashboard | 3      | 1.1, 1.2, 1.4           |
+| 1.6 Event Ledger     | 3      | 1.1 (woven through all) |
+| **Total**            | **22** |                         |
 
-Given a published Task has a critical error
-When Admin cancels it
-Then the Task is marked `Cancelled`, a reason is recorded in Events, and members are notified
-
-Safety Checks:
-- Cancellation requires Admin role and logs rationale
-- Previous claims are preserved for audit and flagged
-
-Values Alignment: **Transparency**, **Human-centered**
-
-DoD:
-- Cancel flow implemented with audit logging and member notifications
+**Sprint 1 velocity target**: 22 points over 2 weeks.
+Stories 1.1, 1.3, and 1.6 can begin in parallel. Stories 1.2 + 1.3 unblock 1.4, which unblocks 1.5.
 
 ---
 
-### Epic: Migration & Season-0 freeze (Web3 bridge) 🌉
+## Sprint 2 Candidates (Preview)
 
-Story: Export per-member Season 0 summary and Merkle root
+- Admin Task Creation UI (Draft → Open with immutability lock)
+- File Upload proofs with SHA-256 hashing
+- Reviewer queue and Peer Review workflows
+- Trust-threshold role promotion automation
+- Mission joining (Membership connection)
+- Event export (JSON/CSV) for Genesis audit
 
-Given Season 0 is complete and the ledger is frozen
-When an Admin requests an export for a member
-Then the system produces a JSON summary (total Trust Score, dimension breakdown, count) and a Merkle proof root for their history
+## Sprint 3 Candidates (Preview)
 
-Safety Checks:
-- Member must be able to opt-in to wallet linking before on-chain attestation
-- Export includes content hashes, not raw PII unless consented
-
-Values Alignment: **Member sovereignty**, **Privacy**
-
-DoD:
-- Export endpoint and format documented and verified against migration strategy
-
----
-
-## Non-functional acceptance criteria (selected)
-
-- UI interactions < 200ms for standard navigation
-- Handle 50 simultaneous claims in 1 minute without data loss
-- 99.5% availability during Season 0, backups and 24-hour recovery
-- WCAG 2.1 AA accessibility; mobile-first responsive design
-- All file uploads hashed (SHA-256) and scanned
+- Admin ops: Cancel tasks, slashing events, dispute resolution
+- Migration export with Merkle root derivation
+- Nonfunctional: performance testing, WCAG AA audit, mobile optimization
+- Leaderboard and personalized task suggestions
 
 ---
 
-## Definition of Done (DoD) — release checklist ✅
+## Definition of Done (per story)
 
-- All stories for an epic have passing unit + integration tests
-- Automated tests for Event immutability and hash verification
-- Security checks: malware scanning on uploads, role validation, JWT-based auth
-- Performance tests for target loads
-- Stakeholder sign-off (founding admins + 2 youth leaders)
-- Migration export validated by sample Merkle root and manual audit
-
----
-
-## Next steps & sprint candidates (recommended)
-
-Sprint 1 (1–2 weeks): Auth & Identity (magic-link sign-in, Member ID assignment), Task Publication for Webinar Attendance, Claim Submission for Webinar proofs, and Basic Event Logging (append-only table)
-
-Sprint 2 (1–2 weeks): Reviewer workflows, Trust Score derivation and role promotion automation, Event export prototype and Merkle root proof, file hashing + scanning.
-
-Sprint 3: Admin ops (cancel, v2 tasks), slashing & dispute flows, migration readiness (export validations), nonfunctional improvements, accessibility and UX testing.
+- [ ] Acceptance criteria pass (validated by `qa-engineer`)
+- [ ] Event logging implemented for all state changes
+- [ ] Ontology correctly modeled (graded by `product-advisor`, target B+)
+- [ ] TypeScript types match schema
+- [ ] Mobile-responsive UI
+- [ ] Retro completed (captured by `retro-facilitator`)
 
 ---
 
-*Prepared by Product Management — ready for review and handoff* ✨
+_Prepared by Product Owner — 2026-02-09_
