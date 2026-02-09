@@ -25,8 +25,8 @@ handoffs:
     send: false
   - label: Request Advisor Input
     agent: product-advisor
-    prompt: I need strategic guidance on this backlog item before creating the detailed user story.
-    send: false
+    prompt: I need strategic guidance on the newest story before implementation
+    send: true
 ---
 
 # Product Owner instructions

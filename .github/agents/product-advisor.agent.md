@@ -28,6 +28,10 @@ handoffs:
     agent: retro-facilitator
     prompt: This implementation meets quality standards (Grade B+ or higher). Conduct retrospective and capture learnings.
     send: false
+  - label: Return to Product Owner
+    agent: product-owner
+    prompt: Consider my pre-implementation review of the newest story.
+    send: true
 ---
 
 # Product Advisor instructions
