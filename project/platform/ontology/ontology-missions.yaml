@@ -1,0 +1,299 @@
+# @format
+
+# ============================================================================
+# Missions System - Implemented as Smart Contracts
+# ============================================================================
+
+feature: missions
+extends: contracts
+version: 1.0.0
+description: Mission system built on smart contract architecture
+
+# ============================================================================
+# Thing Types - Mission-Specific Entities
+# ============================================================================
+
+thingTypes:
+  # Mission (extends action_contract)
+  - name: mission
+    description: Learning and contribution project as a smart contract
+    properties:
+      # Mission identity
+      title: string
+      description: string
+      slug: string
+
+      # Mission type
+      missionType: string # standard, specialized, advanced, daily, onboarding, impact, growth
+      category: string # technical, governance, community, research, advocacy
+
+      # Difficulty
+      difficulty: string # beginner, intermediate, advanced, expert
+      estimatedHours: number
+      complexity: string # simple, moderate, complex
+
+      # Learning outcomes
+      skillsLearned: string[]
+      skillProofsAwarded: string[]
+      knowledge_areas: string[]
+
+      # Requirements (extends contract eligibility)
+      prerequisites: string[] # mission IDs that must be completed first
+      requiredSkills: string[]
+      recommendedSkills: string[]
+
+      # Mission structure
+      phases:
+        object[]
+        # phaseName: string
+        # description: string
+        # deliverables: string[]
+        # estimatedHours: number
+        # order: number
+
+      isSolo: boolean
+      isCollaborative: boolean
+      minTeamSize: number
+      maxTeamSize: number
+
+      # Guidance
+      resources:
+        object[]
+        # title: string
+        # type: string (article, video, tool)
+        # url: string
+      instructions: string
+      tips: string[]
+      commonPitfalls: string[]
+
+      # Submission requirements
+      submissionGuidelines: string
+      deliverables: string[]
+      exampleSubmissions: string[]
+
+      # Contract reference
+      contractId: string # Links to action_contract
+
+      # Tracking
+      totalEnrollments: number
+      totalCompletions: number
+      completionRate: number
+      avgRating: number
+      avgCompletionTime: number # hours
+
+      # Status
+      status: string # draft, published, archived
+      publishedAt: number
+      createdBy: string
+
+    example:
+      type: mission
+      name: "Blockchain Basics"
+      properties:
+        missionType: "standard"
+        difficulty: "beginner"
+        estimatedHours: 8
+        skillProofsAwarded: ["blockchain_basics"]
+        isSolo: true
+        isCollaborative: false
+        contractId: "contract_123"
+        submissionGuidelines: "Submit a 1500-word report demonstrating understanding"
+
+  # Mission enrollment (links member to mission via contract)
+  - name: mission_enrollment
+    description: Member's enrollment and progress in a mission
+    properties:
+      memberId: string
+      missionId: string
+      contractFulfillmentId: string # Links to contract_fulfillment
+
+      # Progress
+      enrolledAt: number
+      startedAt: number
+      targetCompletionDate: number
+      actualCompletionDate: number
+
+      progressPercentage: number
+      phasesCompleted: number[]
+      checkpoints:
+        object[]
+        # checkpoint: string
+        # completedAt: number
+        # notes: string
+
+      # Collaboration (if team mission)
+      teamId: string # squad ID
+      roleInTeam: string
+
+      # Support
+      mentorId: string
+      buddyId: string
+
+      # Status
+      status: string # enrolled, in_progress, submitted, completed, abandoned
+
+      # Time tracking
+      hoursSpent: number
+      lastActivityAt: number
+
+  # Daily mission (micro-learning)
+  - name: daily_mission
+    description: Quick daily learning challenge
+    properties:
+      title: string
+      description: string
+      missionType: string # quiz, challenge, reflection, survey, mini_task
+
+      # Content
+      content: object # varies by type
+      correctAnswer: string # for quizzes
+
+      # Scheduling
+      availableDate: number
+      expiresAt: number
+
+      # Rewards (small)
+      trustPointsReward: number
+
+      # Tracking
+      participantCount: number
+      completionRate: number
+
+    example:
+      type: daily_mission
+      name: "Web3 Word of the Day"
+      properties:
+        missionType: "quiz"
+        trustPointsReward: 5
+        availableDate: 1738800000000
+        expiresAt: 1738886400000
+
+  # Mission pathway (curated progression)
+  - name: mission_pathway
+    description: Curated sequence of missions for skill development
+    properties:
+      title: string
+      description: string
+
+      # Progression
+      missions:
+        object[]
+        # missionId: string
+        # order: number
+        # required: boolean
+
+      # Outcomes
+      totalSkillProofs: string[]
+      estimatedTotalHours: number
+
+      # Tracking
+      enrolledMembers: number
+      completedMembers: number
+
+    example:
+      type: mission_pathway
+      name: "Blockchain Developer Track"
+      properties:
+        missions:
+          - { missionId: "mission_1", order: 1, required: true }
+          - { missionId: "mission_2", order: 2, required: true }
+          - { missionId: "mission_3", order: 3, required: false }
+
+# ============================================================================
+# Connection Types - Mission Relationships
+# ============================================================================
+
+connectionTypes:
+  - name: enrolled_in
+    description: Member enrolled in mission
+    fromType: member
+    toType: mission
+    metadata:
+      enrolledAt: number
+      enrollmentId: string # mission_enrollment ID
+      status: string
+
+  - name: completed_mission
+    description: Member successfully completed mission
+    fromType: member
+    toType: mission
+    metadata:
+      completedAt: number
+      rating: number
+      hoursSpent: number
+      fulfillmentId: string
+
+  - name: facilitates
+    description: Member facilitates or mentors mission
+    fromType: member
+    toType: mission
+    metadata:
+      role: string # facilitator, mentor, reviewer
+
+  - name: mission_squad
+    description: Squad formed for collaborative mission
+    fromType: squad
+    toType: mission
+    metadata:
+      formedAt: number
+
+  - name: follows_mission
+    description: Next mission in pathway
+    fromType: mission
+    toType: mission
+    metadata:
+      order: number
+      required: boolean
+
+# ============================================================================
+# Event Types - Mission Actions
+# ============================================================================
+
+eventTypes:
+  - name: mission_created
+    description: New mission designed
+    thingType: mission
+
+  - name: mission_published
+    description: Mission made available to members
+    thingType: mission
+
+  - name: mission_enrolled
+    description: Member enrolled in mission
+    thingType: mission
+
+  - name: mission_started
+    description: Member began work on mission
+    thingType: mission
+
+  - name: mission_progress_updated
+    description: Member updated progress
+    thingType: mission_enrollment
+
+  - name: mission_phase_completed
+    description: Member completed a mission phase
+    thingType: mission_enrollment
+
+  - name: mission_submitted
+    description: Member submitted mission for review
+    thingType: mission
+
+  - name: mission_completed
+    description: Mission successfully finished
+    thingType: mission
+
+  - name: mission_abandoned
+    description: Member gave up on mission
+    thingType: mission
+
+  - name: daily_mission_completed
+    description: Member completed daily challenge
+    thingType: daily_mission
+
+  - name: pathway_started
+    description: Member started mission pathway
+    thingType: mission_pathway
+
+  - name: pathway_completed
+    description: Member finished all pathway missions
+    thingType: mission_pathway

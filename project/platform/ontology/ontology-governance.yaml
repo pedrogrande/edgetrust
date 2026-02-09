@@ -1,0 +1,261 @@
+# @format
+
+# ============================================================================
+# Governance System - Implemented as Smart Contracts
+# ============================================================================
+
+feature: governance
+extends: contracts
+version: 1.0.0
+description: Democratic governance and decision-making system
+
+# ============================================================================
+# Thing Types - Governance Entities
+# ============================================================================
+
+thingTypes:
+  # Governance proposal
+  - name: governance_proposal
+    description: Formal proposal for community decision
+    properties:
+      title: string
+      description: string
+      proposalType: string # policy_change, resource_allocation, strategic_direction, council_election
+
+      # Content
+      motivation: string # why this is needed
+      specification: string # what exactly is proposed
+      implementation: string # how it would be executed
+      impact_analysis: object
+
+      # Authorship
+      proposerId: string
+      coSponsors: string[]
+
+      # Voting
+      votingPeriod:
+        object
+        # startDate: number
+        # endDate: number
+      quorumRequired: number # percentage of eligible voters
+      approvalThreshold: number # percentage of votes needed (e.g., 0.51, 0.67)
+
+      # Eligibility to vote
+      voterEligibility:
+        object
+        # minTrustScore: number
+        # requiredRank: string[]
+        # fieldOfficeIds: string[] (if field-office specific)
+
+      # Results
+      votes:
+        object
+        # for: number
+        # against: number
+        # abstain: number
+      totalVotes: number
+      quorumMet: boolean
+      passed: boolean
+
+      # Contract reference (voting is a contract action)
+      votingContractId: string
+
+      # Implementation
+      implementationStatus: string # pending, in_progress, completed, failed
+      implementedAt: number
+      implementedBy: string
+
+      # Status
+      status: string # draft, open_for_discussion, voting_active, passed, rejected, implemented
+      createdAt: number
+
+    example:
+      type: governance_proposal
+      name: "Proposal: Increase Mission Completion Rewards"
+      properties:
+        proposalType: "policy_change"
+        votingPeriod:
+          startDate: 1738800000000
+          endDate: 1739400000000
+        quorumRequired: 0.20
+        approvalThreshold: 0.51
+        votingContractId: "contract_vote_123"
+
+  # Vote record
+  - name: vote
+    description: Individual member's vote on proposal
+    properties:
+      proposalId: string
+      voterId: string
+
+      vote: string # for, against, abstain
+      reason: string # optional explanation
+      votingPower: number # based on trust score or governance weight
+
+      # Contract reference
+      contractFulfillmentId: string # voting is fulfilling a contract
+
+      timestamp: number
+
+    example:
+      type: vote
+      name: "Vote on Proposal 123"
+      properties:
+        proposalId: "proposal_123"
+        voterId: "member_456"
+        vote: "for"
+        votingPower: 1.5
+        contractFulfillmentId: "fulfillment_vote_789"
+
+  # Council / governance body
+  - name: council
+    description: Elected governance body for specific domain
+    properties:
+      name: string
+      description: string
+      domain: string # values, mission, strategy, technical, community
+
+      # Membership
+      seats: number
+      currentMembers:
+        object[]
+        # memberId: string
+        # role: string (lead, member)
+        # electedAt: number
+        # termEnds: number
+
+      # Powers
+      responsibilities: string[]
+      decision_authority: string[]
+      budget_control: number
+
+      # Meetings
+      meeting_frequency: string
+      nextMeetingDate: number
+
+      # Status
+      status: string # active, forming, dissolved
+
+  # Voting contract (specific type of action_contract)
+  - name: voting_contract
+    description: Contract that rewards participation in governance
+    properties:
+      proposalId: string
+
+      # Eligibility to vote (who can fulfill this contract)
+      eligibility:
+        object
+        # minTrustScore: number
+        # requiredRank: string[]
+
+      # Rewards for voting
+      valueGenerated:
+        object
+        # participationPoints: number (for any vote)
+        # informedVoterBonus: number (if they attended discussions)
+
+      # Validity
+      validityPeriod:
+        object
+        # startDate: number
+        # endDate: number
+
+# ============================================================================
+# Connection Types - Governance Relationships
+# ============================================================================
+
+connectionTypes:
+  - name: proposed_by
+    description: Member proposed governance item
+    fromType: member
+    toType: governance_proposal
+    metadata:
+      proposedAt: number
+
+  - name: co_sponsored
+    description: Member co-sponsored proposal
+    fromType: member
+    toType: governance_proposal
+    metadata:
+      sponsoredAt: number
+
+  - name: voted_on
+    description: Member voted on proposal
+    fromType: member
+    toType: governance_proposal
+    metadata:
+      vote: string
+      votingPower: number
+      votedAt: number
+      voteId: string
+
+  - name: council_member
+    description: Member serves on council
+    fromType: member
+    toType: council
+    metadata:
+      role: string
+      electedAt: number
+      termEnds: number
+      seat_number: number
+
+  - name: implements_proposal
+    description: Proposal being implemented
+    fromType: member
+    toType: governance_proposal
+    metadata:
+      implementationStarted: number
+      estimatedCompletion: number
+
+# ============================================================================
+# Event Types - Governance Actions
+# ============================================================================
+
+eventTypes:
+  - name: proposal_created
+    description: New governance proposal submitted
+    thingType: governance_proposal
+
+  - name: proposal_discussion_started
+    description: Community began discussing proposal
+    thingType: governance_proposal
+
+  - name: proposal_voting_opened
+    description: Voting period began
+    thingType: governance_proposal
+
+  - name: vote_cast
+    description: Member voted on proposal
+    thingType: governance_proposal
+
+  - name: proposal_voting_closed
+    description: Voting period ended
+    thingType: governance_proposal
+
+  - name: proposal_passed
+    description: Proposal approved by community
+    thingType: governance_proposal
+
+  - name: proposal_rejected
+    description: Proposal did not pass
+    thingType: governance_proposal
+
+  - name: proposal_implemented
+    description: Approved proposal executed
+    thingType: governance_proposal
+
+  - name: council_election_held
+    description: Council members elected
+    thingType: council
+
+  - name: council_member_elected
+    description: Member elected to council
+    thingType: council
+
+  - name: council_meeting_held
+    description: Council convened
+    thingType: council
+
+  - name: council_decision_made
+    description: Council made decision
+    thingType: council

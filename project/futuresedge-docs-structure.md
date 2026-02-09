@@ -1,0 +1,32 @@
+project/
+-platform/
+--examples/
+---example-governance-voting-contract.js
+---example-knowledge-contribution.js
+---example-mission-completion-workflow.js
+--ontology/
+---ontology-contracts.yaml
+---ontology-futuresedge-core.yaml
+---ontology-governance.yaml
+---ontology-knowledge.yaml
+---ontology-missions.yaml
+--persona-profile.md
+--platform.md
+--PRD.md
+--user-stories.md
+--UX.md
+-trust-builder/
+--product-manager/
+---**backlog files**
+--retros
+---**retro files**
+--00-product-vision-and-goals.md
+--01-user-personas-and-journeys.md
+--02-functional-requirements.md
+--03-nonfunctional-requirements.md
+--04-data-model-and-api-design.md
+--05-smart-contract-behaviour-spec.md
+--06-incentive-and-trust-score-rules.md
+--07-admin-and-review-operations.md
+--08-migration-and-audit-strategy.md
+--project-requirements.md

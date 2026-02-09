@@ -1,0 +1,269 @@
+# @format
+
+# ============================================================================
+# KnowledgeBank - Implemented as Smart Contracts
+# ============================================================================
+
+feature: knowledge
+extends: contracts
+version: 1.0.0
+description: Knowledge contribution and sharing system
+
+# ============================================================================
+# Thing Types - Knowledge Entities
+# ============================================================================
+
+thingTypes:
+  # Knowledge article
+  - name: knowledge_article
+    description: Educational content in KnowledgeBank
+    properties:
+      title: string
+      slug: string
+      content: string # markdown or HTML
+      summary: string
+
+      # Classification
+      category: string # tutorial, guide, reference, case_study, research
+      topics: string[]
+      difficulty: string
+
+      # Content structure
+      sections: object[]
+      estimatedReadTime: number # minutes
+
+      # Authorship
+      authorId: string
+      contributors: string[]
+
+      # Contract reference (if incentivized contribution)
+      contractFulfillmentId: string
+
+      # Versioning
+      version: string
+      previousVersionId: string
+      changeLog: string
+
+      # Metadata
+      viewCount: number
+      helpfulCount: number
+      references: string[]
+      relatedArticles: string[]
+
+      # Status
+      status: string # draft, published, under_review, archived
+      publishedAt: number
+      lastUpdatedAt: number
+
+    example:
+      type: knowledge_article
+      name: "Introduction to DAOs"
+      properties:
+        category: "guide"
+        topics: ["governance", "web3", "dao"]
+        difficulty: "beginner"
+        estimatedReadTime: 10
+        contractFulfillmentId: "fulfillment_789"
+
+  # Knowledge contribution contract
+  - name: knowledge_contribution_contract
+    description: Contract for creating/improving knowledge articles
+    properties:
+      contributionType: string # create_new, improve_existing, translate, update
+      targetArticleId: string # for improvements/updates
+      requiredQuality:
+        object
+        # minimumWords: number
+        # requiresCitation: boolean
+        # requiresExamples: boolean
+        # requiresDiagrams: boolean
+
+      # Rewards
+      baseReward: object
+      qualityBonus:
+        object
+        # excellentWriting: number
+        # highEngagement: number (views/helpful clicks)
+        # citedByOthers: number
+
+    example:
+      type: knowledge_contribution_contract
+      name: "Create Web3 Glossary Article"
+      properties:
+        contributionType: "create_new"
+        requiredQuality:
+          minimumWords: 1000
+          requiresCitation: true
+          requiresExamples: true
+
+  # IdeaBank submission
+  - name: idea
+    description: Member's proposal or idea
+    properties:
+      title: string
+      description: string
+      ideaType: string # mission_proposal, governance_proposal, improvement, innovation
+
+      # Content
+      problem: string
+      solution: string
+      benefits: object
+      feasibility: object
+      resources_needed: object
+
+      # Authorship
+      proposerId: string
+      coAuthors: string[]
+
+      # Community feedback
+      votes:
+        object
+        # upvotes: number
+        # downvotes: number
+      comments: object[]
+
+      # Status
+      status: string # submitted, under_discussion, approved, implemented, rejected
+      submittedAt: number
+
+      # If approved, becomes contract
+      implementationContractId: string
+
+  # Discussion thread
+  - name: discussion
+    description: Community discussion on topics/ideas
+    properties:
+      title: string
+      content: string
+      discussionType: string # question, debate, brainstorm, feedback
+
+      # Context
+      relatedTo: string # article ID, idea ID, proposal ID
+      relatedType: string
+
+      # Participants
+      startedBy: string
+      participantIds: string[]
+
+      # Activity
+      replies: object[]
+      resolvedAt: number
+      resolution: string
+
+      status: string # open, resolved, archived
+
+# ============================================================================
+# Connection Types - Knowledge Relationships
+# ============================================================================
+
+connectionTypes:
+  - name: authored
+    description: Member created knowledge article
+    fromType: member
+    toType: knowledge_article
+    metadata:
+      role: string # primary_author, contributor, translator
+      contributedAt: number
+
+  - name: improved
+    description: Member improved existing article
+    fromType: member
+    toType: knowledge_article
+    metadata:
+      improvementType: string
+      changesDescription: string
+      approvedAt: number
+
+  - name: found_helpful
+    description: Member found article useful
+    fromType: member
+    toType: knowledge_article
+    metadata:
+      markedAt: number
+
+  - name: cites
+    description: Article references another article
+    fromType: knowledge_article
+    toType: knowledge_article
+    metadata:
+      citationType: string
+
+  - name: proposed_idea
+    description: Member submitted idea
+    fromType: member
+    toType: idea
+    metadata:
+      proposedAt: number
+
+  - name: voted_on_idea
+    description: Member voted on idea
+    fromType: member
+    toType: idea
+    metadata:
+      vote: string # upvote, downvote
+      votedAt: number
+
+  - name: commented_on
+    description: Member participated in discussion
+    fromType: member
+    toType: discussion
+    metadata:
+      commentCount: number
+      lastCommentAt: number
+
+# ============================================================================
+# Event Types - Knowledge Actions
+# ============================================================================
+
+eventTypes:
+  - name: article_created
+    description: New knowledge article written
+    thingType: knowledge_article
+
+  - name: article_published
+    description: Article made public
+    thingType: knowledge_article
+
+  - name: article_updated
+    description: Article content improved
+    thingType: knowledge_article
+
+  - name: article_viewed
+    description: Member read article
+    thingType: knowledge_article
+
+  - name: article_marked_helpful
+    description: Member found article useful
+    thingType: knowledge_article
+
+  - name: idea_submitted
+    description: New idea proposed
+    thingType: idea
+
+  - name: idea_discussed
+    description: Community discussed idea
+    thingType: idea
+
+  - name: idea_voted
+    description: Member voted on idea
+    thingType: idea
+
+  - name: idea_approved
+    description: Idea accepted for implementation
+    thingType: idea
+
+  - name: idea_implemented
+    description: Approved idea became reality
+    thingType: idea
+
+  - name: discussion_started
+    description: New discussion thread created
+    thingType: discussion
+
+  - name: discussion_replied
+    description: Member added to discussion
+    thingType: discussion
+
+  - name: discussion_resolved
+    description: Discussion reached conclusion
+    thingType: discussion

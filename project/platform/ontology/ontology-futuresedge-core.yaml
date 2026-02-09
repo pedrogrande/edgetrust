@@ -1,0 +1,211 @@
+# @format
+
+# ============================================================================
+# Future's Edge Core Ontology
+# ============================================================================
+
+feature: futuresedge-core
+extends: core
+version: 1.0.0
+description: Core entities and relationships for Future's Edge platform
+author: Pete Argent
+
+# ============================================================================
+# Thing Types - Core Entities
+# ============================================================================
+
+thingTypes:
+  # Members and Identity
+  - name: member
+    description: Future's Edge member with trust score and progression
+    properties:
+      username: string
+      displayName: string
+      email: string
+      bio: string
+      avatar: string
+
+      # Progression
+      rank: string # recruit, novice, member, senior, elder
+      trustScore: number
+      impactScore: number
+      leadershipScore: number
+      gratitudePoints: number
+
+      # Activity tracking
+      activeMissions: number
+      completedMissions: number
+      activeContracts: number
+      totalContractsCompleted: number
+
+      # Balances
+      tokenBalance: number
+
+      # Skills
+      skillBadges: string[]
+      specializations: string[]
+
+      # Membership
+      joinedAt: number
+      initiatedAt: number
+      status: string # active, probation, suspended, archived
+
+      # Web3
+      walletAddress: string
+
+    example:
+      type: member
+      name: "Alex Chen"
+      properties:
+        username: "alex_chen"
+        displayName: "Alex Chen"
+        rank: "member"
+        trustScore: 250
+        impactScore: 100
+        tokenBalance: 1500
+        skillBadges: ["blockchain_basics", "design_thinking"]
+
+  # Field Offices (Maps to Groups)
+  - name: field_office
+    description: Regional or functional community hub
+    properties:
+      region: string
+      capacity: number
+      currentMembers: number
+      meetingSchedule: string
+      focusAreas: string[]
+      performanceScore: number
+
+      # Leadership
+      leaderId: string
+      coLeaders: string[]
+
+      # Resources
+      resourceAllocation: object
+
+      status: string # active, forming, dormant
+
+  # Divisions (Specialized groups)
+  - name: division
+    description: Specialized focus area or expertise domain
+    properties:
+      focusArea: string # sustainability, blockchain, policy, education
+      expertise: string[]
+      missionTypes: string[]
+      memberCount: number
+
+      # Leadership
+      headId: string
+      councilMembers: string[]
+
+      status: string # active, incubating, archived
+
+  # Squads (Small teams)
+  - name: squad
+    description: Small self-organizing team for specific missions
+    properties:
+      missionId: string
+      maxSize: number
+      currentSize: number
+      roles: object[]
+
+      status: string # forming, active, completed, disbanded
+
+# ============================================================================
+# Connection Types - Core Relationships
+# ============================================================================
+
+connectionTypes:
+  # Membership
+  - name: member_of
+    description: Member belongs to field office
+    fromType: member
+    toType: field_office
+    metadata:
+      joinedAt: number
+      role: string # member, lead, co-lead
+      contribution_score: number
+
+  - name: belongs_to
+    description: Member belongs to division
+    fromType: member
+    toType: division
+    metadata:
+      joinedAt: number
+      specialization: string
+      expertise_level: string
+
+  - name: in_squad
+    description: Member is part of squad
+    fromType: member
+    toType: squad
+    metadata:
+      role: string
+      joinedAt: number
+
+  # Leadership
+  - name: leads
+    description: Person leads group/office/division
+    fromType: member
+    toType: "*"
+    metadata:
+      appointed: number
+      term_ends: number
+
+  - name: mentors
+    description: Senior member mentors junior member
+    fromType: member
+    toType: member
+    metadata:
+      started: number
+      focus_areas: string[]
+
+  # Social
+  - name: connects_with
+    description: Members have made a connection
+    fromType: member
+    toType: member
+    metadata:
+      connectedAt: number
+      connectionStrength: number
+      interactions: number
+
+# ============================================================================
+# Event Types - Core Actions
+# ============================================================================
+
+eventTypes:
+  # Member lifecycle
+  - name: member_registered
+    description: New member registered interest
+    thingType: member
+
+  - name: member_accepted
+    description: Recruit accepted as probationary member
+    thingType: member
+
+  - name: member_initiated
+    description: Member completed initiation to full status
+    thingType: member
+
+  - name: member_promoted
+    description: Member rank increased
+    thingType: member
+
+  # Activity
+  - name: member_checked_in
+    description: Member attended briefing
+    thingType: member
+
+  - name: connection_made
+    description: Two members connected
+    thingType: member
+
+  # Scores
+  - name: trust_score_updated
+    description: Member trust score changed
+    thingType: member
+
+  - name: impact_recorded
+    description: Member created measurable impact
+    thingType: member

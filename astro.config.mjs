@@ -2,9 +2,10 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
+import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
-  site: 'https://one.ie',
+  site: 'https://futuresedge.pro',
   integrations: [react(), sitemap()],
   vite: {
     plugins: [
@@ -13,5 +14,6 @@ export default defineConfig({
       }),
     ],
   },
-  output: 'static',
+  output: 'server',
+  adapter: cloudflare(),
 });
