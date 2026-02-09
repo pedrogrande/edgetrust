@@ -267,3 +267,18 @@ export interface DashboardData {
     availableTasks: number;
   };
 }
+
+/**
+ * EVENTS dimension: Immutable audit ledger entries
+ */
+export interface Event {
+  id: number; // BIGSERIAL in PostgreSQL maps to number in JavaScript
+  timestamp: Date;
+  actor_id: string;
+  entity_type: string;
+  entity_id: string;
+  event_type: string;
+  metadata: Record<string, any>;
+}
+
+export type EventTypeFilter = 'all' | 'claim' | 'trust' | 'member';
