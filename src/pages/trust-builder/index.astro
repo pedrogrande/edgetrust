@@ -1,0 +1,135 @@
+---
+/**
+ * Trust Builder Hub Page
+ *
+ * Landing page showing active missions and CTAs
+ * Public access with progressive enhancement for authenticated users
+ */
+
+import Layout from '@/layouts/Layout.astro';
+import { Button } from '@/components/ui/button';
+import { MissionCard } from '@/components/trust-builder/MissionCard';
+import { sql } from '@/lib/db/connection';
+import { getCurrentUser } from '@/lib/auth';
+
+// Fetch active missions
+const missionsResponse = await fetch(
+  `${Astro.url.origin}/api/trust-builder/missions`
+);
+const { missions } = await missionsResponse.json();
+
+// Check if user is authenticated
+const currentUser = await getCurrentUser(Astro.request, sql);
+---
+
+<Layout title="Trust Builder - Future's Edge Season 0">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold mb-4">Trust Builder</h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
+        Season 0: Build trust, earn recognition, shape the future of
+        decentralized collaboration.
+      </p>
+      <p class="text-muted-foreground max-w-3xl mx-auto mb-8">
+        Complete tasks, submit proofs, and grow your Trust Score across five key
+        dimensions: Participation, Collaboration, Innovation, Leadership, and
+        Impact.
+      </p>
+
+      <div class="flex gap-4 justify-center flex-wrap">
+        <a href="/trust-builder/tasks">
+          <Button size="lg"> Explore Tasks </Button>
+        </a>
+
+        {
+          currentUser ? (
+            <a href="/trust-builder/dashboard">
+              <Button size="lg" variant="outline">
+                View Your Dashboard
+              </Button>
+            </a>
+          ) : (
+            <a href="/trust-builder/signin">
+              <Button size="lg" variant="outline">
+                Sign In
+              </Button>
+            </a>
+          )
+        }
+      </div>
+    </div>
+
+    <!-- Current Status Banner (if authenticated) -->
+    {
+      currentUser && (
+        <div class="bg-secondary/50 rounded-lg p-6 mb-12 border">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <p class="text-sm text-muted-foreground">
+                Welcome back, {currentUser.display_name || 'Explorer'}
+              </p>
+              <p class="text-lg font-semibold">{currentUser.member_id}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-muted-foreground">Trust Score</p>
+              <p class="text-2xl font-bold text-primary">
+                {currentUser.trust_score_cached}
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    <!-- Active Missions -->
+    <div class="mb-12">
+      <h2 class="text-3xl font-bold mb-6">Active Missions</h2>
+
+      {
+        missions.length === 0 ? (
+          <p class="text-center text-muted-foreground py-12">
+            No active missions yet. Check back soon!
+          </p>
+        ) : (
+          <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {missions.map((mission: any) => (
+              <MissionCard mission={mission} />
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    <!-- How It Works -->
+    <div class="bg-muted/30 rounded-lg p-8">
+      <h2 class="text-2xl font-bold mb-6 text-center">How It Works</h2>
+      <div class="grid gap-6 md:grid-cols-3">
+        <div class="text-center">
+          <div class="text-4xl mb-3">🎯</div>
+          <h3 class="font-semibold mb-2">1. Choose a Task</h3>
+          <p class="text-sm text-muted-foreground">
+            Browse available tasks across active missions. Each task has clear
+            criteria and point values.
+          </p>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl mb-3">✍️</div>
+          <h3 class="font-semibold mb-2">2. Submit Your Proof</h3>
+          <p class="text-sm text-muted-foreground">
+            Complete the task and submit evidence for each criterion. Some tasks
+            are auto-approved.
+          </p>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl mb-3">🏆</div>
+          <h3 class="font-semibold mb-2">3. Earn Trust Points</h3>
+          <p class="text-sm text-muted-foreground">
+            Approved claims add to your Trust Score and unlock new roles as you
+            grow.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
