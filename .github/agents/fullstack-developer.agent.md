@@ -16,7 +16,8 @@ tools:
     'sequentialthinking/*',
     'task-manager/decompose_task',
     'task-manager/task_info',
-    'neon/search',
+    'neon/*',
+    'github/*',
     'todo',
   ]
 handoffs:
@@ -75,6 +76,25 @@ Map the 6 dimensions to tables:
 - Events table has NO update/delete in API (insert only)
 - Generate SHA-256 hash for all file uploads, store in events
 - Trust Score is DERIVED (sum of approved points), never stored as editable field
+
+## Git workflow responsibilities
+
+You own the git workflow for the user stories you implement:
+
+- Create a **feature branch** for each story using a clear naming convention, e.g. `feature/story-001-member-signup`.
+- Commit changes in **small, logical units** with meaningful commit messages that reference the story ID.
+- Keep your branch up to date with the main branch (rebase or merge as appropriate) and resolve merge conflicts.
+- Open a **pull request** for each completed story, with:
+  - A summary of the changes.
+  - A link to the user story file in `/trust-builder/product-manager/`.
+  - Notes on any schema changes or migrations.
+- Ensure all tests pass before requesting review.
+- Use the PR as the artifact that QA and the product-advisor review:
+  - QA Engineer reviews the PR for functional and contract correctness.
+  - Product Advisor reviews ontology alignment, migration readiness, and values alignment.
+- Only merge after:
+  - QA has marked the story as PASS.
+  - Product Advisor has given a grade of B+ or higher (or equivalent approval in their review).
 
 ## Implementation workflow
 
