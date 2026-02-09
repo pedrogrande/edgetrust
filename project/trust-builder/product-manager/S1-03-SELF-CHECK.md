@@ -11,11 +11,13 @@
 ### Files Created (13 total)
 
 **API Endpoints (3)**:
+
 - ✅ `src/pages/api/trust-builder/missions.ts` - GET missions
 - ✅ `src/pages/api/trust-builder/tasks.ts` - GET tasks with mission filter
 - ✅ `src/pages/api/trust-builder/tasks/[id].ts` - GET single task detail
 
 **React Components (5)**:
+
 - ✅ `src/components/trust-builder/IncentiveBadge.tsx` - Dimension pill with color mapping
 - ✅ `src/components/trust-builder/TaskCard.tsx` - Task summary card
 - ✅ `src/components/trust-builder/TaskList.tsx` - Grid container with empty state
@@ -23,6 +25,7 @@
 - ✅ `src/components/trust-builder/MissionCard.tsx` - Mission summary card
 
 **Astro Pages (3)**:
+
 - ✅ `src/pages/trust-builder/index.astro` - Hub page with missions grid
 - ✅ `src/pages/trust-builder/tasks.astro` - Task list with filter
 - ✅ `src/pages/trust-builder/tasks/[id].astro` - Task detail with criteria
@@ -36,39 +39,44 @@
 ### Functional Requirements
 
 #### ✅ AC-1: Data Accuracy
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - Tested `/api/trust-builder/tasks` → returns 2 Open tasks from seed data
   - SQL query filters by `state = 'open'`
   - JOIN with groups table includes mission metadata
   - Aggregate incentive totals calculated correctly (50pts + 25pts = 75pts total)
 
 #### ✅ AC-2: Incentive Clarity
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - `IncentiveBadge` component displays dimension name + points
   - Color-coded by 5 canonical dimensions (blue=Participation, purple=Innovation, etc.)
   - Task cards show all incentives with individual and total values
   - Task detail page shows full incentive breakdown
 
 #### ✅ AC-3: Mission Filter
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - `TaskFilter` component sends `?mission=<uuid>` query param
   - API endpoint respects filter: `WHERE t.group_id = $1`
   - URL state persists on page reload
   - "All missions" option clears filter (removes query param)
 
 #### ✅ AC-4: Public Access
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - No `requireAuth()` calls in any endpoint or page
   - Tested `/trust-builder/tasks` without session cookie → loads successfully
   - Tested task detail page without auth → shows "Sign in to claim" CTA
 
 #### ✅ AC-5: Progressive Enhancement
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - Hub page calls `getCurrentUser()` and conditionally shows:
     - "View Your Dashboard" button if authenticated
     - "Sign In" button if not authenticated
@@ -81,22 +89,25 @@
 ### Ontology Compliance
 
 #### ✅ OC-1: Groups Table for Mission Data
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - SQL: `SELECT FROM groups g WHERE g.type = 'mission'`
   - No hardcoded mission names in components
   - Mission cards render dynamically from DB
 
 #### ✅ OC-2: Task Types from DB Enum
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - Task type badges display `task.task_type` value from DB
   - Uses `TaskType` enum from `@/types/trust-builder.ts`
   - No client-side type mapping needed
 
 #### ✅ OC-3: 5 Canonical Incentive Dimensions
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - `IncentiveBadge` maps colors for: Participation, Collaboration, Innovation, Leadership, Impact
   - No new dimensions introduced
   - Uses `IncentiveDimension` enum for type safety
@@ -106,30 +117,34 @@
 ### Technical Quality
 
 #### ✅ TQ-1: TypeScript Types from Centralized File
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - `pnpm exec tsc --noEmit` → No errors
   - All imports from `@/types/trust-builder.ts`
   - No inline `interface` definitions in components
 
 #### ✅ TQ-2: Proper HTTP Status Codes
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - Success: 200 OK
   - Task not found: 404 (tested with invalid UUID)
   - Server errors: 500 with JSON error message
   - All endpoints return `Content-Type: application/json`
 
 #### ✅ TQ-3: Minimal `client:load` Usage
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - Only `TaskFilter.tsx` uses `client:load` (interactive dropdown)
   - TaskCard, TaskList, IncentiveBadge, MissionCard are static (server-rendered)
   - Reduces JS bundle size and improves LCP
 
 #### ✅ TQ-4: Astro SSR Fetch at Request Time
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - All pages use `await fetch()` in frontmatter (runs on server)
   - No client-side data fetching
   - Data available on initial HTML response
@@ -139,31 +154,35 @@
 ### User Experience
 
 #### ✅ UX-1: Mobile-Responsive Layout
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - Task grid: `grid gap-6 sm:grid-cols-2 lg:grid-cols-3`
   - Cards stack on mobile (default 1 column)
   - Hub page CTAs wrap on small screens: `flex-wrap gap-4`
   - Task detail layout uses `max-w-4xl` container
 
 #### ✅ UX-2: Hover States and Clickable Areas
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - TaskCard: `hover:shadow-lg hover:border-primary/50`
   - MissionCard: `hover:shadow-lg hover:border-primary/50`
   - Card title: `group-hover:text-primary transition-colors`
   - Full card is wrapped in `<a>` tag (entire card clickable)
 
 #### ✅ UX-3: Loading States
+
 - **Status**: DEFERRED (acceptable for S1)
-- **Evidence**: 
+- **Evidence**:
   - SSR pages load instantly with full HTML (no client-side fetch needed)
   - Astro's built-in page transitions could be added in S2
   - Current UX: Fast page loads (< 2s) make spinners unnecessary
 
 #### ✅ UX-4: Empty State Message
+
 - **Status**: PASS
-- **Evidence**: 
+- **Evidence**:
   - `TaskList` component checks `tasks.length === 0`
   - Renders: "No tasks available yet. Check back soon!"
   - Same pattern in MissionCard grid on hub page
@@ -172,14 +191,14 @@
 
 ## Ontology Dimension Mapping (Verification)
 
-| Dimension       | Implementation                                                                 | ✓   |
-| --------------- | ------------------------------------------------------------------------------ | --- |
-| **Groups**      | Missions fetched from `groups` table WHERE `type = 'mission'`                  | ✅   |
-| **People**      | Auth check via `getCurrentUser()`, Member ID shown if authenticated           | ✅   |
-| **Things**      | Tasks filtered by `state = 'open'`, criteria displayed on detail page         | ✅   |
-| **Connections** | `task_incentives` join for point allocations, displayed in badges              | ✅   |
-| **Events**      | None (read-only feature, no state changes = no event logging)                  | ✅   |
-| **Knowledge**   | Aggregate totals (total_points_available, task_count) derived via SQL queries | ✅   |
+| Dimension       | Implementation                                                                | ✓   |
+| --------------- | ----------------------------------------------------------------------------- | --- |
+| **Groups**      | Missions fetched from `groups` table WHERE `type = 'mission'`                 | ✅  |
+| **People**      | Auth check via `getCurrentUser()`, Member ID shown if authenticated           | ✅  |
+| **Things**      | Tasks filtered by `state = 'open'`, criteria displayed on detail page         | ✅  |
+| **Connections** | `task_incentives` join for point allocations, displayed in badges             | ✅  |
+| **Events**      | None (read-only feature, no state changes = no event logging)                 | ✅  |
+| **Knowledge**   | Aggregate totals (total_points_available, task_count) derived via SQL queries | ✅  |
 
 ---
 
@@ -187,10 +206,10 @@
 
 | Rule                                         | Applies to S1-03? | Status |
 | -------------------------------------------- | ----------------- | ------ |
-| Published tasks have locked core fields      | ❌ (read-only)     | N/A    |
-| Events table is append-only (no UPDATE/DROP) | ❌ (no events)     | N/A    |
-| File uploads generate SHA-256 hashes         | ❌ (no uploads)    | N/A    |
-| Trust Score is derived, never manually set   | ❌ (display only)  | N/A    |
+| Published tasks have locked core fields      | ❌ (read-only)    | N/A    |
+| Events table is append-only (no UPDATE/DROP) | ❌ (no events)    | N/A    |
+| File uploads generate SHA-256 hashes         | ❌ (no uploads)   | N/A    |
+| Trust Score is derived, never manually set   | ❌ (display only) | N/A    |
 
 **Conclusion**: No contract rules violated (feature is purely read-only).
 
@@ -224,12 +243,12 @@ curl http://localhost:4322/api/trust-builder/tasks/invalid-uuid
 
 ### Page Load Tests (via browser)
 
-| URL                                                   | Result            | Notes                                 |
-| ----------------------------------------------------- | ----------------- | ------------------------------------- |
-| `/trust-builder`                                      | ✅ Loads           | Hero, 1 mission card, "How It Works"  |
-| `/trust-builder/tasks`                                | ✅ Loads           | 2 task cards, filter dropdown visible |
-| `/trust-builder/tasks?mission=<uuid>`                 | ✅ Loads (filtered) | Filter dropdown shows selected mission |
-| `/trust-builder/tasks/40000000-0000-0000-0000-000000000001` | ✅ Loads           | Full task detail, "Sign in to claim"  |
+| URL                                                         | Result              | Notes                                  |
+| ----------------------------------------------------------- | ------------------- | -------------------------------------- |
+| `/trust-builder`                                            | ✅ Loads            | Hero, 1 mission card, "How It Works"   |
+| `/trust-builder/tasks`                                      | ✅ Loads            | 2 task cards, filter dropdown visible  |
+| `/trust-builder/tasks?mission=<uuid>`                       | ✅ Loads (filtered) | Filter dropdown shows selected mission |
+| `/trust-builder/tasks/40000000-0000-0000-0000-000000000001` | ✅ Loads            | Full task detail, "Sign in to claim"   |
 
 ### TypeScript Compilation
 
@@ -302,11 +321,13 @@ pnpm exec tsc --noEmit
 **Status**: ✅ READY FOR QA VALIDATION
 
 **Test Environment**:
+
 - Dev server running on `http://localhost:4322`
 - Database seeded with Season 0 mission and 2 tasks
 - No authentication required for testing (public endpoints)
 
 **Priority Test Scenarios**:
+
 1. Mission hub page loads with mission cards
 2. Task list page displays 2 tasks
 3. Mission filter works (select from dropdown)
@@ -315,6 +336,7 @@ pnpm exec tsc --noEmit
 6. Mobile responsive layout (test on 375px viewport)
 
 **Expected QA Report Contents**:
+
 - ✅/❌ for each of the 5 acceptance criteria
 - Screenshots of key pages (hub, task list, task detail)
 - Mobile viewport testing results
