@@ -477,3 +477,56 @@ export async function getRecentClaims(memberId: string, limit: number = 5) {
     points_earned: number;
   }>;
 }
+
+// ============================================================================
+// EVENT LEDGER QUERIES (S1-06)
+// ============================================================================
+
+/**
+ * Get member's events with optional filtering and pagination
+ * Event-sourced audit trail for transparency and blockchain migration
+ */
+export async function getMemberEvents(
+  memberId: string,
+  options: {
+    eventType?: 'all' | 'claim' | 'trust' | 'member';
+    page?: number;
+    limit?: number;
+  } = {}
+): Promise<{ events: any[]; total: number; pages: number }> {
+  const { eventType, page = 1, limit = 20 } = options;
+  const offset = (page - 1) * limit;
+
+  // Build WHERE clause based on event type filter
+  let typeCondition = sql``;
+
+  if (eventType && eventType !== 'all') {
+    const pattern = `${eventType}.%`;
+    typeCondition = sql`AND event_type LIKE ${pattern}`;
+  }
+
+  // Count total matching events
+  const countResult = await sql`
+    SELECT COUNT(*) as total
+    FROM events
+    WHERE actor_id = ${memberId}
+    ${typeCondition}
+  `;
+  const total = Number((countResult[0] as { total: number }).total);
+
+  // Fetch paginated events
+  const result = await sql`
+    SELECT id, timestamp, actor_id, entity_type, entity_id, event_type, metadata
+    FROM events
+    WHERE actor_id = ${memberId}
+    ${typeCondition}
+    ORDER BY timestamp DESC
+    LIMIT ${limit} OFFSET ${offset}
+  `;
+
+  return {
+    events: result as any[],
+    total,
+    pages: Math.ceil(total / limit),
+  };
+}
