@@ -53,12 +53,20 @@ export const POST: APIRoute = async ({ request }) => {
     );
   } catch (error) {
     console.error('Sign-in error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    const isEmailConfigError = message === 'Email delivery is not configured';
+
     return new Response(
       JSON.stringify({
-        error: 'Failed to send verification code',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        error: isEmailConfigError
+          ? 'Email delivery is not configured'
+          : 'Failed to send verification code',
+        details: import.meta.env.DEV ? message : undefined,
       }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      {
+        status: isEmailConfigError ? 503 : 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
     );
   }
 };

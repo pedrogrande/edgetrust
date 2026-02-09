@@ -5,6 +5,8 @@
  * session management, and member identity.
  */
 
+import { Resend } from 'resend';
+
 import type { Member } from '@/types/trust-builder';
 
 /**
@@ -25,8 +27,13 @@ export async function sendVerificationEmail(
   email: string,
   code: string
 ): Promise<void> {
-  // S1 stub: Log to console
-  console.log(`
+  const apiKey = import.meta.env.RESEND_API_KEY;
+  const fromAddress =
+    import.meta.env.RESEND_FROM || 'Trust Builder <noreply@yourdomain.com>';
+
+  if (!apiKey) {
+    if (import.meta.env.DEV) {
+      console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║          Trust Builder Verification Code                  ║
 ╠═══════════════════════════════════════════════════════════╣
@@ -36,14 +43,30 @@ export async function sendVerificationEmail(
 ║  This code expires in 15 minutes                          ║
 ╚═══════════════════════════════════════════════════════════╝
   `);
+      return;
+    }
 
-  // S2 enhancement: Integrate with actual email service
-  // await emailService.send({
-  //   to: email,
-  //   subject: 'Your Trust Builder Verification Code',
-  //   template: 'verification-code',
-  //   data: { code, expiresIn: '15 minutes' }
-  // });
+    throw new Error('Email delivery is not configured');
+  }
+
+  const resend = new Resend(apiKey);
+
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: 'Your Trust Builder Verification Code',
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <h2>Your Trust Builder verification code</h2>
+        <p>Your code is:</p>
+        <p style="font-size: 24px; font-weight: bold; letter-spacing: 2px;">
+          ${code}
+        </p>
+        <p>This code expires in 15 minutes.</p>
+        <p>If you did not request this, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
 }
 
 /**
