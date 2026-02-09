@@ -1,0 +1,117 @@
+---
+/**
+ * Event Ledger Page
+ * Displays member's immutable audit trail
+ * S1-06: Append-Only Event Ledger UI
+ */
+
+import Layout from '@/layouts/Layout.astro';
+import { getCurrentUser } from '@/lib/auth';
+import { getMemberEvents } from '@/lib/db/queries';
+import EventCard from '@/components/trust-builder/EventCard';
+import EventFilter from '@/components/trust-builder/EventFilter';
+import DashboardEmptyState from '@/components/trust-builder/DashboardEmptyState';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { EventTypeFilter } from '@/types/trust-builder';
+
+const member = await getCurrentUser(Astro.request, Astro.cookies);
+if (!member) return Astro.redirect('/trust-builder/sign-in');
+
+// Parse query params
+const url = new URL(Astro.request.url);
+const eventType = (url.searchParams.get('type') as EventTypeFilter) || 'all';
+const page = parseInt(url.searchParams.get('page') || '1');
+
+// Fetch events
+const { events, total, pages } = await getMemberEvents(member.id, {
+  eventType: eventType === 'all' ? undefined : eventType,
+  page,
+  limit: 20,
+});
+
+// Empty state check (only member.created event)
+const isNewMember =
+  events.length === 1 && events[0].event_type === 'member.created';
+---
+
+<Layout title="Event Ledger - Trust Builder">
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold">Event Ledger</h1>
+      <p class="text-muted-foreground mt-2">
+        Your complete contribution history in Trust Builder's immutable ledger
+      </p>
+    </div>
+
+    <EventFilter
+      currentFilter={eventType}
+      baseUrl="/trust-builder/events"
+      client:load
+    />
+
+    <div class="mt-6 space-y-4">
+      {events.map((event) => <EventCard event={event} client:load />)}
+    </div>
+
+    {
+      isNewMember && (
+        <div class="mt-8">
+          <DashboardEmptyState
+            heading="Your Trust Journey Begins Here"
+            message="Every action you take in Trust Builder is recorded in this immutable ledger. As you complete tasks, submit claims, and earn trust points, you'll see your contribution history grow here."
+            primaryCta={{
+              text: 'Browse Available Tasks',
+              href: '/trust-builder/tasks',
+            }}
+            secondaryCta={null}
+            client:load
+          />
+        </div>
+      )
+    }
+
+    {
+      pages > 1 && (
+        <div class="flex items-center justify-between mt-8">
+          <p class="text-sm text-muted-foreground">
+            Page {page} of {pages} | Showing{' '}
+            {Math.min((page - 1) * 20 + 1, total)}-{Math.min(page * 20, total)}{' '}
+            of {total} events
+          </p>
+          <div class="flex gap-2">
+            <Button variant="outline" disabled={page === 1} asChild>
+              <a
+                href={`/trust-builder/events?type=${eventType}&page=${page - 1}`}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
+              </a>
+            </Button>
+            <Button variant="outline" disabled={page === pages} asChild>
+              <a
+                href={`/trust-builder/events?type=${eventType}&page=${page + 1}`}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      events.length === 0 && !isNewMember && (
+        <div class="mt-8 text-center p-12 border border-dashed rounded-lg">
+          <p class="text-muted-foreground">
+            No events found matching your filter.
+          </p>
+          <Button variant="link" asChild className="mt-4">
+            <a href="/trust-builder/events">View all events</a>
+          </Button>
+        </div>
+      )
+    }
+  </div>
+</Layout>
