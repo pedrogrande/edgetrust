@@ -298,6 +298,33 @@ export async function getClaimsByMember(
 }
 
 /**
+ * Get task criteria with verification methods
+ */
+export async function getTaskCriteria(taskId: string): Promise<
+  Array<{
+    id: string;
+    description: string;
+    verification_method: string;
+    proof_type: string;
+    sort_order: number;
+  }>
+> {
+  const result = await sql`
+    SELECT id, description, verification_method, proof_type, sort_order
+    FROM criteria
+    WHERE task_id = ${taskId}
+    ORDER BY sort_order
+  `;
+  return result as Array<{
+    id: string;
+    description: string;
+    verification_method: string;
+    proof_type: string;
+    sort_order: number;
+  }>;
+}
+
+/**
  * Get a claim by ID
  */
 export async function getClaimById(id: string): Promise<Claim | null> {

@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-02-09
 **Season 0 window**: February 10 – March 31, 2026
-**Status**: Sprint 1 — In Progress (S1-01 ✅, S1-02 ✅, S1-03 🏗️ Active)
+**Status**: Sprint 1 — In Progress (S1-01 ✅, S1-02 ✅, S1-03 ✅, S1-04 🧪 Testing)
 
 ---
 
@@ -202,18 +202,19 @@ And the Events table has no UPDATE or DELETE permissions
 
 ## Sprint 1 Summary
 
-| Story                | Points | Dependency              |
-| -------------------- | ------ | ----------------------- |
-| 1.1 Schema & Seed    | 3      | None                    |
-| 1.2 Auth & Identity  | 5      | 1.1                     |
-| 1.3 Public Task List | 3      | 1.1                     |
-| 1.4 Claim Submission | 5      | 1.1, 1.2                |
-| 1.5 Member Dashboard | 3      | 1.1, 1.2, 1.4           |
-| 1.6 Event Ledger     | 3      | 1.1 (woven through all) |
-| **Total**            | **22** |                         |
+| Story                | Points | Dependency              | Status                                            |
+| -------------------- | ------ | ----------------------- | ------------------------------------------------- |
+| 1.1 Schema & Seed    | 3      | None                    | ✅ DONE                                           |
+| 1.2 Auth & Identity  | 5      | 1.1                     | ✅ DONE                                           |
+| 1.3 Public Task List | 3      | 1.1                     | ✅ DONE                                           |
+| 1.4 Claim Submission | 5      | 1.1, 1.2, 1.3           | 🧪 TESTING (ready for QA)                         |
+| 1.5 Member Dashboard | 3      | 1.1, 1.2, 1.4           | ⏳ Blocked                                        |
+| 1.6 Event Ledger     | 3      | 1.1 (woven through all) | ⏳ Blocked                                        |
+| **Total**            | **22** | **Completed: 11/22**    |                                                   |
 
-**Sprint 1 velocity target**: 22 points over 2 weeks.
-Stories 1.1, 1.3, and 1.6 can begin in parallel. Stories 1.2 + 1.3 unblock 1.4, which unblocks 1.5.
+**Sprint 1 Progress**: 11 of 22 points complete (50%)
+**Velocity**: 3.7 points/day (based on 3 days elapsed)
+**Projection**: On track to complete Sprint 1 by Feb 15 (6 days remaining)
 
 ---
 
