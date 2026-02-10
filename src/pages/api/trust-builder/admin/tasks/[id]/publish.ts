@@ -19,10 +19,10 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     const { id: taskId } = params;
 
     if (!taskId) {
-      return new Response(
-        JSON.stringify({ error: 'Task ID is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Task ID is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Fetch task with metadata for event logging
@@ -36,10 +36,10 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     `;
 
     if (tasks.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Task not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Task not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const task = tasks[0];
@@ -49,7 +49,8 @@ export const PATCH: APIRoute = async ({ request, params }) => {
       if (task.state === TaskState.OPEN) {
         return new Response(
           JSON.stringify({
-            error: 'This task has already been published by another Guardian. Refresh the page to see the current state.',
+            error:
+              'This task has already been published by another Guardian. Refresh the page to see the current state.',
           }),
           { status: 409, headers: { 'Content-Type': 'application/json' } }
         );
@@ -78,7 +79,8 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     if (updatedTasks.length === 0) {
       return new Response(
         JSON.stringify({
-          error: 'This task has already been published. Refresh the page to see the current state.',
+          error:
+            'This task has already been published. Refresh the page to see the current state.',
         }),
         { status: 409, headers: { 'Content-Type': 'application/json' } }
       );
@@ -126,7 +128,11 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     return new Response(
       JSON.stringify({
         error: 'Failed to publish task',
-        details: import.meta.env.DEV ? (error instanceof Error ? error.message : String(error)) : undefined,
+        details: import.meta.env.DEV
+          ? error instanceof Error
+            ? error.message
+            : String(error)
+          : undefined,
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );

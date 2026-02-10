@@ -12,7 +12,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface Task {
   id: string;
   title: string;
-  state: 'draft' | 'open' | 'in_progress' | 'complete' | 'expired' | 'cancelled';
+  state:
+    | 'draft'
+    | 'open'
+    | 'in_progress'
+    | 'complete'
+    | 'expired'
+    | 'cancelled';
   mission_name: string;
   creator_member_id: string;
   creator_display_name: string | null;
@@ -71,9 +77,12 @@ export function TaskList() {
       setPublishingId(taskId);
       setError('');
 
-      const response = await fetch(`/api/trust-builder/admin/tasks/${taskId}/publish`, {
-        method: 'PATCH',
-      });
+      const response = await fetch(
+        `/api/trust-builder/admin/tasks/${taskId}/publish`,
+        {
+          method: 'PATCH',
+        }
+      );
 
       const data = await response.json();
 
@@ -92,7 +101,10 @@ export function TaskList() {
   };
 
   const getStateBadge = (state: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    const variants: Record<
+      string,
+      'default' | 'secondary' | 'destructive' | 'outline'
+    > = {
       draft: 'secondary',
       open: 'default',
       in_progress: 'outline',
@@ -101,11 +113,19 @@ export function TaskList() {
       cancelled: 'destructive',
     };
 
-    return <Badge variant={variants[state] || 'default'}>{state.toUpperCase()}</Badge>;
+    return (
+      <Badge variant={variants[state] || 'default'}>
+        {state.toUpperCase()}
+      </Badge>
+    );
   };
 
   if (loading) {
-    return <div className="text-center py-8 text-muted-foreground">Loading tasks...</div>;
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Loading tasks...
+      </div>
+    );
   }
 
   if (error) {
@@ -136,7 +156,8 @@ export function TaskList() {
                   {getStateBadge(task.state)}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Mission: {task.mission_name} • Created by {task.creator_member_id}
+                  Mission: {task.mission_name} • Created by{' '}
+                  {task.creator_member_id}
                 </div>
               </div>
               {task.state === 'draft' && (
@@ -183,7 +204,8 @@ export function TaskList() {
             {task.state === 'draft' && (
               <Alert className="mt-4">
                 <AlertDescription className="text-sm">
-                  This task is in <strong>Draft</strong>. It is not visible to members yet. Review and publish when ready.
+                  This task is in <strong>Draft</strong>. It is not visible to
+                  members yet. Review and publish when ready.
                 </AlertDescription>
               </Alert>
             )}
