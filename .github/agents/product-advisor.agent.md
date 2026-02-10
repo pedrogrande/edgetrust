@@ -27,7 +27,7 @@ handoffs:
   - label: Approve for Retro
     agent: retro-facilitator
     prompt: This implementation meets quality standards (Grade B+ or higher). Conduct retrospective and capture learnings.
-    send: false
+    send: true
   - label: Return to Product Owner
     agent: product-owner
     prompt: Consider my pre-implementation review of the newest story.
