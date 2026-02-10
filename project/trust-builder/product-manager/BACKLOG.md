@@ -1,8 +1,12 @@
 # Trust Builder — Season 0 Backlog
 
-**Last updated**: 2026-02-10
+**Last updated**: 2026-02-11
 **Season 0 window**: February 10 – March 31, 2026
-**Status**: Sprint 1 — Complete ✅ (22/22 points) | Sprint 2 — Kickoff
+**Status**:
+
+- Sprint 1 — Complete ✅ (22/22 points, Grade B+)
+- Sprint 2 — Complete ✅ (20/20 points, Grade A)
+- Sprint 3 — Ready for Kickoff 🚀 (20 points planned)
 
 ---
 
@@ -49,6 +53,75 @@ src/
 | `retro-facilitator`   | Process  | Captures lessons learned after each story/sprint        |
 
 **Workflow**: Product Owner writes story → `fullstack-developer` implements → `qa-engineer` validates → `product-advisor` grades → `retro-facilitator` captures lessons → next story.
+
+---
+
+## Sprint Progress Summary
+
+### Sprint 1 — Foundation (Complete ✅)
+
+**Grade**: B+ (3.3 GPA)  
+**Stories**: 6 delivered (Schema, Auth, Task List, Claims, Dashboard, Events)  
+**Migration Readiness**: 60-70% average  
+**Key Achievement**: End-to-end "contract" loop working (sign in → browse → claim → approve → see Trust Score)
+
+### Sprint 2 — Production Hardening (Complete ✅)
+
+**Grade**: A (4.0 GPA) — Quality improvement trend  
+**Stories Delivered**:
+
+- S2-01: Email Delivery Infrastructure (A-)
+- S2-02: Admin Task Creation UI (A-)
+- S2-03: File Upload Proofs + SHA-256 (A-)
+- S2-04: Peer Review Workflow (A)
+
+**Key Achievements**:
+
+- ✅ Strategic review adoption 0% → 100% (3-4x ROI proven)
+- ✅ Event sourcing architecture 95% migration-ready
+- ✅ Defense-in-depth pattern established (database + application)
+- ✅ Git workflow compliance 50% → 75%
+- ✅ Sanctuary culture embedded in architecture
+
+**Gaps Identified**:
+
+- ❌ 0 automated tests (CRITICAL for Sprint 3)
+- ❌ Manual testing not consistently scheduled
+- ❌ 25% git workflow violations remaining
+
+### Sprint 3 — Quality & Member Experience (Ready 🚀)
+
+**Goal**: Test infrastructure, member dashboard, automated workflows, role promotion  
+**Planned Stories** (20 points):
+
+- S3-01: Test Infrastructure + Git Enforcement (3 points, CRITICAL)
+- S3-02: Member Dashboard & Trust Score Viz (8 points, Complex)
+- S3-03: Background Jobs & Orphaned Claim Release (5 points, Moderate)
+- S3-04: Trust-Threshold Role Promotion (4 points, Simple)
+
+**Sprint Targets**:
+
+- 🎯 60% test coverage (up from 0%)
+- 🎯 100% git workflow compliance (pre-push hooks)
+- 🎯 100% manual testing (devices allocated)
+- 🎯 90%+ migration readiness average
+- 🎯 Grade A (maintain quality trend)
+
+**Process Improvements Applied**:
+
+- Strategic review mandatory for Complex stories (S3-02, proven 3-4x ROI)
+- Testing schedule built into every story (Day 5, 1 hour allocated)
+- AI-optimized story sizing (1-2 days per story)
+- Pre-push hooks enforce git workflow (100% compliance)
+- Character encoding checks (pre-commit hooks)
+
+**Learnings Incorporated**:
+
+- Event sourcing completeness (metadata sufficient for reconstruction)
+- Defense-in-depth for critical rules (database constraints + sanctuary messages)
+- Transaction boundaries as function signatures (PoolClient pattern)
+- Atomic assignment with `UPDATE...RETURNING` (gold standard)
+- Sanctuary culture as architecture (not just copy)
 
 ---
 

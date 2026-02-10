@@ -32,6 +32,10 @@ handoffs:
     agent: product-owner
     prompt: Consider my pre-implementation review of the newest story.
     send: true
+  - label: Conduct sprint retro
+    agent: retro-facilitator
+    prompt: Create a learnings and guidelines document based on your retros from each story retro and the retro report for the last sprint that includes the team's successes, struggles, and action items for improvement.
+    send: false
 ---
 
 # Product Advisor instructions

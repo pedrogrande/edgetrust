@@ -1,0 +1,64 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { getCurrentUser } from '@/lib/auth/index';
+import { sql } from '@/lib/db/connection';
+
+const currentUser = await getCurrentUser(Astro.request, sql);
+
+if (!currentUser) {
+  return Astro.redirect('/trust-builder/signin');
+}
+
+// Check reviewer eligibility
+const isEligibleReviewer = currentUser.trust_score_cached >= 250;
+---
+
+<Layout title="Review Queue - Trust Builder">
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Header with Sanctuary Culture Reminder -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-4">Review Queue</h1>
+      
+      {isEligibleReviewer ? (
+        <div class="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+          <h2 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+            🏛️ Your Role as a Reviewer
+          </h2>
+          <p class="text-blue-800 dark:text-blue-200 text-sm">
+            Your role is to <strong>help members succeed</strong>, not to gatekeep. When requesting revisions, 
+            explain what's missing and <strong>HOW to fix it</strong>. Remember: you were once a new member too.
+          </p>
+        </div>
+      ) : (
+        <div class="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+          <p class="text-amber-800 dark:text-amber-200">
+            You need a Trust Score of at least 250 (Contributor level) to review claims.
+            Your current score: <strong>{currentUser.trust_score_cached}</strong>
+          </p>
+          <p class="text-amber-700 dark:text-amber-300 text-sm mt-2">
+            Keep completing tasks to unlock reviewer privileges!
+          </p>
+        </div>
+      )}
+    </div>
+
+    {isEligibleReviewer && (
+      <div id="review-queue-container" data-user-id={currentUser.id}>
+        <!-- React component mounts here -->
+      </div>
+    )}
+  </div>
+</Layout>
+
+<script>
+  import { createRoot } from 'react-dom/client';
+  import { createElement } from 'react';
+  import ReviewQueue from '@/components/trust-builder/ReviewQueue';
+
+  const container = document.getElementById('review-queue-container');
+  if (container) {
+    const userId = container.getAttribute('data-user-id');
+    const root = createRoot(container);
+    root.render(createElement(ReviewQueue, { userId: userId || '' }));
+  }
+</script>

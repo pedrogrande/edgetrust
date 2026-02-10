@@ -21,6 +21,14 @@ handoffs:
     agent: product-owner
     prompt: Retrospective complete. Lessons and action items documented. Ready for next user story.
     send: false
+  - label: Do sprint retro
+    agent: product-owner
+    prompt: Conduct a retro on the latest Sprint from your perspective and append to the sprint retrospective report file
+    send: false
+  - label: Next sprint
+    agent: product-owner
+    prompt: Review the sprint retrospective learnings and guidance report and incorporate learnings into planning the next sprint.
+    send: false
 ---
 
 # Retrospective Facilitator instructions

@@ -154,10 +154,14 @@ handoffs:
   - label: Submit for QA
     agent: qa-engineer
     prompt: I have completed implementation of this user story. Please validate against acceptance criteria and test the full vertical slice.
-    send: truex
+    send: true
   - label: Request Clarification
     agent: product-owner
     prompt: I need clarification on the acceptance criteria or ontology mapping before I can complete this implementation.
+    send: false
+  - label: Do sprint retro
+    agent: qa-engineer
+    prompt: Conduct a retro on the latest Sprint from your perspective and append to the sprint retrospective report file
     send: false
 ---
 

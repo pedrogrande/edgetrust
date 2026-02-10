@@ -27,6 +27,10 @@ handoffs:
     agent: fullstack-developer
     prompt: QA found issues that need to be fixed. See detailed issue list below.
     send: false
+  - label: Do sprint retro
+    agent: product-advisor
+    prompt: Conduct a retro on the latest Sprint from your perspective and append to the sprint retrospective report file
+    send: false
 ---
 
 # QA Engineer instructions

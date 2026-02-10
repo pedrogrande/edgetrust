@@ -73,12 +73,15 @@ export enum EventType {
   CLAIM_REJECTED = 'claim.rejected', // placeholder for S2
   TRUST_UPDATED = 'trust.updated',
 
-  // S2: Admin & reviewer workflows (placeholders)
+  // S2: Admin & reviewer workflows
   TASK_CREATED = 'task.created',
   TASK_PUBLISHED = 'task.published',
   TASK_CANCELLED = 'task.cancelled',
   MEMBERSHIP_JOINED = 'membership.joined',
   CLAIM_REVISION_REQUESTED = 'claim.revision_requested',
+  CLAIM_REVIEW_ASSIGNED = 'claim.review_assigned',
+  CLAIM_REVIEW_TIMEOUT = 'claim.review_timeout',
+  CLAIM_REVIEW_RELEASED = 'claim.review_released',
 }
 
 // ============================================================================
@@ -188,6 +191,8 @@ export interface Claim {
   reviewed_at: Date | null;
   reviewer_id: string | null;
   review_notes: string | null;
+  revision_count: number; // S2-04: Track revision cycles (max 2)
+  review_deadline: Date | null; // S2-04: Auto-release after 72 hours
 }
 
 /**
