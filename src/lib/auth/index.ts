@@ -29,7 +29,9 @@ export async function sendVerificationEmail(
 ): Promise<void> {
   const apiKey = import.meta.env.RESEND_API_KEY;
   const fromAddress =
-    import.meta.env.RESEND_FROM || 'Trust Builder <noreply@yourdomain.com>';
+    import.meta.env.RESEND_FROM ||
+    import.meta.env.RESEND_FROM_EMAIL ||
+    'Trust Builder <noreply@yourdomain.com>';
 
   if (!apiKey) {
     if (import.meta.env.DEV) {
@@ -176,6 +178,42 @@ export async function requireAuth(request: Request, sql: any): Promise<Member> {
   if (!member) {
     throw new Response(JSON.stringify({ error: 'Authentication required' }), {
       status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return member;
+}
+
+/**
+ * Require specific role middleware
+ * Returns member or throws 403 error response with sanctuary-aligned message
+ *
+ * @param request - API request
+ * @param sql - NeonDB query function
+ * @param requiredRole - Role required (e.g., 'guardian')
+ * @returns Authenticated member with required role
+ * @throws Response with 403 if insufficient permissions
+ */
+export async function requireRole(
+  request: Request,
+  sql: any,
+  requiredRole: string
+): Promise<Member> {
+  const member = await requireAuth(request, sql);
+
+  if (member.role !== requiredRole) {
+    const roleMessages: Record<string, string> = {
+      guardian:
+        "Only Guardians can access this area. Guardians coordinate community activities and manage tasks. Your current role doesn't include these permissions. Reach out to a Guardian if you'd like to discuss contributing in this way.",
+    };
+
+    const message =
+      roleMessages[requiredRole] ||
+      `This action requires ${requiredRole} role. Your current role is ${member.role}.`;
+
+    throw new Response(JSON.stringify({ error: message }), {
+      status: 403,
       headers: { 'Content-Type': 'application/json' },
     });
   }
