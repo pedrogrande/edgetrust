@@ -33,6 +33,7 @@ export const POST: APIRoute = async ({ request }) => {
       description,
       task_type,
       verification_method,
+      proof_type = 'text', // S2-03: Default to 'text' if not provided
       max_completions,
       criteria = [],
       incentives = [], // Array of { incentive_id, points }
@@ -106,8 +107,8 @@ export const POST: APIRoute = async ({ request }) => {
         } = await client.query(
           `INSERT INTO tasks (
           group_id, title, rationale, description, state, task_type, 
-          verification_method, max_completions, version, created_by, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+          verification_method, proof_type, max_completions, version, created_by, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
         RETURNING *`,
           [
             group_id,
@@ -117,6 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
             TaskState.DRAFT,
             task_type,
             verification_method,
+            proof_type, // S2-03
             max_completions || null,
             1, // version
             member.id,
@@ -165,6 +167,7 @@ export const POST: APIRoute = async ({ request }) => {
               task_id: newTask.id,
               title: newTask.title,
               group_id: newTask.group_id,
+              proof_type: newTask.proof_type, // S2-03
               criteria_count: criteria.length,
               total_points: totalPoints,
               actor_id: member.id,

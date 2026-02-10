@@ -23,7 +23,9 @@ import { validateUUID, validateProofText } from './validators';
 
 export interface ProofInput {
   criterion_id: string;
-  proof_text: string;
+  proof_text?: string; // Optional for text-based proofs
+  file_id?: string; // S2-03: Optional for file-based proofs
+  file_hash?: string; // S2-03: SHA-256 hash for file integrity
 }
 
 export interface ClaimResult {
@@ -140,7 +142,32 @@ async function validateProofs(
   // Validate proof text meets minimum requirements
   for (const proof of proofs) {
     validateUUID(proof.criterion_id, 'criterion_id');
-    validateProofText(proof.proof_text);
+
+    // S2-03: Proof must have either text OR file (not both, not neither)
+    const hasText = proof.proof_text && proof.proof_text.trim().length > 0;
+    const hasFile = proof.file_id && proof.file_hash;
+
+    if (!hasText && !hasFile) {
+      throw new Error(
+        `Proof for criterion ${proof.criterion_id} must include either proof text or a file upload`
+      );
+    }
+
+    // Validate text proof if provided
+    if (hasText) {
+      validateProofText(proof.proof_text!);
+    }
+
+    // Validate file proof if provided
+    if (hasFile) {
+      validateUUID(proof.file_id!, 'file_id');
+      // Hash format: 64 hex characters (SHA-256)
+      if (!/^[a-f0-9]{64}$/i.test(proof.file_hash!)) {
+        throw new Error(
+          `Invalid file_hash format for criterion ${proof.criterion_id}. Expected 64-character hex string.`
+        );
+      }
+    }
   }
 }
 
@@ -168,28 +195,67 @@ async function createClaim(
 
 /**
  * Create proof records
+ * S2-03: Handles both text and file-based proofs
+ * For file proofs, moves file data from uploaded_files to proofs table
  */
 async function createProofs(
   client: PoolClient,
   claimId: string,
   proofs: ProofInput[]
 ): Promise<void> {
-  const values: string[] = [];
-  const params: string[] = [];
-  let paramIndex = 1;
-
   for (const proof of proofs) {
-    values.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2})`);
-    params.push(claimId, proof.criterion_id, proof.proof_text.trim());
-    paramIndex += 3;
+    // Case 1: Text-based proof
+    if (proof.proof_text) {
+      await client.query(
+        `INSERT INTO proofs (claim_id, criterion_id, content_text)
+         VALUES ($1, $2, $3)`,
+        [claimId, proof.criterion_id, proof.proof_text.trim()]
+      );
+    }
+    // Case 2: File-based proof
+    else if (proof.file_id && proof.file_hash) {
+      // Fetch file data from uploaded_files staging table
+      const fileResult = await client.query(
+        `SELECT file_data, file_size, mime_type, file_url
+         FROM uploaded_files
+         WHERE id = $1 AND file_hash = $2`,
+        [proof.file_id, proof.file_hash]
+      );
+
+      if (fileResult.rows.length === 0) {
+        throw new Error(
+          `File not found in staging table: ${proof.file_id}. The file may have expired or the hash does not match.`
+        );
+      }
+
+      const file = fileResult.rows[0] as {
+        file_data: Buffer;
+        file_size: number;
+        mime_type: string;
+        file_url: string;
+      };
+
+      // Insert proof with file data
+      await client.query(
+        `INSERT INTO proofs (claim_id, criterion_id, file_url, file_hash, file_size, mime_type, file_data)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          claimId,
+          proof.criterion_id,
+          file.file_url,
+          proof.file_hash,
+          file.file_size,
+          file.mime_type,
+          file.file_data,
+        ]
+      );
+
+      // Clean up staging table (file has been moved to proofs)
+      await client.query('DELETE FROM uploaded_files WHERE id = $1', [
+        proof.file_id,
+      ]);
+    }
   }
-
-  const query = `
-    INSERT INTO proofs (claim_id, criterion_id, content_text)
-    VALUES ${values.join(', ')}
-  `;
-
-  await client.query(query, params);
 }
 
 /**
