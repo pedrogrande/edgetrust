@@ -69,6 +69,7 @@ psql "$DATABASE_URL" -f project/trust-builder/product-manager/stories/S1-01-seed
 Create **two** environment files:
 
 #### `.env` (for build-time variables)
+
 ```bash
 DATABASE_URL=postgresql://your-connection-string
 RESEND_API_KEY=re_your_api_key
@@ -76,6 +77,7 @@ RESEND_FROM="Trust Builder <noreply@yourdomain.com>"
 ```
 
 #### `.dev.vars` (for Cloudflare Workers/runtime)
+
 ```bash
 DATABASE_URL=postgresql://your-connection-string
 RESEND_API_KEY=re_your_api_key
@@ -96,19 +98,21 @@ Visit `http://localhost:4321` 🎉
 
 The seed data creates these test accounts:
 
-| Member ID | Email | Role | Purpose |
-|-----------|-------|------|----------|
+| Member ID  | Email                  | Role     | Purpose        |
+| ---------- | ---------------------- | -------- | -------------- |
 | FE-M-00000 | system@futuresedge.org | guardian | System account |
-| FE-M-00002 | (set your email) | guardian | Admin testing |
-| FE-M-00005 | (set your email) | explorer | User testing |
+| FE-M-00002 | (set your email)       | guardian | Admin testing  |
+| FE-M-00005 | (set your email)       | explorer | User testing   |
 
 **To sign in:**
+
 1. Go to `/trust-builder/signin`
 2. Enter your email
 3. Check your inbox for the magic link
 4. Click to authenticate
 
 **Guardian access:**
+
 - Admin dashboard: `/trust-builder/admin/tasks`
 - Create tasks, manage missions, review claims
 

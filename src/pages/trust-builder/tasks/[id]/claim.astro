@@ -45,6 +45,7 @@ const taskResult = await sql`
     t.title,
     t.state,
     t.max_completions,
+    t.proof_type,
     g.name as mission_name
   FROM tasks t
   INNER JOIN groups g ON t.group_id = g.id
@@ -60,6 +61,7 @@ const task = taskResult[0] as {
   title: string;
   state: string;
   max_completions: number | null;
+  proof_type: 'text' | 'file' | 'text_or_file';
   mission_name: string;
 };
 
@@ -149,6 +151,7 @@ if (criteria.length === 0) {
       taskId={id}
       taskTitle={task.title}
       criteria={criteria}
+      proofType={task.proof_type}
     />
   </div>
 </Layout>

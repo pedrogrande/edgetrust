@@ -60,6 +60,9 @@ export function TaskCreateForm({ missions, incentives }: Props) {
   const [verificationMethod, setVerificationMethod] = useState<
     'auto_approve' | 'peer_review' | 'admin_review'
   >('auto_approve');
+  const [proofType, setProofType] = useState<'text' | 'file' | 'text_or_file'>(
+    'text'
+  ); // S2-03
   const [maxCompletions, setMaxCompletions] = useState('');
 
   // Criteria (at least one required)
@@ -129,6 +132,7 @@ export function TaskCreateForm({ missions, incentives }: Props) {
           description,
           task_type: taskType,
           verification_method: verificationMethod,
+          proof_type: proofType, // S2-03
           max_completions: maxCompletions ? parseInt(maxCompletions) : null,
           criteria: criteria.map((c) => ({
             description: c.description,
@@ -154,6 +158,7 @@ export function TaskCreateForm({ missions, incentives }: Props) {
       setTitle('');
       setRationale('');
       setDescription('');
+      setProofType('text'); // S2-03
       setMaxCompletions('');
       setCriteria([
         {
@@ -244,8 +249,8 @@ export function TaskCreateForm({ missions, incentives }: Props) {
         />
       </div>
 
-      {/* Task Type & Verification Method */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Task Type, Verification Method & Proof Type */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="task-type">Task Type *</Label>
           <Select
@@ -285,6 +290,33 @@ export function TaskCreateForm({ missions, incentives }: Props) {
               <SelectItem value="admin_review">Admin Review</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="proof-type">Proof Type * (S2-03)</Label>
+          <Select
+            value={proofType}
+            onValueChange={(v) =>
+              setProofType(v as 'text' | 'file' | 'text_or_file')
+            }
+            disabled={loading}
+            required
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="text">Text proof only</SelectItem>
+              <SelectItem value="file">File upload only</SelectItem>
+              <SelectItem value="text_or_file">
+                Text or file (flexible)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            What type of proof should members submit? File uploads enable
+            screenshots, documents, and photos.
+          </p>
         </div>
       </div>
 
