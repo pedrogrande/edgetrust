@@ -473,3 +473,439 @@ export async function processClaimSubmission(
     message: `Claim approved! You earned ${pointsEarned} points.`,
   };
 }
+
+// ============================================================================
+// S2-04: PEER REVIEW WORKFLOW
+// ============================================================================
+
+/**
+ * Assign a claim to a reviewer (atomic with race condition protection)
+ * Sets status to 'under_review' and establishes 72-hour deadline
+ */
+export async function assignClaimToReviewer(
+  client: PoolClient,
+  claimId: string,
+  reviewerId: string
+): Promise<{ success: boolean; queueDepth: number }> {
+  validateUUID(claimId, 'claimId');
+  validateUUID(reviewerId, 'reviewerId');
+
+  // Get queue depth for event metadata
+  const queueResult = await client.query(
+    "SELECT COUNT(*) as count FROM claims WHERE status = 'submitted'"
+  );
+  const queueDepth = Number((queueResult.rows[0] as { count: string }).count);
+
+  // Atomic claim assignment with race condition protection
+  const result = await client.query(
+    `UPDATE claims 
+     SET status = $1, 
+         reviewer_id = $2,
+         review_deadline = NOW() + INTERVAL '72 hours',
+         reviewed_at = NOW()
+     WHERE id = $3 
+       AND status = 'submitted'
+       AND reviewer_id IS NULL
+     RETURNING id, member_id`,
+    [ClaimStatus.UNDER_REVIEW, reviewerId, claimId]
+  );
+
+  if (result.rows.length === 0) {
+    return { success: false, queueDepth };
+  }
+
+  const claim = result.rows[0] as { id: string; member_id: string };
+
+  // Log assignment event
+  await logEventBatch(client, [
+    {
+      actorId: reviewerId,
+      entityType: 'claim',
+      entityId: claim.id,
+      eventType: EventType.CLAIM_REVIEW_ASSIGNED,
+      metadata: {
+        reviewer_id: reviewerId,
+        claimant_id: claim.member_id,
+        assignment_method: 'self_selected',
+        queue_depth_at_assignment: queueDepth,
+      },
+    },
+  ]);
+
+  return { success: true, queueDepth };
+}
+
+/**
+ * Approve a claim after peer review (atomic trust score update)
+ */
+export async function approveClaimWithReview(
+  client: PoolClient,
+  claimId: string,
+  reviewerId: string,
+  verificationNotes?: string
+): Promise<ClaimResult> {
+  validateUUID(claimId, 'claimId');
+  validateUUID(reviewerId, 'reviewerId');
+
+  // Get claim details
+  const claimResult = await client.query(
+    `SELECT c.id, c.member_id, c.task_id, c.reviewer_id, c.status
+     FROM claims c
+     WHERE c.id = $1`,
+    [claimId]
+  );
+
+  if (claimResult.rows.length === 0) {
+    throw new Error('CLAIM_NOT_FOUND');
+  }
+
+  const claim = claimResult.rows[0] as {
+    id: string;
+    member_id: string;
+    task_id: string;
+    reviewer_id: string | null;
+    status: string;
+  };
+
+  // Validation: Must be under review by this reviewer
+  if (claim.reviewer_id !== reviewerId) {
+    throw new Error('UNAUTHORIZED_REVIEWER');
+  }
+
+  if (claim.status !== ClaimStatus.UNDER_REVIEW) {
+    throw new Error('CLAIM_NOT_UNDER_REVIEW');
+  }
+
+  // Calculate points
+  const pointsResult = await calculateTaskPoints(client, claim.task_id);
+  const { total: pointsEarned, dimensions } = pointsResult;
+
+  // Get trust score before update
+  const trustScoreBefore = await getMemberTrustScore(client, claim.member_id);
+
+  // Update claim status
+  await client.query(
+    `UPDATE claims 
+     SET status = $1, reviewed_at = NOW(), review_notes = $2, review_deadline = NULL
+     WHERE id = $3`,
+    [ClaimStatus.APPROVED, verificationNotes || null, claimId]
+  );
+
+  // Update member trust score (atomic)
+  await client.query(
+    'UPDATE members SET trust_score_cached = trust_score_cached + $1 WHERE id = $2',
+    [pointsEarned, claim.member_id]
+  );
+
+  const trustScoreAfter = trustScoreBefore + pointsEarned;
+
+  // Log events
+  await logEventBatch(client, [
+    {
+      actorId: reviewerId,
+      entityType: 'claim',
+      entityId: claimId,
+      eventType: EventType.CLAIM_APPROVED,
+      metadata: {
+        reviewer_id: reviewerId,
+        verification_notes: verificationNotes || null,
+        points_awarded: pointsEarned,
+        dimensions,
+        trust_score_before: trustScoreBefore,
+        trust_score_after: trustScoreAfter,
+        peer_reviewed: true,
+      },
+    },
+    {
+      actorId: claim.member_id,
+      entityType: 'member',
+      entityId: claim.member_id,
+      eventType: EventType.TRUST_UPDATED,
+      metadata: {
+        claim_id: claimId,
+        points_added: pointsEarned,
+        dimensions,
+      },
+    },
+  ]);
+
+  return {
+    claimId,
+    status: ClaimStatus.APPROVED,
+    pointsEarned,
+    newTrustScore: trustScoreAfter,
+    message: `Claim approved by peer reviewer! You earned ${pointsEarned} points.`,
+  };
+}
+
+/**
+ * Reject a claim with required reason
+ */
+export async function rejectClaim(
+  client: PoolClient,
+  claimId: string,
+  reviewerId: string,
+  rejectionReason: string
+): Promise<void> {
+  validateUUID(claimId, 'claimId');
+  validateUUID(reviewerId, 'reviewerId');
+
+  if (!rejectionReason || rejectionReason.trim().length < 20) {
+    throw new Error(
+      'Rejection reason required (minimum 20 characters) to help the member understand what needs improvement'
+    );
+  }
+
+  // Get claim details
+  const claimResult = await client.query(
+    `SELECT c.id, c.member_id, c.reviewer_id, c.status
+     FROM claims c
+     WHERE c.id = $1`,
+    [claimId]
+  );
+
+  if (claimResult.rows.length === 0) {
+    throw new Error('CLAIM_NOT_FOUND');
+  }
+
+  const claim = claimResult.rows[0] as {
+    id: string;
+    member_id: string;
+    reviewer_id: string | null;
+    status: string;
+  };
+
+  // Validation
+  if (claim.reviewer_id !== reviewerId) {
+    throw new Error('UNAUTHORIZED_REVIEWER');
+  }
+
+  if (claim.status !== ClaimStatus.UNDER_REVIEW) {
+    throw new Error('CLAIM_NOT_UNDER_REVIEW');
+  }
+
+  // Update claim status
+  await client.query(
+    `UPDATE claims 
+     SET status = $1, reviewed_at = NOW(), review_notes = $2, review_deadline = NULL
+     WHERE id = $3`,
+    [ClaimStatus.REJECTED, rejectionReason, claimId]
+  );
+
+  // Log rejection event
+  await logEventBatch(client, [
+    {
+      actorId: reviewerId,
+      entityType: 'claim',
+      entityId: claimId,
+      eventType: EventType.CLAIM_REJECTED,
+      metadata: {
+        reviewer_id: reviewerId,
+        claimant_id: claim.member_id,
+        rejection_reason: rejectionReason,
+        can_resubmit: false,
+      },
+    },
+  ]);
+}
+
+/**
+ * Request revision on a claim (max 2 revision cycles)
+ */
+export async function requestRevision(
+  client: PoolClient,
+  claimId: string,
+  reviewerId: string,
+  feedback: string
+): Promise<void> {
+  validateUUID(claimId, 'claimId');
+  validateUUID(reviewerId, 'reviewerId');
+
+  if (!feedback || feedback.trim().length < 20) {
+    throw new Error(
+      'Revision feedback required (minimum 20 characters) to help the member improve their submission'
+    );
+  }
+
+  // Get claim details including revision count
+  const claimResult = await client.query(
+    `SELECT c.id, c.member_id, c.reviewer_id, c.status, c.revision_count
+     FROM claims c
+     WHERE c.id = $1`,
+    [claimId]
+  );
+
+  if (claimResult.rows.length === 0) {
+    throw new Error('CLAIM_NOT_FOUND');
+  }
+
+  const claim = claimResult.rows[0] as {
+    id: string;
+    member_id: string;
+    reviewer_id: string | null;
+    status: string;
+    revision_count: number;
+  };
+
+  // Validation
+  if (claim.reviewer_id !== reviewerId) {
+    throw new Error('UNAUTHORIZED_REVIEWER');
+  }
+
+  if (claim.status !== ClaimStatus.UNDER_REVIEW) {
+    throw new Error('CLAIM_NOT_UNDER_REVIEW');
+  }
+
+  // Check revision limit (max 2 revisions)
+  if (claim.revision_count >= 2) {
+    throw new Error(
+      'MAX_REVISIONS_REACHED: This claim has reached the maximum revision limit (2). Please reject or approve.'
+    );
+  }
+
+  // Get current proof hashes for audit trail
+  const proofsResult = await client.query(
+    `SELECT file_hash FROM proofs WHERE claim_id = $1 AND file_hash IS NOT NULL`,
+    [claimId]
+  );
+  const previousHashes = proofsResult.rows.map(
+    (row) => (row as { file_hash: string }).file_hash
+  );
+
+  // Increment revision count and reset to submitted
+  await client.query(
+    `UPDATE claims 
+     SET status = $1, 
+         revision_count = revision_count + 1,
+         reviewer_id = NULL,
+         review_notes = $2,
+         review_deadline = NULL,
+         reviewed_at = NOW()
+     WHERE id = $3`,
+    [ClaimStatus.SUBMITTED, feedback, claimId]
+  );
+
+  // Log revision request event
+  await logEventBatch(client, [
+    {
+      actorId: reviewerId,
+      entityType: 'claim',
+      entityId: claimId,
+      eventType: EventType.CLAIM_REVISION_REQUESTED,
+      metadata: {
+        reviewer_id: reviewerId,
+        claimant_id: claim.member_id,
+        feedback,
+        revision_count: claim.revision_count + 1,
+        previous_submission_hashes: previousHashes,
+      },
+    },
+  ]);
+}
+
+/**
+ * Release a claim back to the queue (voluntary reviewer action)
+ */
+export async function releaseClaim(
+  client: PoolClient,
+  claimId: string,
+  reviewerId: string,
+  reason?: string
+): Promise<void> {
+  validateUUID(claimId, 'claimId');
+  validateUUID(reviewerId, 'reviewerId');
+
+  // Get claim details
+  const claimResult = await client.query(
+    `SELECT c.id, c.member_id, c.reviewer_id, c.status
+     FROM claims c
+     WHERE c.id = $1`,
+    [claimId]
+  );
+
+  if (claimResult.rows.length === 0) {
+    throw new Error('CLAIM_NOT_FOUND');
+  }
+
+  const claim = claimResult.rows[0] as {
+    id: string;
+    member_id: string;
+    reviewer_id: string | null;
+    status: string;
+  };
+
+  // Validation
+  if (claim.reviewer_id !== reviewerId) {
+    throw new Error('UNAUTHORIZED_REVIEWER');
+  }
+
+  if (claim.status !== ClaimStatus.UNDER_REVIEW) {
+    throw new Error('CLAIM_NOT_UNDER_REVIEW');
+  }
+
+  // Reset to submitted
+  await client.query(
+    `UPDATE claims 
+     SET status = $1, reviewer_id = NULL, review_deadline = NULL
+     WHERE id = $2`,
+    [ClaimStatus.SUBMITTED, claimId]
+  );
+
+  // Log release event
+  await logEventBatch(client, [
+    {
+      actorId: reviewerId,
+      entityType: 'claim',
+      entityId: claimId,
+      eventType: EventType.CLAIM_REVIEW_RELEASED,
+      metadata: {
+        reviewer_id: reviewerId,
+        claimant_id: claim.member_id,
+        reason: reason || 'Reviewer voluntarily released claim',
+      },
+    },
+  ]);
+}
+
+/**
+ * Auto-release orphaned claims (timeout after 72 hours)
+ * Should be called by background job/cron
+ */
+export async function releaseOrphanedClaims(
+  client: PoolClient
+): Promise<number> {
+  const result = await client.query(
+    `UPDATE claims 
+     SET status = $1, reviewer_id = NULL, review_deadline = NULL
+     WHERE status = $2
+       AND review_deadline < NOW()
+     RETURNING id, reviewer_id, member_id`,
+    [ClaimStatus.SUBMITTED, ClaimStatus.UNDER_REVIEW]
+  );
+
+  // Log timeout events for each orphaned claim
+  const events = result.rows.map((row) => {
+    const claim = row as {
+      id: string;
+      reviewer_id: string;
+      member_id: string;
+    };
+    return {
+      actorId: claim.reviewer_id,
+      entityType: 'claim' as const,
+      entityId: claim.id,
+      eventType: EventType.CLAIM_REVIEW_TIMEOUT,
+      metadata: {
+        reviewer_id: claim.reviewer_id,
+        claimant_id: claim.member_id,
+        reason: 'Review deadline exceeded 72 hours',
+      },
+    };
+  });
+
+  if (events.length > 0) {
+    await logEventBatch(client, events);
+  }
+
+  return result.rows.length;
+}

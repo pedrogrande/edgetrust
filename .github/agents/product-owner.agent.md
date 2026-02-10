@@ -27,6 +27,10 @@ handoffs:
     agent: product-advisor
     prompt: I need strategic guidance on the newest story before implementation
     send: true
+  - label: Do sprint retro
+    agent: fullstack-developer
+    prompt: Conduct a retro on the latest Sprint from your perspective and append to the sprint retrospective report file
+    send: false
 ---
 
 # Product Owner instructions
