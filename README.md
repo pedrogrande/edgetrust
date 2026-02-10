@@ -1,6 +1,8 @@
-# 🚀 Astro 5 + Shadcn/UI + Tailwind v4 Starter Kit
+# Trust Builder
 
-A production-ready, enterprise-grade starter template combining Astro's performance with Shadcn's beautiful components and Tailwind CSS v4's modern CSS-based configuration. Featuring advanced blog system, search, accessibility, and SEO optimizations.
+**Trust Builder** is a vertical-slice implementation of the Future's Edge platform, built on the ONE ontology. It demonstrates crypto-native patterns for mission-based collaboration, claim verification, and trust score accrual—without deploying to a blockchain.
+
+Built with Astro 5, React 19, NeonDB (Postgres), and Shadcn UI.
 
 ## ✨ What's Inside
 
@@ -19,43 +21,125 @@ A production-ready, enterprise-grade starter template combining Astro's performa
 
 ![Astro Shadcn UI](https://astro-shadcn.one.ie/screenshots/screenshot.png)
 
-## ⚡ Quick Start
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **[Bun](https://bun.sh/)** v1.0+ (JavaScript runtime)
+- **[NeonDB](https://neon.tech/)** account (serverless Postgres)
+- **[Resend](https://resend.com/)** account (email magic links)
+- Git
+
+### 1. Clone and Install
 
 ```bash
 # Clone the repository
-git clone https://github.com/one-ie/astro-shadcn.git
+git clone https://github.com/pedrogrande/edgetrust.git
+cd edgetrust
 
-# Navigate to project
-cd astro-shadcn
-
-# Install dependencies (using pnpm recommended)
-pnpm install
-
-# Start development server
-pnpm dev
-
-# Or with npm
-npm install
-npm run dev
+# Install dependencies
+bun install
 ```
 
-Visit `http://localhost:4321` - You're ready to go! 🎉
+### 2. Database Setup
 
-## 🔐 Environment Variables
-
-Set these in your local environment or `.dev.vars`:
+1. Create a new project on [NeonDB](https://neon.tech/)
+2. Copy your connection string (it looks like `postgresql://user:pass@host/dbname`)
+3. Run the schema migration:
 
 ```bash
-# Required for database access
-DATABASE_URL=postgresql://...
+# Set your database URL
+export DATABASE_URL="postgresql://your-connection-string"
 
-# Required for production email delivery
-RESEND_API_KEY=re_...
+# Deploy schema
+psql "$DATABASE_URL" -f project/trust-builder/product-manager/stories/S1-01-schema.sql
 
-# Optional: override sender address (either variable name works)
-RESEND_FROM="Trust Builder <noreply@yourdomain.com>"
-RESEND_FROM_EMAIL="Trust Builder <noreply@yourdomain.com>"
+# Load seed data (creates test accounts and initial mission)
+psql "$DATABASE_URL" -f project/trust-builder/product-manager/stories/S1-01-seed.sql
 ```
+
+### 3. Email Setup
+
+1. Sign up for [Resend](https://resend.com/)
+2. Get your API key from the dashboard
+3. (Optional) Verify your sending domain for production use
+
+### 4. Environment Configuration
+
+Create **two** environment files:
+
+#### `.env` (for build-time variables)
+```bash
+DATABASE_URL=postgresql://your-connection-string
+RESEND_API_KEY=re_your_api_key
+RESEND_FROM="Trust Builder <noreply@yourdomain.com>"
+```
+
+#### `.dev.vars` (for Cloudflare Workers/runtime)
+```bash
+DATABASE_URL=postgresql://your-connection-string
+RESEND_API_KEY=re_your_api_key
+RESEND_FROM="Trust Builder <noreply@yourdomain.com>"
+```
+
+⚠️ **Security**: Both files are gitignored. Never commit credentials.
+
+### 5. Run the Dev Server
+
+```bash
+bun dev
+```
+
+Visit `http://localhost:4321` 🎉
+
+### 6. Test Accounts
+
+The seed data creates these test accounts:
+
+| Member ID | Email | Role | Purpose |
+|-----------|-------|------|----------|
+| FE-M-00000 | system@futuresedge.org | guardian | System account |
+| FE-M-00002 | (set your email) | guardian | Admin testing |
+| FE-M-00005 | (set your email) | explorer | User testing |
+
+**To sign in:**
+1. Go to `/trust-builder/signin`
+2. Enter your email
+3. Check your inbox for the magic link
+4. Click to authenticate
+
+**Guardian access:**
+- Admin dashboard: `/trust-builder/admin/tasks`
+- Create tasks, manage missions, review claims
+
+## � Architecture
+
+### ONE Ontology Dimensions
+
+Trust Builder implements 6 core dimensions:
+
+1. **Groups** → `missions` table (parent missions, sub-missions)
+2. **People** → `members` table (FE-M-XXXXX IDs, roles, trust scores)
+3. **Things** → `tasks` table (draft → open → completed states)
+4. **Connections** → `claims`, `memberships`, `task_incentives` tables
+5. **Events** → `events` table (append-only audit log)
+6. **Knowledge** → Derived via queries (trust scores calculated from approved claims)
+
+### Quasi-Smart Contract Patterns
+
+- **State Immutability**: Published tasks lock core fields
+- **Event Sourcing**: All state changes logged to `events` table
+- **Atomic Transactions**: Multi-table writes use `withTransaction()`
+- **Optimistic Locking**: Race condition protection via `WHERE state='draft'`
+- **Trust Score Derivation**: Never stored directly, always calculated
+
+### Tech Stack
+
+- **Frontend**: Astro 5 (SSR) + React 19 islands + Shadcn UI
+- **Database**: NeonDB (serverless Postgres) + Drizzle ORM
+- **Auth**: Email magic links (14-day HttpOnly cookies)
+- **Runtime**: Bun (development) / Node 20+ (production)
+- **Deployment**: Compatible with Cloudflare Pages, Vercel, Netlify
 
 ## 🎯 Key Features
 

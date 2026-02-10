@@ -1,0 +1,7 @@
+# Cloudflare Workers / Runtime Environment Variables
+# Copy this file to .dev.vars and fill in your actual values
+# NEVER commit .dev.vars to git!
+
+DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
+RESEND_API_KEY=re_your_api_key_here
+RESEND_FROM="Trust Builder <noreply@yourdomain.com>"
