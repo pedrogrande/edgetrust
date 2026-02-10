@@ -24,7 +24,7 @@ handoffs:
   - label: Submit for QA
     agent: qa-engineer
     prompt: I have completed implementation of this user story. Please validate against acceptance criteria and test the full vertical slice.
-    send: false
+    send: truex
   - label: Request Clarification
     agent: product-owner
     prompt: I need clarification on the acceptance criteria or ontology mapping before I can complete this implementation.

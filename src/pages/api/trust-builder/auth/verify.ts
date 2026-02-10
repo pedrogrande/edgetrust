@@ -44,7 +44,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Find or create member with atomic transaction
     const result = await withTransaction(dbUrl, async (client) => {
-      const normalizedEmail = email.toLowerCase();
+      const normalizedEmail = email.toLowerCase().trim();
 
       // Check if member exists
       const existingResult = await client.query(

@@ -64,7 +64,11 @@ export function TaskCreateForm({ missions, incentives }: Props) {
 
   // Criteria (at least one required)
   const [criteria, setCriteria] = useState<Criterion[]>([
-    { description: '', proof_type: 'text', verification_method: 'auto_approve' },
+    {
+      description: '',
+      proof_type: 'text',
+      verification_method: 'auto_approve',
+    },
   ]);
 
   // Incentives (at least one with points > 0 required)
@@ -75,7 +79,11 @@ export function TaskCreateForm({ missions, incentives }: Props) {
   const handleAddCriterion = () => {
     setCriteria([
       ...criteria,
-      { description: '', proof_type: 'text', verification_method: verificationMethod },
+      {
+        description: '',
+        proof_type: 'text',
+        verification_method: verificationMethod,
+      },
     ]);
   };
 
@@ -85,7 +93,11 @@ export function TaskCreateForm({ missions, incentives }: Props) {
     }
   };
 
-  const handleCriterionChange = (index: number, field: keyof Criterion, value: string) => {
+  const handleCriterionChange = (
+    index: number,
+    field: keyof Criterion,
+    value: string
+  ) => {
     const updated = [...criteria];
     updated[index] = { ...updated[index], [field]: value };
     setCriteria(updated);
@@ -133,16 +145,26 @@ export function TaskCreateForm({ missions, incentives }: Props) {
         throw new Error(data.error || 'Failed to create task draft');
       }
 
-      setSuccess(`Task draft created: "${data.task.title}". You can now publish it to make it visible to members.`);
-      
+      setSuccess(
+        `Task draft created: "${data.task.title}". You can now publish it to make it visible to members.`
+      );
+
       // Reset form
       setGroupId('');
       setTitle('');
       setRationale('');
       setDescription('');
       setMaxCompletions('');
-      setCriteria([{ description: '', proof_type: 'text', verification_method: 'auto_approve' }]);
-      setTaskIncentives(incentives.map((inc) => ({ incentive_id: inc.id, points: 0 })));
+      setCriteria([
+        {
+          description: '',
+          proof_type: 'text',
+          verification_method: 'auto_approve',
+        },
+      ]);
+      setTaskIncentives(
+        incentives.map((inc) => ({ incentive_id: inc.id, points: 0 }))
+      );
 
       // Refresh task list
       window.dispatchEvent(new Event('task-created'));
@@ -158,7 +180,12 @@ export function TaskCreateForm({ missions, incentives }: Props) {
       {/* Mission Selection */}
       <div className="space-y-2">
         <Label htmlFor="mission">Mission *</Label>
-        <Select value={groupId} onValueChange={setGroupId} disabled={loading} required>
+        <Select
+          value={groupId}
+          onValueChange={setGroupId}
+          disabled={loading}
+          required
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select a mission" />
           </SelectTrigger>
@@ -242,7 +269,9 @@ export function TaskCreateForm({ missions, incentives }: Props) {
           <Select
             value={verificationMethod}
             onValueChange={(v) =>
-              setVerificationMethod(v as 'auto_approve' | 'peer_review' | 'admin_review')
+              setVerificationMethod(
+                v as 'auto_approve' | 'peer_review' | 'admin_review'
+              )
             }
             disabled={loading}
             required
@@ -272,7 +301,8 @@ export function TaskCreateForm({ missions, incentives }: Props) {
           disabled={loading}
         />
         <p className="text-sm text-muted-foreground">
-          Limits how many members can complete this task. Leave empty for unlimited.
+          Limits how many members can complete this task. Leave empty for
+          unlimited.
         </p>
       </div>
 
@@ -280,7 +310,13 @@ export function TaskCreateForm({ missions, incentives }: Props) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Label>Acceptance Criteria * (at least 1 required)</Label>
-          <Button type="button" variant="outline" size="sm" onClick={handleAddCriterion} disabled={loading}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddCriterion}
+            disabled={loading}
+          >
             Add Criterion
           </Button>
         </div>
@@ -289,7 +325,9 @@ export function TaskCreateForm({ missions, incentives }: Props) {
           <Card key={index}>
             <CardContent className="pt-4 space-y-3">
               <div className="flex items-start justify-between">
-                <span className="text-sm font-medium">Criterion {index + 1}</span>
+                <span className="text-sm font-medium">
+                  Criterion {index + 1}
+                </span>
                 {criteria.length > 1 && (
                   <Button
                     type="button"
@@ -305,7 +343,9 @@ export function TaskCreateForm({ missions, incentives }: Props) {
 
               <Textarea
                 value={criterion.description}
-                onChange={(e) => handleCriterionChange(index, 'description', e.target.value)}
+                onChange={(e) =>
+                  handleCriterionChange(index, 'description', e.target.value)
+                }
                 placeholder="What must be done to satisfy this criterion?"
                 rows={2}
                 required
@@ -317,7 +357,9 @@ export function TaskCreateForm({ missions, incentives }: Props) {
                   <Label className="text-xs">Proof Type</Label>
                   <Select
                     value={criterion.proof_type}
-                    onValueChange={(v) => handleCriterionChange(index, 'proof_type', v)}
+                    onValueChange={(v) =>
+                      handleCriterionChange(index, 'proof_type', v)
+                    }
                     disabled={loading}
                   >
                     <SelectTrigger>
@@ -335,7 +377,9 @@ export function TaskCreateForm({ missions, incentives }: Props) {
                   <Label className="text-xs">Verification</Label>
                   <Select
                     value={criterion.verification_method}
-                    onValueChange={(v) => handleCriterionChange(index, 'verification_method', v)}
+                    onValueChange={(v) =>
+                      handleCriterionChange(index, 'verification_method', v)
+                    }
                     disabled={loading}
                   >
                     <SelectTrigger>
@@ -359,10 +403,15 @@ export function TaskCreateForm({ missions, incentives }: Props) {
         <Label>Incentive Points * (at least 1 point required)</Label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {incentives.map((incentive) => {
-            const taskIncentive = taskIncentives.find((ti) => ti.incentive_id === incentive.id);
+            const taskIncentive = taskIncentives.find(
+              (ti) => ti.incentive_id === incentive.id
+            );
             return (
               <div key={incentive.id} className="space-y-2">
-                <Label htmlFor={`incentive-${incentive.id}`} className="text-sm font-medium">
+                <Label
+                  htmlFor={`incentive-${incentive.id}`}
+                  className="text-sm font-medium"
+                >
                   {incentive.name}
                 </Label>
                 <Input
@@ -370,10 +419,17 @@ export function TaskCreateForm({ missions, incentives }: Props) {
                   type="number"
                   min="0"
                   value={taskIncentive?.points || 0}
-                  onChange={(e) => handleIncentiveChange(incentive.id, parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleIncentiveChange(
+                      incentive.id,
+                      parseInt(e.target.value) || 0
+                    )
+                  }
                   disabled={loading}
                 />
-                <p className="text-xs text-muted-foreground">{incentive.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {incentive.description}
+                </p>
               </div>
             );
           })}
@@ -399,8 +455,9 @@ export function TaskCreateForm({ missions, incentives }: Props) {
       {/* Warning about publishing */}
       <Alert>
         <AlertDescription>
-          <strong>Note:</strong> This will create a <strong>draft task</strong>. It is not visible to members yet.
-          After reviewing, you can publish it below to make it visible.{' '}
+          <strong>Note:</strong> This will create a <strong>draft task</strong>.
+          It is not visible to members yet. After reviewing, you can publish it
+          below to make it visible.{' '}
           <strong>Once published, core fields cannot be changed.</strong>
         </AlertDescription>
       </Alert>
