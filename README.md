@@ -41,6 +41,22 @@ npm run dev
 
 Visit `http://localhost:4321` - You're ready to go! 🎉
 
+## 🔐 Environment Variables
+
+Set these in your local environment or `.dev.vars`:
+
+```bash
+# Required for database access
+DATABASE_URL=postgresql://...
+
+# Required for production email delivery
+RESEND_API_KEY=re_...
+
+# Optional: override sender address (either variable name works)
+RESEND_FROM="Trust Builder <noreply@yourdomain.com>"
+RESEND_FROM_EMAIL="Trust Builder <noreply@yourdomain.com>"
+```
+
 ## 🎯 Key Features
 
 ### 📝 Advanced Blog System
@@ -94,21 +110,27 @@ import { Card } from '@/components/ui/card';
 ### Available Components (50+)
 
 **Layout & Navigation:**
+
 - ✅ Sidebar, Navigation Menu, Breadcrumb, Tabs
 
 **Forms & Inputs:**
+
 - ✅ Button, Input, Textarea, Select, Checkbox, Radio Group, Switch, Slider, Calendar, Date Picker, Input OTP
 
 **Data Display:**
+
 - ✅ Card, Table, Badge, Avatar, Progress, Chart (Recharts), Carousel
 
 **Feedback & Overlays:**
+
 - ✅ Dialog, Alert Dialog, Sheet, Drawer, Popover, Tooltip, Toast, Sonner, Alert
 
 **Interactive:**
+
 - ✅ Accordion, Collapsible, Dropdown Menu, Context Menu, Menubar, Hover Card, Command, Resizable Panels
 
 **Custom Components:**
+
 - ✅ BlogSearch - Real-time blog post filtering
 - ✅ TableOfContents - Auto-generated with active tracking
 - ✅ ShareButtons - Native + social media sharing
@@ -263,17 +285,20 @@ Edit `src/styles/global.css` to customize colors:
 ### Common Issues & Solutions
 
 **Type Errors After Adding Content**
+
 ```bash
 npx astro sync  # Regenerate content collection types
 ```
 
 **Component Not Interactive**
+
 ```astro
 <!-- Add client:load directive -->
 <Button client:load>Click me</Button>
 ```
 
 **Styling Issues**
+
 ```astro
 <!-- Use className (not class) in React components -->
 <Button className="custom-class">Button</Button>
@@ -283,6 +308,7 @@ npx astro sync  # Regenerate content collection types
 ```
 
 **Build Failures**
+
 ```bash
 npx astro check  # Check for TypeScript errors
 pnpm lint        # Check for linting errors
@@ -348,12 +374,14 @@ Perfect scores across all metrics:
 ## 📚 Documentation & Resources
 
 ### Official Docs
+
 - [Astro Documentation](https://docs.astro.build)
 - [Shadcn/UI Components](https://ui.shadcn.com/docs/components/accordion)
 - [Tailwind CSS v4 Docs](https://tailwindcss.com/docs)
 - [React 19 Release](https://react.dev/blog/2025/01/29/react-19)
 
 ### Project Docs
+
 - `CLAUDE.md` - AI assistant instructions and architecture guide
 - `improve.md` - Detailed improvement roadmap and best practices
 
@@ -379,6 +407,7 @@ Perfect scores across all metrics:
 ## 🎯 Use Cases
 
 Perfect for:
+
 - 📝 Technical blogs and documentation sites
 - 🎨 Portfolio and personal websites
 - 🚀 Landing pages and marketing sites

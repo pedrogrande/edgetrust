@@ -45,8 +45,11 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
         throw new Error(data.error || 'Failed to send verification code');
       }
 
+      const expiresNote = data.expiresIn
+        ? ` Code expires in ${data.expiresIn}.`
+        : '';
       setSuccess(
-        `Verification code sent to ${email}. Check your console (S1 stub).`
+        `${data.message || 'Verification code sent.'} Check your inbox.${expiresNote}`
       );
       setStep('code');
     } catch (err) {
@@ -188,7 +191,7 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
             variant="outline"
             className="w-full"
             onClick={() => handleEmailSubmit(new Event('submit') as any)}
-            disabled={loading}
+            disabled={loading || !email}
           >
             Resend Code
           </Button>

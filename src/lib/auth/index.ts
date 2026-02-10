@@ -5,6 +5,8 @@
  * session management, and member identity.
  */
 
+import { Resend } from 'resend';
+
 import type { Member } from '@/types/trust-builder';
 
 /**
@@ -25,8 +27,15 @@ export async function sendVerificationEmail(
   email: string,
   code: string
 ): Promise<void> {
-  // S1 stub: Log to console
-  console.log(`
+  const apiKey = import.meta.env.RESEND_API_KEY;
+  const fromAddress =
+    import.meta.env.RESEND_FROM ||
+    import.meta.env.RESEND_FROM_EMAIL ||
+    'Trust Builder <noreply@yourdomain.com>';
+
+  if (!apiKey) {
+    if (import.meta.env.DEV) {
+      console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║          Trust Builder Verification Code                  ║
 ╠═══════════════════════════════════════════════════════════╣
@@ -36,14 +45,30 @@ export async function sendVerificationEmail(
 ║  This code expires in 15 minutes                          ║
 ╚═══════════════════════════════════════════════════════════╝
   `);
+      return;
+    }
 
-  // S2 enhancement: Integrate with actual email service
-  // await emailService.send({
-  //   to: email,
-  //   subject: 'Your Trust Builder Verification Code',
-  //   template: 'verification-code',
-  //   data: { code, expiresIn: '15 minutes' }
-  // });
+    throw new Error('Email delivery is not configured');
+  }
+
+  const resend = new Resend(apiKey);
+
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: 'Your Trust Builder Verification Code',
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <h2>Your Trust Builder verification code</h2>
+        <p>Your code is:</p>
+        <p style="font-size: 24px; font-weight: bold; letter-spacing: 2px;">
+          ${code}
+        </p>
+        <p>This code expires in 15 minutes.</p>
+        <p>If you did not request this, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
 }
 
 /**
@@ -153,6 +178,42 @@ export async function requireAuth(request: Request, sql: any): Promise<Member> {
   if (!member) {
     throw new Response(JSON.stringify({ error: 'Authentication required' }), {
       status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return member;
+}
+
+/**
+ * Require specific role middleware
+ * Returns member or throws 403 error response with sanctuary-aligned message
+ *
+ * @param request - API request
+ * @param sql - NeonDB query function
+ * @param requiredRole - Role required (e.g., 'guardian')
+ * @returns Authenticated member with required role
+ * @throws Response with 403 if insufficient permissions
+ */
+export async function requireRole(
+  request: Request,
+  sql: any,
+  requiredRole: string
+): Promise<Member> {
+  const member = await requireAuth(request, sql);
+
+  if (member.role !== requiredRole) {
+    const roleMessages: Record<string, string> = {
+      guardian:
+        "Only Guardians can access this area. Guardians coordinate community activities and manage tasks. Your current role doesn't include these permissions. Reach out to a Guardian if you'd like to discuss contributing in this way.",
+    };
+
+    const message =
+      roleMessages[requiredRole] ||
+      `This action requires ${requiredRole} role. Your current role is ${member.role}.`;
+
+    throw new Response(JSON.stringify({ error: message }), {
+      status: 403,
       headers: { 'Content-Type': 'application/json' },
     });
   }
