@@ -147,14 +147,18 @@ export async function getCurrentUser(
   const cookieHeader = request.headers.get('cookie');
   const memberId = parseSession(cookieHeader);
 
-  if (!memberId) return null;
+  if (!memberId) {
+    return null;
+  }
 
   try {
     const result = await sql`
       SELECT * FROM members WHERE id = ${memberId}
     `;
 
-    if (result.length === 0) return null;
+    if (result.length === 0) {
+      return null;
+    }
 
     return result[0] as Member;
   } catch (error) {
