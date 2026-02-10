@@ -22,7 +22,7 @@ handoffs:
   - label: Pass to Advisor
     agent: product-advisor
     prompt: QA validation complete. All acceptance criteria passed. Ready for strategic review.
-    send: false
+    send: true
   - label: Return to Developer
     agent: fullstack-developer
     prompt: QA found issues that need to be fixed. See detailed issue list below.
