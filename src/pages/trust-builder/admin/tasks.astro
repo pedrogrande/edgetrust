@@ -1,0 +1,68 @@
+---
+/**
+ * Admin Task Management Page
+ * Guardian-only interface for creating and publishing tasks
+ */
+import Layout from '@/layouts/Layout.astro';
+import { getCurrentUser } from '@/lib/auth';
+import { sql } from '@/lib/db/connection';
+import { TaskCreateForm } from '@/components/trust-builder/admin/TaskCreateForm';
+import { TaskList } from '@/components/trust-builder/admin/TaskList';
+
+const member = await getCurrentUser(Astro.request, sql);
+
+// Redirect if not authenticated or not Guardian
+if (!member || member.role !== 'guardian') {
+  return Astro.redirect('/trust-builder/signin');
+}
+
+// Fetch missions for task assignment
+const missions = await sql`
+  SELECT id, name, description
+  FROM groups
+  WHERE type = 'mission' AND status = 'active'
+  ORDER BY name
+`;
+
+// Fetch incentive dimensions
+const incentives = await sql`
+  SELECT id, name, description
+  FROM incentives
+  ORDER BY name
+`;
+---
+
+<Layout title="Admin: Task Management">
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-3xl font-bold">Task Management</h1>
+        <span class="text-sm text-muted-foreground">
+          Guardian: {member.member_id}
+        </span>
+      </div>
+      <p class="text-muted-foreground">
+        Create and publish tasks for the community. Draft tasks are private
+        until published.
+      </p>
+    </div>
+
+    <div class="grid gap-8">
+      <!-- Task Creation Form -->
+      <div class="border rounded-lg p-6 bg-card">
+        <h2 class="text-2xl font-semibold mb-4">Create New Task</h2>
+        <TaskCreateForm 
+          client:load
+          missions={missions}
+          incentives={incentives}
+        />
+      </div>
+
+      <!-- Task List -->
+      <div class="border rounded-lg p-6 bg-card">
+        <h2 class="text-2xl font-semibold mb-4">All Tasks</h2>
+        <TaskList client:load />
+      </div>
+    </div>
+  </div>
+</Layout>

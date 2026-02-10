@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-02-10
 **Season 0 window**: February 10 – March 31, 2026
-**Status**: Sprint 1 — Complete ✅ (22/22 points) | Sprint 2 — Planning
+**Status**: Sprint 1 — Complete ✅ (22/22 points) | Sprint 2 — Kickoff
 
 ---
 
@@ -221,6 +221,7 @@ And the Events table has no UPDATE or DELETE permissions
 
 ## Sprint 2 Candidates (Preview)
 
+- Email Delivery for Verification Codes (Resend integration)
 - Admin Task Creation UI (Draft → Open with immutability lock)
 - File Upload proofs with SHA-256 hashing
 - Reviewer queue and Peer Review workflows
