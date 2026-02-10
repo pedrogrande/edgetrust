@@ -52,8 +52,9 @@ DATABASE_URL=postgresql://...
 # Required for production email delivery
 RESEND_API_KEY=re_...
 
-# Optional: override sender address
+# Optional: override sender address (either variable name works)
 RESEND_FROM="Trust Builder <noreply@yourdomain.com>"
+RESEND_FROM_EMAIL="Trust Builder <noreply@yourdomain.com>"
 ```
 
 ## 🎯 Key Features

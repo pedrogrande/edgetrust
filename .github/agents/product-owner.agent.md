@@ -22,7 +22,7 @@ handoffs:
   - label: Implement Story
     agent: fullstack-developer
     prompt: Implement this user story as a vertical feature slice (NeonDB schema + API + React UI). Follow the ONE ontology dimensions and quasi-smart contract rules defined in the acceptance criteria.
-    send: false
+    send: true
   - label: Request Advisor Input
     agent: product-advisor
     prompt: I need strategic guidance on the newest story before implementation
