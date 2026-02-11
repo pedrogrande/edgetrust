@@ -57,20 +57,21 @@ export async function detectCacheDrift(
   const cached = memberResult.rows[0]?.trust_score_cached || 0;
   const calculated = await calculateTrustScore(client, memberId);
   const drift = calculated - cached;
-  
+
   // Log discrepancies >5 points for proactive monitoring
   if (Math.abs(drift) > 5) {
     await logEvent(client, {
       event_type: 'trust_score.drift_detected',
-      metadata: { cached, calculated, drift }
+      metadata: { cached, calculated, drift },
     });
   }
-  
+
   return { cached, calculated, drift, driftPercentage };
 }
 ```
 
-**Migration Readiness**: 
+**Migration Readiness**:
+
 - Trust Score cache can be dropped during blockchain migration
 - Member data stable with UUIDs and FE-M-XXXXX IDs
 - All derived values reconstructable from events
@@ -115,11 +116,17 @@ export async function detectCacheDrift(
 await client.query(
   `INSERT INTO events (actor_id, entity_type, entity_id, event_type, metadata)
    VALUES ($1, $2, $3, $4, $5)`,
-  [currentUser.id, 'member', currentUser.id, 'dashboard.viewed', {
-    trust_score_at_view: data.trustScore,
-    role: data.member.role,
-    load_time_ms: Date.now() - startTime,  // Performance tracking
-  }]
+  [
+    currentUser.id,
+    'member',
+    currentUser.id,
+    'dashboard.viewed',
+    {
+      trust_score_at_view: data.trustScore,
+      role: data.member.role,
+      load_time_ms: Date.now() - startTime, // Performance tracking
+    },
+  ]
 );
 ```
 
@@ -149,7 +156,8 @@ GROUP BY COALESCE(i.name, incentive->>'name')
 
 **Impact**: Migration confidence increases from 88% → 92%. If event metadata incomplete, system falls back to task definition (still event-linked via claim_id). Radar chart always displays accurate data.
 
-**Test Coverage**: 
+**Test Coverage**:
+
 - AC11 test validates fallback behavior
 - AC4 test validates aggregation accuracy
 - All 23 tests passing in 5ms
@@ -225,12 +233,13 @@ const thresholds = {
 
 ```sql
 -- schema.sql line 195
-CREATE INDEX idx_events_claim_approved_member 
+CREATE INDEX idx_events_claim_approved_member
   ON events (event_type, (metadata->>'member_id'))
   WHERE event_type = 'claim.approved';
 ```
 
 **Impact**:
+
 - Query optimization from O(n) full table scan → O(log n) index scan
 - Dashboard load time <100ms at scale (measured 5ms in tests)
 - AC1, AC26 validated (2s load target met)
@@ -264,7 +273,7 @@ CREATE INDEX idx_events_claim_approved_member
 ```tsx
 // Status badge colors (AC25 compliant)
 const badgeStyles = {
-  submitted: 'bg-blue-100 text-blue-900',      // High contrast
+  submitted: 'bg-blue-100 text-blue-900', // High contrast
   'under review': 'bg-yellow-100 text-yellow-900',
   approved: 'bg-green-100 text-green-900',
   'revision requested': 'bg-orange-100 text-orange-900',
@@ -272,7 +281,7 @@ const badgeStyles = {
 };
 ```
 
-**Impact**: All badge colors use text-*-900 variants (high contrast against *-100 backgrounds).
+**Impact**: All badge colors use text-_-900 variants (high contrast against _-100 backgrounds).
 
 **Manual Test Confirmation**: User validated AC25 (WCAG contrast check passed).
 
@@ -286,7 +295,8 @@ const badgeStyles = {
 
 **Solution Delivered**: `detectCacheDrift()` function with logging (see People section above).
 
-**Impact**: 
+**Impact**:
+
 - Early warning system for cache corruption
 - Admin dashboard can display drift alerts
 - Logs provide audit trail for debugging
@@ -318,12 +328,13 @@ if (loadTime > 2000) {
 return new Response(JSON.stringify(dashboardData), {
   headers: {
     'Content-Type': 'application/json',
-    'X-Load-Time': `${loadTime}ms`,  // Frontend can display/track
+    'X-Load-Time': `${loadTime}ms`, // Frontend can display/track
   },
 });
 ```
 
-**Impact**: 
+**Impact**:
+
 - Ops visibility into performance degradation
 - Frontend can display "Loaded in 87ms" to users (transparency)
 - Logs provide data for capacity planning
@@ -339,12 +350,14 @@ return new Response(JSON.stringify(dashboardData), {
 ### Pre-Migration Assessment (Strategic Review): 88%
 
 **Blockers Identified**:
+
 1. Query performance at scale (CRITICAL)
 2. Incomplete event metadata handling (HIGH)
 
 ### Post-Implementation Assessment: **92%** ✅
 
 **Blockers Resolved**:
+
 1. ✅ Composite index added (100ms query time at 100k events)
 2. ✅ Fallback query pattern (radar chart always accurate)
 
@@ -382,6 +395,7 @@ return new Response(JSON.stringify(dashboardData), {
 **Pattern Review**:
 
 1. **Claim Approval** (S2-04):
+
    ```
    BEGIN TRANSACTION
      UPDATE claims SET status = 'approved'
@@ -432,10 +446,11 @@ return new Response(JSON.stringify(dashboardData), {
 **Evidence in UX**:
 
 **Empty State Messaging** (new members, 0 Trust Score):
+
 ```tsx
 // MemberDashboard.tsx - AC20 implementation
 <p className="text-muted-foreground">
-  Welcome to your Trust Builder journey! 
+  Welcome to your Trust Builder journey!
   Complete tasks to start earning Trust Score.
 </p>
 <a href="/trust-builder/tasks" className="text-primary hover:underline">
@@ -444,24 +459,32 @@ return new Response(JSON.stringify(dashboardData), {
 ```
 
 **Progress Bar Encouragement** (75%+ to next role):
+
 ```tsx
 // ProgressToSteward.tsx - AC18 implementation
-{percentage >= 75 && (
-  <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-    You're almost there! Keep up the great work 🎉
-  </p>
-)}
+{
+  percentage >= 75 && (
+    <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+      You're almost there! Keep up the great work 🎉
+    </p>
+  );
+}
 ```
 
 **Error Handling** (API failures):
+
 ```typescript
 // dashboard/me.ts - Sanctuary error response
-return new Response(JSON.stringify({
-  error: 'We could not load your dashboard right now.',
-  reason: 'This might be a temporary connection issue.',
-  nextSteps: 'Please try refreshing the page. If this persists, contact support@futuresedge.org',
-  supportUrl: '/support',
-}), { status: 500 });
+return new Response(
+  JSON.stringify({
+    error: 'We could not load your dashboard right now.',
+    reason: 'This might be a temporary connection issue.',
+    nextSteps:
+      'Please try refreshing the page. If this persists, contact support@futuresedge.org',
+    supportUrl: '/support',
+  }),
+  { status: 500 }
+);
 ```
 
 **Contrast with Typical Implementations**:
@@ -565,6 +588,7 @@ return new Response(JSON.stringify({
    - Loading states have `role="status"` and `aria-live="polite"`
 
 **Accessibility Test Results** (Manual):
+
 - AC21: Keyboard navigation ✅ PASS
 - AC22: Focus indicators ✅ PASS
 - AC23: Screen reader Trust Score ✅ PASS
@@ -623,22 +647,23 @@ return new Response(JSON.stringify({
    - Accessibility patterns → all future UI stories
    - Test-first workflow → Sprint 3 standard
 
-**Why not A+**: 
+**Why not A+**:
+
 - Minor threshold versioning gap (4% migration readiness)
 - No explicit test for event corruption edge case (2% events dimension)
 - These are acceptable tradeoffs for MVP complexity
 
 **Comparison to Pre-Implementation Grade (A-, 3.7)**:
 
-| Criterion              | Pre (Strategic Review) | Post (This Review) | Delta |
-| ---------------------- | ---------------------- | ------------------ | ----- |
-| Ontology Correctness   | 88%                    | 96%                | +8%   |
-| Migration Readiness    | 88%                    | 92%                | +4%   |
-| Strategic Fixes        | N/A (guidance)         | 100%               | +100% |
-| Quasi-Smart Contract   | 95%                    | 100%               | +5%   |
-| Values Alignment       | 90%                    | 100%               | +10%  |
-| Test Quality           | N/A                    | 100%               | +100% |
-| **Overall Grade**      | **A- (3.7)**           | **A (4.0)**        | +0.3  |
+| Criterion            | Pre (Strategic Review) | Post (This Review) | Delta |
+| -------------------- | ---------------------- | ------------------ | ----- |
+| Ontology Correctness | 88%                    | 96%                | +8%   |
+| Migration Readiness  | 88%                    | 92%                | +4%   |
+| Strategic Fixes      | N/A (guidance)         | 100%               | +100% |
+| Quasi-Smart Contract | 95%                    | 100%               | +5%   |
+| Values Alignment     | 90%                    | 100%               | +10%  |
+| Test Quality         | N/A                    | 100%               | +100% |
+| **Overall Grade**    | **A- (3.7)**           | **A (4.0)**        | +0.3  |
 
 **Strategic Value**: This dashboard establishes the **trust visualization pattern** for the entire platform. Excellence here compounds across:
 
@@ -679,11 +704,13 @@ return new Response(JSON.stringify({
 ### For S3-03 (Background Jobs & Orphaned Claims)
 
 **Reusable**:
+
 - Event logging patterns (`claim.released` event)
 - Transaction atomicity (`withTransaction` pattern)
 - Performance monitoring (X-Execution-Time header)
 
 **New**:
+
 - Cron job structure (Cloudflare Cron Triggers)
 - Bulk event logging (release multiple claims)
 
@@ -692,12 +719,14 @@ return new Response(JSON.stringify({
 ### For S3-04 (Trust-Threshold Role Promotion)
 
 **Reusable**:
+
 - `calculateRoleProgress()` function (already implemented!)
 - Event logging (`role.promoted` event)
 - Sanctuary messaging ("Congratulations! You've earned Steward role")
 - Test patterns (role threshold validation)
 
 **New**:
+
 - Threshold configuration (consider `role_thresholds` table for versioning)
 - Promotion notification (email/webhook)
 
@@ -706,12 +735,14 @@ return new Response(JSON.stringify({
 ### For S4-01 (Leaderboard)
 
 **Reusable**:
+
 - `calculateTrustScore()` function (event-sourced)
 - Trust Score display component (`TrustScoreCard.tsx`)
 - Role badge colors (explorer=blue, contributor=green, etc.)
 - Performance optimization (composite index, pagination)
 
 **New**:
+
 - Ranking algorithm (ORDER BY trust_score DESC)
 - Anonymization options (privacy for non-consenting members)
 - Real-time updates (WebSocket or polling)
@@ -721,12 +752,14 @@ return new Response(JSON.stringify({
 ### For S5-01 (Governance Voting)
 
 **Reusable**:
+
 - `calculateTrustScore()` as voting weight
 - Event logging (`vote.cast` event with metadata)
 - Quasi-smart contract patterns (immutable votes)
 - Transparency UX (show voting weight calculation)
 
 **New**:
+
 - Proposal schema (proposals table)
 - Quadratic voting (square root of Trust Score)
 - Delegation patterns (members delegate votes to Stewards)
@@ -737,29 +770,29 @@ return new Response(JSON.stringify({
 
 ### Automated Tests (23/23 PASSING)
 
-| Category                     | Tests | Pass Rate | Evidence                                                          |
-| ---------------------------- | ----- | --------- | ----------------------------------------------------------------- |
-| Trust Score Calculation      | 3     | 100%      | AC2 (event sum), AC9 (event-sourced), AC2 (new member 0)         |
-| Incentive Breakdown          | 3     | 100%      | AC4 (accurate sum), AC11 (fallback query), AC20 (empty state)    |
-| Claim History                | 3     | 100%      | AC5 (all claims), AC28 (pagination), AC19 (status badges)        |
-| Progress to Next Role        | 4     | 100%      | AC18 (percentage), AC18 (threshold), AC18 (max role), AC18 (cap) |
-| Cache Drift Detection        | 3     | 100%      | AC8 (no drift), AC8 (drift detected), Strategic (high drift)     |
-| Complete Dashboard Data      | 3     | 100%      | AC1 (<2s load), AC20 (empty state), AC10 (cache not source)      |
-| Event Logging                | 2     | 100%      | AC13 (dashboard.viewed), AC14 (recalculated)                     |
-| Performance                  | 2     | 100%      | AC26 (<2s), AC27 (composite index)                               |
-| **Total**                    | 23    | 100%      | 5ms execution (92% faster than target)                           |
+| Category                | Tests | Pass Rate | Evidence                                                         |
+| ----------------------- | ----- | --------- | ---------------------------------------------------------------- |
+| Trust Score Calculation | 3     | 100%      | AC2 (event sum), AC9 (event-sourced), AC2 (new member 0)         |
+| Incentive Breakdown     | 3     | 100%      | AC4 (accurate sum), AC11 (fallback query), AC20 (empty state)    |
+| Claim History           | 3     | 100%      | AC5 (all claims), AC28 (pagination), AC19 (status badges)        |
+| Progress to Next Role   | 4     | 100%      | AC18 (percentage), AC18 (threshold), AC18 (max role), AC18 (cap) |
+| Cache Drift Detection   | 3     | 100%      | AC8 (no drift), AC8 (drift detected), Strategic (high drift)     |
+| Complete Dashboard Data | 3     | 100%      | AC1 (<2s load), AC20 (empty state), AC10 (cache not source)      |
+| Event Logging           | 2     | 100%      | AC13 (dashboard.viewed), AC14 (recalculated)                     |
+| Performance             | 2     | 100%      | AC26 (<2s), AC27 (composite index)                               |
+| **Total**               | 23    | 100%      | 5ms execution (92% faster than target)                           |
 
 ### Manual Tests (5/5 PASS - User Confirmed)
 
-| AC   | Test                  | Result   | Method                     |
-| ---- | --------------------- | -------- | -------------------------- |
-| AC16 | Mobile responsive     | ✅ PASS  | 375px, 768px, 1024px       |
-| AC17 | Chart legend          | ✅ PASS  | Visual inspection          |
-| AC21 | Keyboard navigation   | ✅ PASS  | Tab through elements       |
-| AC22 | Focus indicators      | ✅ PASS  | 2px ring visible           |
-| AC23 | Screen reader (Score) | ✅ PASS  | VoiceOver/NVDA             |
-| AC24 | Screen reader (Chart) | ✅ PASS  | Companion table announced  |
-| AC25 | WCAG contrast         | ✅ PASS  | Lighthouse 100% (DevTools) |
+| AC   | Test                  | Result  | Method                     |
+| ---- | --------------------- | ------- | -------------------------- |
+| AC16 | Mobile responsive     | ✅ PASS | 375px, 768px, 1024px       |
+| AC17 | Chart legend          | ✅ PASS | Visual inspection          |
+| AC21 | Keyboard navigation   | ✅ PASS | Tab through elements       |
+| AC22 | Focus indicators      | ✅ PASS | 2px ring visible           |
+| AC23 | Screen reader (Score) | ✅ PASS | VoiceOver/NVDA             |
+| AC24 | Screen reader (Chart) | ✅ PASS | Companion table announced  |
+| AC25 | WCAG contrast         | ✅ PASS | Lighthouse 100% (DevTools) |
 
 ---
 

@@ -143,7 +143,7 @@ describe('Dashboard API: Claim History', () => {
     };
   });
 
-  it('AC5: Claim history table shows all member\'s claims with task context', async () => {
+  it("AC5: Claim history table shows all member's claims with task context", async () => {
     // Mock 2 claims with task and mission context
     (mockClient.query as any).mockResolvedValueOnce({
       rows: [
@@ -336,7 +336,7 @@ describe('Dashboard API: Complete Dashboard Data', () => {
     };
   });
 
-  it('AC1: Dashboard displays member\'s Trust Score within 2s page load', async () => {
+  it("AC1: Dashboard displays member's Trust Score within 2s page load", async () => {
     // Mock all dashboard queries
     (mockClient.query as any)
       .mockResolvedValueOnce({

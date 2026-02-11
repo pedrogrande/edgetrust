@@ -23,9 +23,10 @@ This is Trust Builder's **first member-facing value delivery**—the dashboard w
 **Context**: Pre-implementation strategic review (90 min with product-advisor) identified missing composite index that would cause dashboard to fail <2s load requirement after 10k events.
 
 **Specific Finding**:
+
 ```sql
 -- CRITICAL recommendation from strategic review
-CREATE INDEX idx_events_claim_approved_member 
+CREATE INDEX idx_events_claim_approved_member
   ON events (event_type, (metadata->>'member_id'))
   WHERE event_type = 'claim.approved';
 ```
@@ -35,6 +36,7 @@ CREATE INDEX idx_events_claim_approved_member
 **With Strategic Review**: Index added during implementation, all 23 tests passing, AC26 (<2s load) validated upfront.
 
 **ROI Calculation**:
+
 - Strategic review time: 90 min
 - Prevented rework: ~4 hours (emergency debugging + hotfix + re-QA)
 - Confidence boost: Migration readiness increased from 80% → 92%
@@ -47,24 +49,26 @@ CREATE INDEX idx_events_claim_approved_member
 ### 2. **Test-First Workflow Maintained 100% Pass Rate Across Two Stories**
 
 **S3-01 Results** (Test Infrastructure):
+
 - 77 tests, 1.06s execution
 - 47% overall coverage, 65-91% critical path
 - Grade A (4.0)
 
 **S3-02 Results** (Member Dashboard):
+
 - 23 tests, 5ms execution (92% faster than 60ms target)
 - 100% pass rate on first run after implementation
 - Grade A (4.0)
 
 **Process Comparison**:
 
-| Phase                    | S3-01 Pattern      | S3-02 Application            | Outcome                   |
-| ------------------------ | ------------------ | ---------------------------- | ------------------------- |
-| Strategic Review         | N/A (infra story)  | 90 min (caught CRITICAL bug) | CRITICAL fix implemented  |
-| Test Infrastructure      | Created from zero  | Reused patterns              | 5ms execution (10x faster) |
-| Implementation           | Built with tests   | Test-first approach          | 0 test failures           |
-| QA Cycles                | 1 cycle (18/18 AC) | 1 cycle (23/28 auto AC)      | Same efficiency           |
-| Post-Implementation Grade | A (4.0)            | A (4.0)                      | Consistent quality        |
+| Phase                     | S3-01 Pattern      | S3-02 Application            | Outcome                    |
+| ------------------------- | ------------------ | ---------------------------- | -------------------------- |
+| Strategic Review          | N/A (infra story)  | 90 min (caught CRITICAL bug) | CRITICAL fix implemented   |
+| Test Infrastructure       | Created from zero  | Reused patterns              | 5ms execution (10x faster) |
+| Implementation            | Built with tests   | Test-first approach          | 0 test failures            |
+| QA Cycles                 | 1 cycle (18/18 AC) | 1 cycle (23/28 auto AC)      | Same efficiency            |
+| Post-Implementation Grade | A (4.0)            | A (4.0)                      | Consistent quality         |
 
 **Why This Matters**: Test-first workflow is now VALIDATED across infrastructure (S3-01) and feature (S3-02) stories. This becomes the Sprint 3 standard.
 
@@ -75,6 +79,7 @@ CREATE INDEX idx_events_claim_approved_member
 ### 3. **Fallback Query Pattern Increased Migration Readiness by 4%**
 
 **Strategic Review Gap Identified** (Events dimension -5%):
+
 ```typescript
 // Edge case: Event metadata missing incentive breakdown
 {
@@ -87,6 +92,7 @@ CREATE INDEX idx_events_claim_approved_member
 **Problem**: Trust Score total would be correct (75 points), but radar chart would show 0 for all 5 dimensions—breaking the visualization and confusing members.
 
 **Solution Implemented** (dashboard-queries.ts lines 86-98):
+
 ```typescript
 // Fallback to task_incentives table if event metadata incomplete
 SELECT
@@ -105,6 +111,7 @@ GROUP BY COALESCE(i.name, incentive->>'name');
 ```
 
 **Impact**:
+
 - Migration readiness: 88% (strategic review) → 92% (post-implementation)
 - Radar chart always displays accurate data (even with incomplete events)
 - No user-facing errors during blockchain migration
@@ -118,9 +125,10 @@ GROUP BY COALESCE(i.name, incentive->>'name');
 ### 4. **Sanctuary Culture Embedded in Every UX Edge Case**
 
 **Empty State** (new members with 0 points):
+
 ```tsx
 <p className="text-muted-foreground">
-  Welcome to your Trust Builder journey! 
+  Welcome to your Trust Builder journey!
   Complete tasks to start earning Trust Score.
 </p>
 <a href="/trust-builder/tasks" className="text-primary hover:underline">
@@ -129,25 +137,34 @@ GROUP BY COALESCE(i.name, incentive->>'name');
 ```
 
 **Progress Encouragement** (75%+ to next role):
+
 ```tsx
-{percentage >= 75 && (
-  <p className="text-sm text-green-600 font-medium">
-    You're almost there! Keep up the great work 🎉
-  </p>
-)}
+{
+  percentage >= 75 && (
+    <p className="text-sm text-green-600 font-medium">
+      You're almost there! Keep up the great work 🎉
+    </p>
+  );
+}
 ```
 
 **Error Handling** (API failures):
+
 ```typescript
-return new Response(JSON.stringify({
-  error: 'We could not load your dashboard right now.',
-  reason: 'This might be a temporary connection issue.',
-  nextSteps: 'Please try refreshing. If this persists, contact support@futuresedge.org',
-  supportUrl: '/support',
-}), { status: 500 });
+return new Response(
+  JSON.stringify({
+    error: 'We could not load your dashboard right now.',
+    reason: 'This might be a temporary connection issue.',
+    nextSteps:
+      'Please try refreshing. If this persists, contact support@futuresedge.org',
+    supportUrl: '/support',
+  }),
+  { status: 500 }
+);
 ```
 
 **Contrast with Generic Implementations**:
+
 - ❌ Judgmental: "You have 0 points."
 - ✅ Sanctuary: "Welcome to your Trust Builder journey!"
 - ❌ Technical: "500 Internal Server Error"
@@ -162,53 +179,65 @@ return new Response(JSON.stringify({
 ### 5. **Accessibility Implementation Exceeded WCAG 2.1 AA Baseline**
 
 **Strategic Review Guidance** (Accessibility Assessment):
+
 - Minimum: WCAG 2.1 AA (keyboard nav, screen reader, 4.5:1 contrast)
 - Best Practice: Companion data table for charts
 
 **Implementation Delivered**:
 
 **1. Screen Reader Companion Table** (IncentiveRadarChart.tsx):
+
 ```tsx
-{/* Visual chart for sighted users */}
+{
+  /* Visual chart for sighted users */
+}
 <RadarChart data={chartData} aria-label={ariaLabel} role="img">
   {/* ... */}
-</RadarChart>
+</RadarChart>;
 
-{/* Hidden table for screen readers */}
+{
+  /* Hidden table for screen readers */
+}
 <table className="sr-only">
   <caption>Trust Score Breakdown by Dimension</caption>
   <thead>
-    <tr><th>Dimension</th><th>Points</th></tr>
+    <tr>
+      <th>Dimension</th>
+      <th>Points</th>
+    </tr>
   </thead>
   <tbody>
-    {data.map(d => (
+    {data.map((d) => (
       <tr key={d.name}>
         <td>{d.name}</td>
         <td>{d.points}</td>
       </tr>
     ))}
   </tbody>
-</table>
+</table>;
 ```
 
 **2. WCAG Contrast Colors** (ClaimHistoryTable.tsx):
+
 ```tsx
 // Upgraded from text-*-800 to text-*-900 for 4.5:1+ ratio
 const statusColors = {
-  submitted: 'bg-blue-100 text-blue-900',       // 5.2:1 (PASS)
+  submitted: 'bg-blue-100 text-blue-900', // 5.2:1 (PASS)
   'under review': 'bg-yellow-100 text-yellow-900', // 5.8:1 (PASS)
-  approved: 'bg-green-100 text-green-900',      // 6.1:1 (PASS)
+  approved: 'bg-green-100 text-green-900', // 6.1:1 (PASS)
   'revision requested': 'bg-orange-100 text-orange-900', // 5.5:1 (PASS)
-  rejected: 'bg-red-100 text-red-900',          // 5.9:1 (PASS)
+  rejected: 'bg-red-100 text-red-900', // 5.9:1 (PASS)
 };
 ```
 
 **3. Keyboard Navigation** (all components):
+
 - Focus indicators: 2px ring on all interactive elements
 - Tab order: Logical flow (Trust Score → Chart → Table → Pagination)
 - Claim row interactivity: onClick with Enter/Space support
 
 **Manual QA Results**:
+
 - AC21: Keyboard navigation ✅ PASS
 - AC22: Focus indicators ✅ PASS
 - AC23: Screen reader (Trust Score) ✅ PASS
@@ -226,6 +255,7 @@ const statusColors = {
 **Reusable Patterns Established**:
 
 **1. Event-Sourced Calculation Pattern**:
+
 ```typescript
 // calculateTrustScore() - Pure derivation from events
 // Reusable for: S4-01 leaderboard, S5-01 voting weight
@@ -245,10 +275,12 @@ export async function calculateTrustScore(
 ```
 
 **Reuse Opportunity**:
+
 - **S4-01 Leaderboard**: Same query with `ORDER BY trust_score DESC LIMIT 100`
 - **S5-01 Governance**: Same Trust Score as voting weight (quadratic: sqrt of score)
 
 **2. Component Accessibility Pattern**:
+
 ```tsx
 // IncentiveRadarChart.tsx - Visual + screen reader table
 // Reusable for: Any chart visualization in S4/S5
@@ -259,6 +291,7 @@ export async function calculateTrustScore(
 ```
 
 **3. Sanctuary Error Messaging Pattern**:
+
 ```typescript
 // API error response - Supportive, actionable, human
 // Reusable for: Every API endpoint
@@ -271,13 +304,14 @@ export async function calculateTrustScore(
 ```
 
 **4. Cache Drift Detection Pattern**:
+
 ```typescript
 // detectCacheDrift() - Proactive monitoring
 // Reusable for: Any cached derived value (role, reputation, stats)
 if (Math.abs(cached - calculated) > threshold) {
   await logEvent(client, {
     event_type: 'cache.drift_detected',
-    metadata: { cached, calculated, drift, severity }
+    metadata: { cached, calculated, drift, severity },
   });
 }
 ```
@@ -291,22 +325,26 @@ if (Math.abs(cached - calculated) > threshold) {
 ### 7. **Documentation Quickrefs Reduced Context Switching by ~50%**
 
 **Problem Identified in S1/S2**: Developers spent 10-15 min per session searching for:
+
 - QA checklist steps
 - Strategic review format
 - Ontology dimension mappings
 - Git commit message conventions
 
 **Solution Implemented** (Sprint 3):
+
 - `docs/quickrefs/developer.md` (2 pages, key patterns)
 - `docs/quickrefs/qa.md` (1.5 pages, validation checklist)
 - `docs/quickrefs/advisor.md` (3 pages, review framework)
 
 **Measured Impact** (S3-02 Implementation):
+
 - Before quickrefs (S1/S2): ~30 min/day context switching to full docs
 - After quickrefs (S3-02): ~15 min/day (50% reduction)
 - **Time saved per story**: 3 hours over 6-day implementation
 
 **Developer Feedback** (from commit messages):
+
 > "Used qa.md quickref for acceptance criteria validation—cut time from 45 min to 20 min"
 
 **Why This Matters**: Documentation ROI is PROVEN. Small, targeted quickrefs are more valuable than comprehensive docs for active development.
@@ -323,7 +361,8 @@ if (Math.abs(cached - calculated) > threshold) {
 
 **Root Cause**: Manual testing checklist was in QA report (created AFTER implementation), not in story file (available DURING implementation).
 
-**Impact**: 
+**Impact**:
+
 - One accessibility issue discovered during QA (could have been caught earlier)
 - No impact on grade (still A), but reduced developer confidence during implementation
 
@@ -332,6 +371,7 @@ if (Math.abs(cached - calculated) > threshold) {
 **Action Item**: Add manual testing checklist to story template BEFORE "Implementation Notes" section. Developers should run manual tests iteratively, not just at end.
 
 **Future Story Template Update**:
+
 ```markdown
 ## Manual Testing Checklist
 
@@ -341,7 +381,7 @@ Run these tests during implementation (not just at end):
   - [ ] Test at 375px (iPhone SE)
   - [ ] Test at 768px (iPad)
   - [ ] Test at 1024px (Desktop)
-  
+
 <!-- etc -->
 ```
 
@@ -352,6 +392,7 @@ Run these tests during implementation (not just at end):
 ### 2. **Role Threshold Versioning Not Addressed**
 
 **Issue**: Role promotion thresholds are hardcoded in `calculateRoleProgress()`:
+
 ```typescript
 const thresholds = {
   explorer: 0,
@@ -368,14 +409,13 @@ const thresholds = {
 **Root Cause**: Threshold versioning is S3-04 scope (Trust-Threshold Role Promotion), but S3-02 needed to display progress bar. Chose simplicity (hardcode) over complexity (versioned config table).
 
 **Tradeoff Analysis**:
+
 - **Option 1**: Hardcode thresholds (current)
   - Pro: Simple, no DB changes
   - Con: Historical variance if thresholds change
-  
 - **Option 2**: Store threshold in `role.promoted` event metadata
   - Pro: Historical accuracy
   - Con: Requires S3-04 coordination (out of scope)
-  
 - **Option 3**: Create `role_thresholds` config table
   - Pro: Versioned, queryable
   - Con: Adds complexity for MVP
@@ -391,9 +431,11 @@ const thresholds = {
 ### 3. **Test Coverage Gap: Event Corruption Edge Case**
 
 **Gap Identified** (Post-Implementation Review):
+
 > "No explicit test for corrupted event scenario (JSON parse error, null metadata). However, COALESCE patterns provide defensive fallback." (product-advisor -2% Events dimension)
 
 **Issue**: All 23 automated tests validate HAPPY PATH or EXPECTED edge cases (empty arrays, missing fields). None test UNEXPECTED corruption:
+
 - Event metadata is `null` (not empty object)
 - Event metadata has invalid JSON (parsing error)
 - Event row exists but metadata column doesn't exist (schema mismatch)
@@ -401,26 +443,29 @@ const thresholds = {
 **Root Cause**: Test fixtures use well-formed mock data. Corruption scenarios require different test setup.
 
 **Risk Assessment**:
+
 - **Likelihood**: LOW (database-level corruption is rare)
 - **Impact**: MEDIUM (dashboard would show 500 error)
 - **Mitigation**: COALESCE patterns and defensive `|| '0'` defaults prevent crashes
 
 **Example Test (Missing)**:
+
 ```typescript
 it('AC27: Handles corrupted event metadata gracefully', async () => {
   // Mock scenario: Event exists but metadata is null
   (mockClient.query as any).mockResolvedValueOnce({
-    rows: [{ metadata: null }],  // Corruption scenario
+    rows: [{ metadata: null }], // Corruption scenario
   });
-  
+
   const trustScore = await calculateTrustScore(mockClient, mockMemberId);
-  
+
   // Should not crash, should return 0
   expect(trustScore).toBe(0);
 });
 ```
 
 **Action Item**: Add "corruption edge case" test suite (5-7 tests) in S3-03 or S3-04. Cover:
+
 - Null metadata
 - Malformed JSON (invalid syntax)
 - Missing expected fields (points_earned, member_id)
@@ -435,13 +480,16 @@ it('AC27: Handles corrupted event metadata gracefully', async () => {
 **Issue**: Pre-implementation strategic review for S3-02 was comprehensive (1,165 lines, 8 dimensions, query optimization, accessibility, values alignment), but potentially overwhelming for quick reference.
 
 **Developer Feedback** (implied from retro):
+
 > "Strategic review caught CRITICAL index issue—excellent. But I didn't read all 1,165 lines during implementation. Mostly used 'Strategic Recommendations' section (lines 900-1000)."
 
 **Observation**: Strategic review has two audiences:
+
 1. **Pre-Implementation** (developers): Need executive summary + critical recommendations
 2. **Post-Retrospective** (leadership/auditors): Need full dimensional analysis + values assessment
 
 **Current Structure** (All Sections in One Document):
+
 - Executive Summary (200 lines)
 - Dimensional Analysis (600 lines)
 - Query Optimization (200 lines)
@@ -451,12 +499,12 @@ it('AC27: Handles corrupted event metadata gracefully', async () => {
 - Migration Readiness (100 lines)
 
 **Proposed Structure** (Split into Two Documents):
+
 1. **Strategic Review (Executive)** (300 lines)
    - Executive summary
    - Critical recommendations (MUST FIX)
    - High-priority recommendations (SHOULD FIX)
    - Quick dimensional scores (95% People, 98% Events, etc.)
-   
 2. **Strategic Review (Detailed)** (865 lines)
    - Full dimensional analysis
    - Query optimization deep-dive
@@ -467,6 +515,7 @@ it('AC27: Handles corrupted event metadata gracefully', async () => {
 **Benefit**: Developers get concise actionable guidance (300 lines, 15 min read). Leadership gets comprehensive assessment (1,165 lines, 60 min read).
 
 **Action Item**: Update strategic review template to include:
+
 - `S3-XX-strategic-review-executive.md` (300 lines)
 - `S3-XX-strategic-review-detailed.md` (865 lines)
 
@@ -511,14 +560,19 @@ export async function detectCacheDrift(client: PoolClient, memberId: string) {
   const cached = await getCachedValue(client, memberId);
   const calculated = await calculateFromEvents(client, memberId);
   const drift = Math.abs(calculated - cached);
-  
+
   if (drift > THRESHOLD) {
     await logEvent(client, {
       event_type: 'cache.drift_detected',
-      metadata: { cached, calculated, drift, severity: drift > 50 ? 'HIGH' : 'LOW' }
+      metadata: {
+        cached,
+        calculated,
+        drift,
+        severity: drift > 50 ? 'HIGH' : 'LOW',
+      },
     });
   }
-  
+
   return { cached, calculated, drift };
 }
 ```
@@ -541,7 +595,7 @@ WHERE event_type = 'claim.approved'
   AND (metadata->>'member_id')::uuid = $1;
 
 -- AFTER index: <100ms query time at 10k events (passes AC26)
-CREATE INDEX idx_events_claim_approved_member 
+CREATE INDEX idx_events_claim_approved_member
   ON events (event_type, ((metadata->>'member_id')::uuid))
   WHERE event_type = 'claim.approved';
 ```
@@ -557,12 +611,14 @@ CREATE INDEX idx_events_claim_approved_member
 **Learning 1: Test-First Workflow Prevents Regression Better Than Post-Hoc Tests**
 
 **S3-01 Workflow** (Test Infrastructure):
+
 1. Write integration test (claim submission endpoint)
 2. Implement endpoint
 3. Run test → PASS on first try
 4. Grade: A (4.0)
 
 **S3-02 Workflow** (Member Dashboard):
+
 1. Write 23 integration tests (Trust Score, incentives, claims, progress)
 2. Implement components + API endpoints
 3. Run test → 1 FAIL (mock data missing role field)
@@ -571,6 +627,7 @@ CREATE INDEX idx_events_claim_approved_member
 6. Grade: A (4.0)
 
 **Comparison to Code-First Workflow** (Historical S1/S2 stories):
+
 1. Implement feature
 2. Write tests after
 3. Discover edge cases during testing
@@ -587,16 +644,19 @@ CREATE INDEX idx_events_claim_approved_member
 **Learning 2: Vitest Execution Speed Enables Flow State**
 
 **S3-02 Test Suite Performance**:
+
 - 23 tests in 5ms (execution only)
 - 340ms total (includes transform, setup, environment)
 - Happy-dom environment (faster than jsdom)
 
 **Developer Experience**:
+
 - Save file → Tests run automatically → Instant feedback
 - No context switch (tests run in <400ms, perceived as instant)
 - Flow state maintained (no 5-10s wait for tests)
 
 **Comparison to Slower Test Suites**:
+
 - Jest with jsdom: 2-5s per test file → Breaks flow state
 - Playwright E2E: 30-60s per test → Developer switches windows while waiting
 
@@ -636,12 +696,14 @@ Charts (radar, bar, line) are inherently visual. Screen readers cannot navigate 
 **Learning 1: Strategic Review ROI is PROVEN (3.7x Time Saved)**
 
 **S3-02 Evidence**:
+
 - Strategic review investment: 90 min
 - Critical issue caught: Missing composite index (would cause >2s dashboard load at scale)
 - Rework prevented: ~4 hours (emergency debugging + hotfix + re-QA + production incident)
 - **ROI: 3.7x** (240 min saved / 90 min invested)
 
 **Formula for Future Stories**:
+
 ```
 ROI = (Rework Hours Prevented) / (Strategic Review Hours)
 
@@ -657,18 +719,21 @@ Simple stories (3 points): ROI ~1-2x (review optional)
 **Learning 2: Documentation Quickrefs Have 50% Context Switch Reduction**
 
 **S3-02 Measurement**:
+
 - Before quickrefs (S1/S2): ~30 min/day searching full docs
 - After quickrefs (S3-02): ~15 min/day referencing quickrefs
 - **Time saved**: 3 hours per 6-day story
 
 **Quickref Design Principles**:
+
 1. **1-3 pages MAX** (optimize for scan-ability)
 2. **80/20 rule** (cover 80% of use cases, not 100%)
 3. **Code examples over explanations** (developers prefer copy-paste)
 4. **Link to full docs for edge cases** (don't duplicate everything)
 
 **Example (from developer.md quickref)**:
-```markdown
+
+````markdown
 ## Event Logging Pattern
 
 ```typescript
@@ -681,9 +746,11 @@ await logEvent(client, actorId, 'claim', claimId, 'claim.approved', {
   incentives: [{ name: 'Participation', points: 25 }, ...]
 });
 ```
+````
 
 See [event-ledger.md](../docs/event-ledger.md) for full taxonomy.
-```
+
+````
 
 **High Signal-to-Noise Ratio**: Code example (6 lines) + link to full docs (1 line) = 7 lines total. Full event ledger doc is 200 lines.
 
@@ -722,9 +789,9 @@ Run these tests iteratively during implementation:
   - [ ] Test at 768px (iPad)
   - [ ] Test at 1024px (Desktop)
   - [ ] Test landscape rotation (trigger browser orientation change)
-  
+
 <!-- etc -->
-```
+````
 
 **Why This Works**: Developers run manual tests DURING implementation (not just at end), catch issues earlier, higher confidence at handoff to QA.
 
@@ -862,11 +929,13 @@ Run these tests iteratively during implementation:
 **Pattern Reuse Opportunities**:
 
 **S3-03: Background Jobs & Orphaned Claim Release** (5 points, Moderate)
+
 - Reuse: Event logging patterns, transaction atomicity, performance monitoring
 - New: Cron job structure (Cloudflare Cron Triggers), bulk event logging
 - Estimate: 5 points (no reduction - infrastructure work like S3-01)
 
 **S3-04: Trust-Threshold Role Promotion** (4 points, Simple)
+
 - Reuse: `calculateRoleProgress()` function (already implemented!), event logging, sanctuary messaging
 - New: Threshold configuration decision, promotion notification
 - Estimate: 4 points (could reduce to 3 points if threshold decision made upfront)
@@ -924,6 +993,7 @@ Two consecutive A-grade stories (S3-01, S3-02) validate that the test-first + st
 5. **Strategic review ROI proven** (3.7x - CRITICAL index caught before implementation)
 
 **Quote from Product-Advisor Review**:
+
 > "This implementation sets the standard for Sprint 3 and creates high-value patterns for Sprint 4 and 5."
 
 **What This Unlocks**:

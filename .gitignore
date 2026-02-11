@@ -40,3 +40,5 @@ pnpm-debug.log*
 # Sensitive data
 .env.*
 !.env.example
+!.github/agents
+!.github/agents/**
