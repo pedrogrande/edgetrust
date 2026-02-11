@@ -17,7 +17,7 @@ import TrustScoreCard from './TrustScoreCard';
 import IncentiveRadarChart from './IncentiveRadarChart';
 import ClaimHistoryTable from './ClaimHistoryTable';
 import ProgressToSteward from './ProgressToSteward';
-import DashboardEmptyState from './Dashboard EmptyState';
+import DashboardEmptyState from './DashboardEmptyState';
 import RoleBadge from './RoleBadge';
 import PromotionToast from './PromotionToast';
 interface DashboardData {
