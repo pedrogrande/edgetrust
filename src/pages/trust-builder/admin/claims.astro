@@ -1,0 +1,243 @@
+---
+/**
+ * S3-03: Admin Claims Management Page
+ *
+ * Guardian-only interface for:
+ * - Viewing pending review queue
+ * - Releasing orphaned claims (>7 days under review)
+ *
+ * AC8: Displays orphaned claim count (badge)
+ * AC9: "Release Orphaned Claims" button (only if count > 0)
+ * AC10-13: Confirmation dialog with sanctuary messaging
+ */
+import Layout from '@/layouts/Layout.astro';
+import { getCurrentUser } from '@/lib/auth';
+import { sql } from '@/lib/db/connection';
+import { OrphanedClaimsBadge } from '@/components/trust-builder/OrphanedClaimsBadge';
+import { ReleaseOrphanedDialog } from '@/components/trust-builder/ReleaseOrphanedDialog';
+
+const member = await getCurrentUser(Astro.request);
+
+// Redirect if not authenticated or not Guardian
+if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
+  return Astro.redirect('/trust-builder/signin');
+}
+
+// Fetch orphaned claims for dialog
+const orphanedClaims = await sql`
+  SELECT
+    c.id,
+    c.task_id,
+    t.title AS task_title,
+    c.reviewer_id,
+    COALESCE(m.display_name, m.email) AS reviewer_name,
+    EXTRACT(DAY FROM (NOW() - c.updated_at))::NUMERIC AS days_orphaned
+  FROM claims c
+  JOIN tasks t ON t.id = c.task_id
+  LEFT JOIN members m ON m.id = c.reviewer_id
+  WHERE c.status = 'under_review'
+    AND c.updated_at < NOW() - INTERVAL '7 days'
+  ORDER BY c.updated_at ASC
+`;
+
+// Fetch all pending claims for review queue display
+const pendingClaims = await sql`
+  SELECT
+    c.id,
+    c.status,
+    c.submitted_at,
+    c.updated_at,
+    t.title AS task_title,
+    t.task_type,
+    submitter.display_name AS submitter_name,
+    submitter.email AS submitter_email,
+    reviewer.display_name AS reviewer_name,
+    CASE 
+      WHEN c.status = 'under_review' THEN EXTRACT(DAY FROM (NOW() - c.updated_at))
+      ELSE NULL
+    END AS days_in_review
+  FROM claims c
+  JOIN tasks t ON t.id = c.task_id
+  JOIN members submitter ON submitter.id = c.member_id
+  LEFT JOIN members reviewer ON reviewer.id = c.reviewer_id
+  WHERE c.status IN ('submitted', 'under_review')
+  ORDER BY 
+    CASE c.status
+      WHEN 'submitted' THEN 1
+      WHEN 'under_review' THEN 2
+    END,
+    c.submitted_at ASC
+  LIMIT 50
+`;
+
+// Calculate queue statistics
+const queueStats = await sql`
+  SELECT
+    COUNT(*) FILTER (WHERE status = 'submitted') AS submitted_count,
+    COUNT(*) FILTER (WHERE status = 'under_review') AS under_review_count,
+    COUNT(*) FILTER (
+      WHERE status = 'under_review' 
+      AND updated_at < NOW() - INTERVAL '7 days'
+    ) AS orphaned_count
+  FROM claims
+`;
+
+const stats = queueStats[0] || {
+  submitted_count: 0,
+  under_review_count: 0,
+  orphaned_count: 0,
+};
+---
+
+<Layout title="Admin: Claim Queue">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    {/* Header with badge and release button */}
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-3xl font-bold flex items-center">
+          Claim Queue
+          <OrphanedClaimsBadge client:load />
+        </h1>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-muted-foreground">
+            Guardian: {member.member_id}
+          </span>
+          <ReleaseOrphanedDialog
+            orphanedClaims={orphanedClaims}
+            client:load
+          />
+        </div>
+      </div>
+
+      {/* Queue statistics */}
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-card p-4 rounded-lg border">
+          <div class="text-2xl font-bold">{stats.submitted_count}</div>
+          <div class="text-sm text-muted-foreground">Awaiting Review</div>
+        </div>
+        <div class="bg-card p-4 rounded-lg border">
+          <div class="text-2xl font-bold">{stats.under_review_count}</div>
+          <div class="text-sm text-muted-foreground">Under Review</div>
+        </div>
+        <div class="bg-card p-4 rounded-lg border">
+          <div
+            class:list={[
+              'text-2xl font-bold',
+              { 'text-destructive': Number(stats.orphaned_count) > 0 },
+            ]}
+          >
+            {stats.orphaned_count}
+          </div>
+          <div class="text-sm text-muted-foreground">Orphaned >7d</div>
+        </div>
+      </div>
+
+      <p class="text-muted-foreground">
+        Monitor the claim review queue. Orphaned claims (>7 days under review)
+        can be released back to the queue for other reviewers.
+      </p>
+    </div>
+
+    {/* Claim queue table */}
+    <div class="bg-card rounded-lg border overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-muted/50">
+          <tr>
+            <th class="text-left p-4 font-semibold">Task</th>
+            <th class="text-left p-4 font-semibold">Submitter</th>
+            <th class="text-left p-4 font-semibold">Status</th>
+            <th class="text-left p-4 font-semibold">Reviewer</th>
+            <th class="text-left p-4 font-semibold">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            pendingClaims.length === 0 ? (
+              <tr>
+                <td colspan="5" class="p-8 text-center text-muted-foreground">
+                  No pending claims. Queue is clear! 🎉
+                </td>
+              </tr>
+            ) : (
+              pendingClaims.map((claim) => (
+                <tr class="border-t hover:bg-muted/25 transition-colors">
+                  <td class="p-4">
+                    <div class="font-medium">{claim.task_title}</div>
+                    <div class="text-xs text-muted-foreground">
+                      {claim.task_type}
+                    </div>
+                  </td>
+                  <td class="p-4">
+                    <div class="text-sm">{claim.submitter_name}</div>
+                    <div class="text-xs text-muted-foreground">
+                      {claim.submitter_email}
+                    </div>
+                  </td>
+                  <td class="p-4">
+                    <span
+                      class:list={[
+                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+                        {
+                          'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200':
+                            claim.status === 'submitted',
+                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
+                            claim.status === 'under_review' &&
+                            Number(claim.days_in_review) <= 7,
+                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
+                            claim.status === 'under_review' &&
+                            Number(claim.days_in_review) > 7,
+                        },
+                      ]}
+                    >
+                      {claim.status === 'submitted'
+                        ? 'Awaiting Review'
+                        : 'Under Review'}
+                      {claim.days_in_review &&
+                        Number(claim.days_in_review) > 7 &&
+                        ' (Orphaned)'}
+                    </span>
+                  </td>
+                  <td class="p-4 text-sm">
+                    {claim.reviewer_name || (
+                      <span class="text-muted-foreground italic">
+                        Unassigned
+                      </span>
+                    )}
+                  </td>
+                  <td class="p-4 text-sm text-muted-foreground">
+                    {claim.status === 'submitted' ? (
+                      <span>
+                        Submitted{' '}
+                        {Math.floor(
+                          (Date.now() -
+                            new Date(claim.submitted_at).getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        )}
+                        d ago
+                      </span>
+                    ) : (
+                      <span>
+                        {Math.floor(Number(claim.days_in_review))}d in review
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )
+          }
+        </tbody>
+      </table>
+    </div>
+
+    {/* Help text */}
+    <div class="mt-6 p-4 bg-muted/50 rounded-lg text-sm">
+      <p class="font-medium mb-2">💡 About Orphaned Claims</p>
+      <p class="text-muted-foreground">
+        Claims marked as "orphaned" have been under review for more than 7 days.
+        Life happens! Use the "Release Orphaned Claims" button to return them to
+        the queue with <strong>no penalties</strong> to the original reviewer.
+        This helps maintain review velocity and supports our learning culture.
+      </p>
+    </div>
+  </div>
+</Layout>
