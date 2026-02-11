@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Audit trail for bypasses
+if [ -n "$HUSKY_SKIP_HOOKS" ]; then
+  echo "⚠️  BYPASS DETECTED: Logging for audit..."
+  echo "$(date) - $(git config user.email) bypassed pre-push hook" >> .git/hook-bypasses.log
+  exit 0
+fi
+
+# Reject direct pushes to main (sanctuary-aligned message)
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$branch" = "main" ]; then
+  echo ""
+  echo "🌱 Let's use a feature branch to keep main stable!"
+  echo ""
+  echo "   Try: git checkout -b feature/S3-XX-description"
+  echo ""
+  echo "   Why? Feature branches enable:"
+  echo "   • Code review through pull requests"
+  echo "   • Safer collaboration and rollback"
+  echo "   • Better tracking of changes"
+  echo ""
+  echo "   Need to bypass? (not recommended)"
+  echo "   HUSKY_SKIP_HOOKS=1 git push"
+  echo ""
+  exit 1
+fi
+
+echo "✅ Pre-push checks passed"
