@@ -115,6 +115,10 @@ export async function checkAndPromoteMember(
     oldRole: currentRole,
     newRole: newRole,
     threshold: threshold ?? undefined,
+  };
+}
+
+/**
  * Manual promotion by admin (AC4: Manual promotion still possible)
  */
 export async function manuallyPromoteMember(
