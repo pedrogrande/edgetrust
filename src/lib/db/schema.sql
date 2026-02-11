@@ -189,6 +189,13 @@ CREATE INDEX idx_events_entity ON events(entity_id);
 CREATE INDEX idx_events_type ON events(event_type);
 CREATE INDEX idx_events_timestamp ON events(timestamp DESC);
 
+-- S3-02: Composite index for Trust Score derivation queries
+-- Critical for dashboard performance (AC26: <2s load time)
+-- Enables O(log n) lookups instead of O(n) table scans
+CREATE INDEX idx_events_claim_approved_member 
+ON events (event_type, ((metadata->>'member_id')::uuid))
+WHERE event_type = 'claim.approved';
+
 -- ============================================================================
 -- SECURITY: Append-Only Event Ledger
 -- ============================================================================

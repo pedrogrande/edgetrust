@@ -23,6 +23,7 @@ Deliver **member-facing dashboard** that showcases Trust Score, incentive breakd
 **Complex** (1.5-2 days)
 
 **Rationale**:
+
 - Multiple ontology dimensions (People + Knowledge + Events)
 - New UI components (dashboard page, charts, tables)
 - Complex query (aggregate events by incentive type)
@@ -132,11 +133,13 @@ And screen readers announce Trust Score and chart data labels
 
 **Page**: `src/pages/trust-builder/dashboard.astro`  
 **API Endpoints**:
+
 - `GET /api/trust-builder/dashboard/me` - Returns dashboard data (Trust Score, incentive breakdown, claim history)
 - `GET /api/trust-builder/members/[id]/trust-score` - Trust Score breakdown (public, for future leaderboard)
 - `POST /api/trust-builder/members/[id]/recalculate-trust-score` - Admin-only, rebuilds from events
 
 **React Components** (`src/components/trust-builder/`):
+
 - `<MemberDashboard />` - Page wrapper, fetches data, layout
 - `<TrustScoreCard />` - Big number display, trend icon (±5 from last week)
 - `<IncentiveRadarChart />` - Recharts radial chart component
@@ -146,6 +149,7 @@ And screen readers announce Trust Score and chart data labels
 ### Database Queries
 
 **Trust Score Derivation** (single query, fast):
+
 ```sql
 -- Get total Trust Score from events (source of truth)
 SELECT
@@ -156,6 +160,7 @@ WHERE event_type = 'claim.approved'
 ```
 
 **Incentive Breakdown** (JSON aggregation):
+
 ```sql
 -- Get points per incentive type
 SELECT
@@ -170,6 +175,7 @@ ORDER BY total_points DESC;
 ```
 
 **Claim History** (optimized with JOIN):
+
 ```sql
 -- Get all claims with task context
 SELECT
@@ -199,25 +205,36 @@ LIMIT 20;
 ```
 
 **Cache Update** (atomic with claim approval, already implemented in S2-04):
+
 ```typescript
 // In claim approval transaction
-await client.query(`
+await client.query(
+  `
   UPDATE members
   SET trust_score_cached = trust_score_cached + $1
   WHERE id = $2
-`, [pointsEarned, memberId]);
+`,
+  [pointsEarned, memberId]
+);
 
 // Event logged inside same transaction
-await client.query(`
+await client.query(
+  `
   INSERT INTO events (actor_id, entity_type, entity_id, event_type, metadata)
   VALUES ($1, 'claim', $2, 'claim.approved', $3)
-`, [reviewerId, claimId, {
-  member_id: memberId,
-  points_earned: pointsEarned,
-  trust_score_before: currentScore,
-  trust_score_after: currentScore + pointsEarned,
-  incentives: [{ name: 'Participation', points: 50 }]
-}]);
+`,
+  [
+    reviewerId,
+    claimId,
+    {
+      member_id: memberId,
+      points_earned: pointsEarned,
+      trust_score_before: currentScore,
+      trust_score_after: currentScore + pointsEarned,
+      incentives: [{ name: 'Participation', points: 50 }],
+    },
+  ]
+);
 ```
 
 ### Recharts Radial Chart Example
@@ -307,6 +324,7 @@ export function ClaimHistoryTable({ claims }: { claims: Claim[] }) {
 ### API Endpoint Structure
 
 **`src/pages/api/trust-builder/dashboard/me.ts`**:
+
 ```typescript
 import type { APIRoute } from 'astro';
 import { getSession } from '@/lib/auth/session';
@@ -315,20 +333,28 @@ import { query } from '@/lib/db/connection';
 export const GET: APIRoute = async ({ request, cookies }) => {
   const session = await getSession(cookies);
   if (!session) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+    });
   }
 
   try {
     // Get Trust Score from events (source of truth)
-    const { rows: [scoreRow] } = await query(`
+    const {
+      rows: [scoreRow],
+    } = await query(
+      `
       SELECT COALESCE(SUM((metadata->>'points_earned')::integer), 0) AS trust_score
       FROM events
       WHERE event_type = 'claim.approved'
         AND (metadata->>'member_id')::uuid = $1
-    `, [session.member.id]);
+    `,
+      [session.member.id]
+    );
 
     // Get incentive breakdown
-    const { rows: breakdown } = await query(`
+    const { rows: breakdown } = await query(
+      `
       SELECT
         incentive->>'name' AS incentive_name,
         SUM((incentive->>'points')::integer) AS total_points
@@ -337,10 +363,13 @@ export const GET: APIRoute = async ({ request, cookies }) => {
       WHERE event_type = 'claim.approved'
         AND (metadata->>'member_id')::uuid = $1
       GROUP BY incentive->>'name'
-    `, [session.member.id]);
+    `,
+      [session.member.id]
+    );
 
     // Get claim history (last 20)
-    const { rows: claims } = await query(`
+    const { rows: claims } = await query(
+      `
       SELECT c.*, t.title AS task_title, g.name AS mission_name
       FROM claims c
       JOIN tasks t ON t.id = c.task_id
@@ -348,23 +377,30 @@ export const GET: APIRoute = async ({ request, cookies }) => {
       WHERE c.member_id = $1
       ORDER BY c.submitted_at DESC
       LIMIT 20
-    `, [session.member.id]);
+    `,
+      [session.member.id]
+    );
 
-    return new Response(JSON.stringify({
-      trust_score: scoreRow.trust_score,
-      breakdown: breakdown.map(row => ({
-        dimension: row.incentive_name,
-        points: row.total_points
-      })),
-      claims,
-      member: session.member
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        trust_score: scoreRow.trust_score,
+        breakdown: breakdown.map((row) => ({
+          dimension: row.incentive_name,
+          points: row.total_points,
+        })),
+        claims,
+        member: session.member,
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('Dashboard error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to load dashboard' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Failed to load dashboard' }), {
+      status: 500,
+    });
   }
 };
 ```
@@ -372,49 +408,75 @@ export const GET: APIRoute = async ({ request, cookies }) => {
 ### Recalculate Trust Score (Admin Only)
 
 **`src/pages/api/trust-builder/members/[id]/recalculate-trust-score.ts`**:
+
 ```typescript
 export const POST: APIRoute = async ({ params, cookies }) => {
   const session = await getSession(cookies);
   if (!session || session.member.role !== 'Admin') {
-    return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 403 });
+    return new Response(JSON.stringify({ error: 'Admin access required' }), {
+      status: 403,
+    });
   }
 
   const memberId = params.id;
 
   await withTransaction(dbUrl, async (client) => {
     // Calculate from events
-    const { rows: [calculated] } = await client.query(`
+    const {
+      rows: [calculated],
+    } = await client.query(
+      `
       SELECT COALESCE(SUM((metadata->>'points_earned')::integer), 0) AS trust_score
       FROM events
       WHERE event_type = 'claim.approved'
         AND (metadata->>'member_id')::uuid = $1
-    `, [memberId]);
+    `,
+      [memberId]
+    );
 
     // Get current cached value
-    const { rows: [member] } = await client.query(`
+    const {
+      rows: [member],
+    } = await client.query(
+      `
       SELECT trust_score_cached FROM members WHERE id = $1
-    `, [memberId]);
+    `,
+      [memberId]
+    );
 
     // Update cache
-    await client.query(`
+    await client.query(
+      `
       UPDATE members SET trust_score_cached = $1 WHERE id = $2
-    `, [calculated.trust_score, memberId]);
+    `,
+      [calculated.trust_score, memberId]
+    );
 
     // Log event
-    await client.query(`
+    await client.query(
+      `
       INSERT INTO events (actor_id, entity_type, entity_id, event_type, metadata)
       VALUES ($1, 'member', $2, 'trust_score.recalculated', $3)
-    `, [session.member.id, memberId, {
-      old_value: member.trust_score_cached,
-      new_value: calculated.trust_score,
-      discrepancy: calculated.trust_score - member.trust_score_cached
-    }]);
+    `,
+      [
+        session.member.id,
+        memberId,
+        {
+          old_value: member.trust_score_cached,
+          new_value: calculated.trust_score,
+          discrepancy: calculated.trust_score - member.trust_score_cached,
+        },
+      ]
+    );
 
-    return new Response(JSON.stringify({
-      old_score: member.trust_score_cached,
-      new_score: calculated.trust_score,
-      discrepancy: calculated.trust_score - member.trust_score_cached
-    }), { status: 200 });
+    return new Response(
+      JSON.stringify({
+        old_score: member.trust_score_cached,
+        new_score: calculated.trust_score,
+        discrepancy: calculated.trust_score - member.trust_score_cached,
+      }),
+      { status: 200 }
+    );
   });
 };
 ```
@@ -484,12 +546,14 @@ export const POST: APIRoute = async ({ params, cookies }) => {
 ## Success Metrics
 
 **Quantitative**:
+
 - ✅ Dashboard loads in <2s (measured)
 - ✅ Trust Score calculation matches events (validated with test query)
 - ✅ 26 acceptance criteria passed
 - ✅ Migration readiness: 90%
 
 **Qualitative**:
+
 - ✅ Members report feeling motivated by visible Trust Score
 - ✅ Progress bar to Steward creates clear goal
 - ✅ Sanctuary culture evident (encouragement, not pressure)
@@ -505,12 +569,12 @@ export const POST: APIRoute = async ({ params, cookies }) => {
 
 ## Risks & Mitigations
 
-| Risk                          | Likelihood | Impact | Mitigation                             |
-| ----------------------------- | ---------- | ------ | -------------------------------------- |
-| Recharts configuration issues | Low        | Medium | Extensive docs, fallback to bar chart  |
-| Query performance slow        | Medium     | Medium | Add indexes on event_type, member_id   |
-| Cache desync with events      | Low        | High   | Recalculate button validates accuracy  |
-| Screen reader chart support   | Medium     | Low    | Use aria-label with full data text     |
+| Risk                          | Likelihood | Impact | Mitigation                            |
+| ----------------------------- | ---------- | ------ | ------------------------------------- |
+| Recharts configuration issues | Low        | Medium | Extensive docs, fallback to bar chart |
+| Query performance slow        | Medium     | Medium | Add indexes on event_type, member_id  |
+| Cache desync with events      | Low        | High   | Recalculate button validates accuracy |
+| Screen reader chart support   | Medium     | Low    | Use aria-label with full data text    |
 
 ---
 
