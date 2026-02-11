@@ -197,6 +197,36 @@ ON events (event_type, ((metadata->>'member_id')::uuid))
 WHERE event_type = 'claim.approved';
 
 -- ============================================================================
+-- KNOWLEDGE DIMENSION: System Configuration (S3-04)
+-- ============================================================================
+
+-- S3-04: Versioned role promotion thresholds
+-- Enables threshold changes without code deployment
+-- Historical promotions retain original threshold in event metadata
+CREATE TABLE system_config (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  description TEXT,
+  version INTEGER NOT NULL DEFAULT 1,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_by UUID REFERENCES members(id)
+);
+
+-- Seed role promotion thresholds
+-- contributor: 100 points (basic participation milestone)
+-- steward: 250 points (unlocks review privileges)
+-- guardian: 1000 points (unlocks admin privileges)
+INSERT INTO system_config (key, value, description)
+VALUES (
+  'role_promotion_thresholds',
+  '{"contributor": 100, "steward": 250, "guardian": 1000}',
+  'Trust Score thresholds for automatic role promotion. Stewards can review claims. Guardians can create tasks.'
+) ON CONFLICT (key) DO NOTHING;
+
+-- Index for config lookups
+CREATE INDEX idx_system_config_key ON system_config(key);
+
+-- ============================================================================
 -- SECURITY: Append-Only Event Ledger
 -- ============================================================================
 
