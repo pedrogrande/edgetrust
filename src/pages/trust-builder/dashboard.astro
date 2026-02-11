@@ -22,26 +22,3 @@ const description = 'View your Trust Score, contributions, and progress toward S
 <Layout title={title} description={description}>
   <MemberDashboard client:load />
 </Layout>
-
-                <p><strong>Trust Score:</strong> ${data.member.trust_score_cached}</p>
-              </div>
-            `;
-          }
-        } else {
-          // Not authenticated, redirect to sign-in
-          window.location.href = '/trust-builder/signin';
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch user:', err);
-        window.location.href = '/trust-builder/signin';
-      });
-  </script>
-
-  <!-- Member info will be injected here -->
-  <div
-    id="member-info"
-    class="max-w-7xl mx-auto mt-4 bg-card p-6 rounded-lg border"
-  >
-  </div>
-</Layout>

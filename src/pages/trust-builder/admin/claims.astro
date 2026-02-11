@@ -16,7 +16,7 @@ import { sql } from '@/lib/db/connection';
 import { OrphanedClaimsBadge } from '@/components/trust-builder/OrphanedClaimsBadge';
 import { ReleaseOrphanedDialog } from '@/components/trust-builder/ReleaseOrphanedDialog';
 
-const member = await getCurrentUser(Astro.request);
+const member = await getCurrentUser(Astro.request, sql);
 
 // Redirect if not authenticated or not Guardian
 if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
