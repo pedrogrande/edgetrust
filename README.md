@@ -303,7 +303,139 @@ pnpm format           # Format with Prettier
 # Type Checking
 npx astro check       # TypeScript type checking
 npx astro sync        # Sync content collection types
+
+# Testing (Sprint 3)
+pnpm test             # Run all tests
+pnpm test:watch       # Run tests in watch mode
+pnpm test:ui          # Open Vitest UI dashboard
+pnpm test:coverage    # Generate coverage report
 ```
+
+### Testing Infrastructure
+
+**Test Framework**: Vitest 4.0+ with @testing-library/react
+
+Trust Builder uses Vitest for fast, ESM-native testing with TypeScript support. All business logic and API endpoints have comprehensive test coverage focusing on quasi-smart contract validation.
+
+**Test Coverage Targets:**
+
+- **Overall Coverage**: 40% minimum (Sprint 3)
+- **Critical Path**: 80% coverage of migration-critical logic
+- **Contract Validation**: Append-only events, immutable tasks, Trust Score derivation
+
+**Running Tests:**
+
+```bash
+# Run all tests once
+pnpm test
+
+# Watch mode (re-runs on file changes)
+pnpm test:watch
+
+# Interactive UI dashboard (recommended for development)
+pnpm test:ui
+
+# Generate coverage report (HTML + JSON)
+pnpm test:coverage
+```
+
+**Test File Locations:**
+
+```text
+src/
+├── lib/
+│   ├── __tests__/
+│   │   ├── setup.ts              # Test configuration
+│   │   ├── fixtures/
+│   │   │   └── members.ts        # Reusable test data
+│   │   └── trust-score-calculator.test.ts
+│   ├── contracts/__tests__/
+│   │   └── claim-engine.test.ts  # Business logic tests
+│   ├── events/__tests__/
+│   │   └── logger.test.ts        # Event logging tests
+│   └── api/__tests__/
+│       ├── auth-verify.test.ts   # API integration tests
+│       ├── claim-submission.test.ts
+│       └── claim-review.test.ts
+```
+
+**Writing Tests:**
+
+```typescript
+// Example unit test with fixtures
+import { describe, it, expect } from 'vitest';
+import { testMember, testTask } from '@/lib/__tests__/fixtures/members';
+
+describe('Trust Score Calculation', () => {
+  it('should sum approved claim points', () => {
+    const claims = [
+      { points: 50, status: 'approved' },
+      { points: 25, status: 'approved' },
+    ];
+    const total = claims.reduce((sum, c) => sum + c.points, 0);
+    expect(total).toBe(75);
+  });
+});
+```
+
+**Test Fixtures:**
+
+Reusable test data is available in `src/lib/__tests__/fixtures/members.ts`:
+
+- `testMember` - Standard member (FE-M-99999, 100 trust score)
+- `testSteward` - Steward member (FE-M-99998, 500 trust score)
+- `testTask` - Sample documentation task (auto-approve enabled)
+- `testClaim` - Submitted claim with proofs
+
+### Git Hooks (Automated Quality Checks)
+
+Trust Builder uses Husky to enforce code quality and prevent common issues:
+
+**Pre-Commit Hook** (runs before `git commit`):
+
+- ✅ TypeScript type checking (`pnpm tsc --noEmit`)
+- ✅ Character encoding validation (blocks smart quotes, en-dashes, em-dashes)
+- ✅ Checks: `.ts`, `.tsx`, `.js`, `.jsx`, `.astro` files
+
+**Pre-Push Hook** (runs before `git push`):
+
+- ✅ Prevents direct pushes to `main` branch
+- ✅ Encourages feature branch workflow
+- ✅ Logs bypasses to `.git/hook-bypasses.log` for audit trail
+
+**Hook Messages:**
+
+Hooks use "sanctuary-aligned" language (supportive, educational):
+
+```
+🌱 Let's use a feature branch to keep main stable!
+
+   Try: git checkout -b feature/S3-XX-description
+
+   Why? Feature branches enable:
+   • Code review through pull requests
+   • Safer collaboration and rollback
+   • Better tracking of changes
+```
+
+**Bypassing Hooks (when absolutely necessary):**
+
+```bash
+# Bypass pre-commit (NOT recommended)
+git commit --no-verify
+
+# Bypass pre-push (logged to audit trail)
+HUSKY_SKIP_HOOKS=1 git push
+
+# Bypasses are logged here:
+cat .git/hook-bypasses.log
+```
+
+**Why These Hooks?**
+
+1. **Character Encoding**: Prevents TypeScript compilation errors from Markdown-copied smart quotes (recurred in S2-03, S2-04)
+2. **Main Branch Protection**: Ensures all changes go through PR review (25% violation rate in Sprint 2)
+3. **TypeScript Safety**: Catches type errors before commit, not in CI
 
 ### Adding Blog Posts
 

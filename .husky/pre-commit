@@ -1,0 +1,47 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+echo ""
+
+# TypeScript type check
+echo "📘 Checking TypeScript..."
+pnpm tsc --noEmit --pretty
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ TypeScript errors detected. Please fix them before committing."
+  exit 1
+fi
+echo "✅ TypeScript check passed"
+echo ""
+
+# Character encoding check (includes .astro files per S3-01 strategic review)
+echo "🔍 Checking for character encoding issues..."
+
+# Check staged files for problematic characters
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx|astro)$')
+
+if [ -n "$STAGED_FILES" ]; then
+  # Check for smart quotes (' ' " "), en-dash (–), em-dash (—)
+  BAD_CHARS=$(echo "$STAGED_FILES" | xargs grep -n -E "[''""\u2013\u2014]" 2>/dev/null || true)
+  
+  if [ -n "$BAD_CHARS" ]; then
+    echo ""
+    echo "❌ Non-ASCII characters detected (smart quotes, en-dashes, or em-dashes):"
+    echo ""
+    echo "$BAD_CHARS"
+    echo ""
+    echo "   Please replace:"
+    echo "   ' or ' → '  (straight single quote)"
+    echo "   " or " → \"  (straight double quote)"
+    echo "   – or — → -  (hyphen-minus)"
+    echo ""
+    echo "   Tip: Search for these in VS Code and replace with ASCII equivalents"
+    echo ""
+    exit 1
+  fi
+fi
+
+echo "✅ Character encoding check passed"
+echo ""
+echo "✅ All pre-commit checks passed!"
