@@ -31,13 +31,13 @@ const orphanedClaims = await sql`
     t.title AS task_title,
     c.reviewer_id,
     COALESCE(m.display_name, m.email) AS reviewer_name,
-    EXTRACT(DAY FROM (NOW() - c.updated_at))::NUMERIC AS days_orphaned
+    EXTRACT(DAY FROM (NOW() - c.reviewed_at))::NUMERIC AS days_orphaned
   FROM claims c
   JOIN tasks t ON t.id = c.task_id
   LEFT JOIN members m ON m.id = c.reviewer_id
   WHERE c.status = 'under_review'
-    AND c.updated_at < NOW() - INTERVAL '7 days'
-  ORDER BY c.updated_at ASC
+    AND c.reviewed_at < NOW() - INTERVAL '7 days'
+  ORDER BY c.reviewed_at ASC
 `;
 
 // Fetch all pending claims for review queue display
@@ -53,7 +53,7 @@ const pendingClaims = await sql`
     submitter.email AS submitter_email,
     reviewer.display_name AS reviewer_name,
     CASE 
-      WHEN c.status = 'under_review' THEN EXTRACT(DAY FROM (NOW() - c.updated_at))
+      WHEN c.status = 'under_review' THEN EXTRACT(DAY FROM (NOW() - c.reviewed_at))
       ELSE NULL
     END AS days_in_review
   FROM claims c
@@ -77,7 +77,7 @@ const queueStats = await sql`
     COUNT(*) FILTER (WHERE status = 'under_review') AS under_review_count,
     COUNT(*) FILTER (
       WHERE status = 'under_review' 
-      AND updated_at < NOW() - INTERVAL '7 days'
+      AND reviewed_at < NOW() - INTERVAL '7 days'
     ) AS orphaned_count
   FROM claims
 `;
@@ -102,10 +102,7 @@ const stats = queueStats[0] || {
           <span class="text-sm text-muted-foreground">
             Guardian: {member.member_id}
           </span>
-          <ReleaseOrphanedDialog
-            orphanedClaims={orphanedClaims}
-            client:load
-          />
+          <ReleaseOrphanedDialog orphanedClaims={orphanedClaims} client:load />
         </div>
       </div>
 
@@ -235,8 +232,8 @@ const stats = queueStats[0] || {
       <p class="text-muted-foreground">
         Claims marked as "orphaned" have been under review for more than 7 days.
         Life happens! Use the "Release Orphaned Claims" button to return them to
-        the queue with <strong>no penalties</strong> to the original reviewer.
-        This helps maintain review velocity and supports our learning culture.
+        the queue with <strong>no penalties</strong> to the original reviewer. This
+        helps maintain review velocity and supports our learning culture.
       </p>
     </div>
   </div>

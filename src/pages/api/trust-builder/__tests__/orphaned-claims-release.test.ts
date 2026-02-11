@@ -45,10 +45,10 @@ describe('Orphaned Claims: Query Logic', () => {
 
     const result = await (mockClient.query as any)(
       `
-      SELECT c.id, EXTRACT(DAY FROM (NOW() - c.updated_at)) AS days_orphaned
+      SELECT c.id, EXTRACT(DAY FROM (NOW() - c.reviewed_at)) AS days_orphaned
       FROM claims c
       WHERE c.status = 'under_review'
-        AND c.updated_at < NOW() - INTERVAL '7 days'
+        AND c.reviewed_at < NOW() - INTERVAL '7 days'
     `
     );
 
@@ -64,7 +64,7 @@ describe('Orphaned Claims: Query Logic', () => {
     });
 
     const result = await (mockClient.query as any)(
-      `WHERE c.updated_at < NOW() - INTERVAL '7 days'`
+      `WHERE c.reviewed_at < NOW() - INTERVAL '7 days'`
     );
 
     expect(result.rows).toHaveLength(0);
@@ -113,7 +113,7 @@ describe('Orphaned Claims: Release Transaction', () => {
       UPDATE claims
       SET status = 'submitted', reviewer_id = NULL
       WHERE status = 'under_review'
-        AND updated_at < NOW() - INTERVAL '7 days'
+        AND reviewed_at < NOW() - INTERVAL '7 days'
       RETURNING id, status, reviewer_id
     `
     );
@@ -330,7 +330,7 @@ describe('Orphaned Claims: Migration Readiness', () => {
     // Query only depends on timestamp and interval (pure function)
     const query = `
       WHERE c.status = 'under_review'
-        AND c.updated_at < NOW() - INTERVAL '7 days'
+        AND c.reviewed_at < NOW() - INTERVAL '7 days'
     `;
 
     // No API calls, no file I/O, no random values

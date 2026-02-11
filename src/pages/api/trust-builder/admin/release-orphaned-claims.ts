@@ -59,13 +59,13 @@ export const POST: APIRoute = async ({ request }) => {
             t.title AS task_title,
             c.reviewer_id,
             COALESCE(m.display_name, m.email) AS reviewer_name,
-            EXTRACT(DAY FROM (NOW() - c.updated_at))::NUMERIC AS days_orphaned
+            EXTRACT(DAY FROM (NOW() - c.reviewed_at))::NUMERIC AS days_orphaned
           FROM claims c
           JOIN tasks t ON t.id = c.task_id
           LEFT JOIN members m ON m.id = c.reviewer_id
           WHERE c.status = 'under_review'
-            AND c.updated_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'
-          ORDER BY c.updated_at ASC
+            AND c.reviewed_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'
+          ORDER BY c.reviewed_at ASC
         `);
 
         // AC: Defensive check for zero orphaned claims

@@ -14,10 +14,10 @@ export const GET: APIRoute = async ({ request }) => {
   const member = await getCurrentUser(request);
 
   if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
-    return new Response(
-      JSON.stringify({ error: 'Admin access required' }),
-      { status: 403, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Admin access required' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -25,16 +25,13 @@ export const GET: APIRoute = async ({ request }) => {
       SELECT COUNT(*)::INTEGER AS count
       FROM claims
       WHERE status = 'under_review'
-        AND updated_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'
+        AND reviewed_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'
     `;
 
-    return new Response(
-      JSON.stringify({ count: result[0]?.count || 0 }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ count: result[0]?.count || 0 }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Orphaned claims count error:', error);
     return new Response(
