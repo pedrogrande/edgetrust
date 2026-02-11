@@ -46,7 +46,6 @@ const pendingClaims = await sql`
     c.id,
     c.status,
     c.submitted_at,
-    c.updated_at,
     t.title AS task_title,
     t.task_type,
     submitter.display_name AS submitter_name,
