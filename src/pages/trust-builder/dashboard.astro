@@ -1,53 +1,28 @@
 ---
 /**
- * Trust Builder Dashboard (Placeholder)
- * Will be fully implemented in S1-05
+ * Trust Builder Member Dashboard Page (S3-02)
+ * 
+ * Displays:
+ * - Trust Score (event-sourced)
+ * - Incentive breakdown chart (5 dimensions)
+ * - Claim history table
+ * - Progress to next role
+ * 
+ * AC16: Mobile responsive (375px, 768px, 1024px viewports)
+ * AC21: Keyboard navigable
  */
 
 import Layout from '@/layouts/Layout.astro';
+import MemberDashboard from '@/components/trust-builder/MemberDashboard';
+
+const title = 'My Dashboard | Trust Builder';
+const description = 'View your Trust Score, contributions, and progress toward Steward role.';
 ---
 
-<Layout title="Dashboard - Trust Builder">
-  <main class="min-h-screen bg-background p-8">
-    <div class="max-w-7xl mx-auto space-y-8">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-4xl font-bold tracking-tight">Dashboard</h1>
-          <p class="text-muted-foreground mt-2">Welcome to Trust Builder</p>
-        </div>
-        <form action="/api/trust-builder/auth/signout" method="POST">
-          <button
-            type="submit"
-            class="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
-          >
-            Sign Out
-          </button>
-        </form>
-      </div>
+<Layout title={title} description={description}>
+  <MemberDashboard client:load />
+</Layout>
 
-      <div class="bg-card p-6 rounded-lg border">
-        <p class="text-muted-foreground">
-          Dashboard content coming in S1-05 (Member Dashboard story).
-        </p>
-      </div>
-    </div>
-  </main>
-
-  <script>
-    // Fetch current user to verify authentication
-    fetch('/api/trust-builder/auth/me')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.member) {
-          console.log('Authenticated as:', data.member);
-          // Display member info in the page
-          const memberInfo = document.getElementById('member-info');
-          if (memberInfo) {
-            memberInfo.innerHTML = `
-              <div class="space-y-2">
-                <p><strong>Member ID:</strong> ${data.member.member_id}</p>
-                <p><strong>Email:</strong> ${data.member.email}</p>
-                <p><strong>Role:</strong> ${data.member.role}</p>
                 <p><strong>Trust Score:</strong> ${data.member.trust_score_cached}</p>
               </div>
             `;

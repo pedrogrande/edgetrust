@@ -1,40 +1,36 @@
 /**
- * Trust Score Card Component
- * Displays member's total trust score and dimension breakdown chart
+ * Trust Score Card Component (S3-02)
+ * Displays member's total Trust Score prominently
+ *
+ * AC1: Dashboard displays member's Trust Score inom 2s page load
+ * AC12: Member role displayed correctly (badge)
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { Badge } from '@/components/ui/badge';
 
 interface TrustScoreCardProps {
-  totalScore: number;
-  dimensions: Record<string, number>;
-  memberId: string;
+  trustScore: number;
+  role: string;
 }
 
 export default function TrustScoreCard({
-  totalScore,
-  dimensions,
-  memberId,
+  trustScore,
+  role,
 }: TrustScoreCardProps) {
-  // Transform dimensions record to chart data format
-  const chartData = Object.entries(dimensions).map(([name, points]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1), // Capitalize
-    points,
-  }));
+  // Map roles to badge colors
+  const roleColors: Record<string, string> = {
+    explorer:
+      'bg-blue-100 text-blue-900 dark:bg-blue-900/20 dark:text-blue-400',
+    contributor:
+      'bg-green-100 text-green-900 dark:bg-green-900/20 dark:text-green-400',
+    steward:
+      'bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-400',
+    guardian:
+      'bg-amber-100 text-amber-900 dark:bg-amber-900/20 dark:text-amber-400',
+  };
 
-  // Sort by points descending for better visual hierarchy
-  chartData.sort((a, b) => b.points - a.points);
-
-  const hasDimensions = chartData.length > 0 && totalScore > 0;
+  const roleBadgeClass = roleColors[role.toLowerCase()] || roleColors.explorer;
 
   return (
     <Card>
@@ -42,73 +38,30 @@ export default function TrustScoreCard({
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-2xl font-bold">Trust Score</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Member ID:{' '}
-              <span className="font-mono font-semibold">{memberId}</span>
-              <span
-                className="ml-2 inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400"
-                title="Your Member ID is your permanent identity in Future's Edge. When we launch on blockchain in April 2026, this ID proves your founding contribution and links to your wallet."
-              >
-                Founding Member
-              </span>
-            </p>
+            <div className="mt-2">
+              <Badge className={roleBadgeClass}>
+                {role.charAt(0).toUpperCase() + role.slice(1)}
+              </Badge>
+            </div>
           </div>
           <div className="text-right">
-            <div className="text-4xl font-bold text-primary">{totalScore}</div>
-            <div className="text-sm text-muted-foreground">points</div>
+            <div
+              className="text-5xl font-bold text-primary"
+              aria-label={`Your Trust Score is ${trustScore} points`}
+            >
+              {trustScore}
+            </div>
+            <div className="text-sm text-muted-foreground mt-1">points</div>
           </div>
         </div>
       </CardHeader>
 
       <CardContent>
-        {hasDimensions ? (
-          <>
-            <h3 className="text-sm font-semibold mb-4 text-muted-foreground">
-              Dimension Breakdown
-            </h3>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    className="stroke-muted"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                    className="text-xs"
-                  />
-                  <YAxis className="text-xs" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '6px',
-                    }}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }}
-                  />
-                  <Bar
-                    dataKey="points"
-                    fill="hsl(var(--primary))"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </>
-        ) : (
-          <div className="py-12 text-center text-muted-foreground">
-            <p className="text-sm">
-              Complete tasks to earn trust points and see your dimension
-              breakdown here.
-            </p>
-          </div>
-        )}
+        <p className="text-sm text-muted-foreground">
+          Your Trust Score is earned through verified contributions across 5
+          dimensions: Participation, Collaboration, Innovation, Leadership, and
+          Impact.
+        </p>
       </CardContent>
     </Card>
   );
