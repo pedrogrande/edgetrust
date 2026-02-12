@@ -11,7 +11,7 @@ import { sql } from '@/lib/db/connection';
 const TIMEOUT_THRESHOLD_DAYS = 7;
 
 export const GET: APIRoute = async ({ request }) => {
-  const member = await getCurrentUser(request);
+  const member = await getCurrentUser(request, sql);
 
   if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
     return new Response(JSON.stringify({ error: 'Admin access required' }), {

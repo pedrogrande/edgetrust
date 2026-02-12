@@ -18,7 +18,7 @@
 
 import type { APIRoute } from 'astro';
 import { getCurrentUser } from '@/lib/auth';
-import { withTransaction } from '@/lib/db/connection';
+import { sql, withTransaction } from '@/lib/db/connection';
 import { EventType } from '@/types/trust-builder';
 
 // TODO: Move to system_config table in S4+ governance story (per strategic review)
@@ -35,7 +35,7 @@ interface OrphanedClaim {
 
 export const POST: APIRoute = async ({ request }) => {
   // AC: Admin-only authorization check
-  const member = await getCurrentUser(request);
+  const member = await getCurrentUser(request, sql);
 
   if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
     return new Response(
