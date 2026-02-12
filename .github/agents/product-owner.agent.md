@@ -156,11 +156,13 @@ Then [...]
 ## Testing Schedule (for UI stories)
 
 **Day 5 Manual Testing** (1 hour allocated):
+
 - Desktop: Chrome at 375px, 768px, 1024px (responsive breakpoints)
 - iOS: Safari on iPhone 13+ (actual device, not simulator)
 - Android: Chrome on Pixel 6+ (actual device)
 
 **Validation**:
+
 - All primary actions reachable without scrolling (laptop viewport baseline)
 - No horizontal scroll at 375px
 - Touch targets ≥44px (mobile accessibility)
@@ -169,6 +171,7 @@ Then [...]
 ## Environment Setup (for database stories)
 
 **Before implementation, verify**:
+
 1. Run `echo $DATABASE_URL` in terminal where dev server runs
 2. Confirm database matches expected environment (dev branch vs production)
 3. If testing with seed data, document which database is being used

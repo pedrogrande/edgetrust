@@ -1,7 +1,7 @@
 # Trust Builder Agent Hub
 
 **Purpose**: Quick navigation for AI agents working on Trust Builder  
-**Last Updated**: 11 February 2026  
+**Last Updated**: 12 February 2026 (Sprint 3 complete)  
 **Doc Whisperer**: Maintained for fast, token-efficient lookups
 
 ---
@@ -15,9 +15,10 @@
 **Story Planning**:
 
 - [BACKLOG.md](product-manager/BACKLOG.md) - Prioritized stories
-- [Sprint 3 Plan](product-manager/SPRINT-3-PLAN.md) - Current sprint goals
 - Story examples: [product-manager/stories/](product-manager/stories/)
-- Latest learnings: [retros/sprint-2-learnings-and-guidance.md](retros/sprint-2-learnings-and-guidance.md)
+- **Latest learnings**: [retros/sprint-3-learnings-and-guidelines.md](retros/sprint-3-learnings-and-guidelines.md) ⭐ **PRIMARY REFERENCE**
+- Strategic review matrix: [quickrefs/strategic-review.md](quickrefs/strategic-review.md)
+- Component registry: [patterns/component-registry.md](patterns/component-registry.md)
 
 **Reference Docs** (check before planning):
 
@@ -33,16 +34,18 @@
 **Gold Patterns**: [patterns/](patterns/) - Copy-paste implementations  
 **Test Infrastructure**: [README Testing section](../../README.md#testing-sprint-3)
 
+**🚀 Sprint 3 Gold Standards** (copy-paste ready):
+
+- **CTE atomic transactions** → [patterns/cte-atomic-pattern.md](patterns/cte-atomic-pattern.md) (state + event atomicity)
+- **Component reuse** → [patterns/component-registry.md](patterns/component-registry.md) (save 2-3 hours per story)
+- API endpoint → [patterns/api-endpoint.md](patterns/api-endpoint.md)
+- Event logging → [patterns/event-sourcing.md](patterns/event-sourcing.md)
+
 **Key Docs**:
 
 - [Data Model & API Design](04-data-model-and-api-design.md) - Database schema, API contracts
 - [Smart Contract Spec](05-smart-contract-behaviour-spec.md) - Event sourcing, quasi-smart contracts
 - [Developer Standards Checklist](meta/developer-standards-checklist.md) - Pre-commit checklist
-
-**🚀 Quick Patterns** (copy-paste ready):
-
-- API endpoint → [patterns/api-endpoint.md](patterns/api-endpoint.md)
-- Event logging → [patterns/event-sourcing.md](patterns/event-sourcing.md)
 
 ---
 
@@ -50,6 +53,12 @@
 
 **Quick Ref**: [quickrefs/qa.md](quickrefs/qa.md) ⭐ **START HERE**  
 **QA Templates**: [product-manager/stories/](product-manager/stories/) (search `*-QA-REPORT.md`)
+
+**Sprint 3 Standards**:
+
+- **Test-first workflow**: 100% pass rate expected (129 tests, <2s execution baseline)
+- **Accessibility validation**: WCAG AA checklist (ARIA, contrast, touch targets, focus)
+- **Database state assertions**: Validate BOTH state change AND event logged (CTE pattern)
 
 **Key Docs**:
 
@@ -68,7 +77,14 @@
 ### Product Advisor
 
 **Quick Ref**: [quickrefs/advisor.md](quickrefs/advisor.md) ⭐ **START HERE**  
+**Strategic Review Matrix**: [quickrefs/strategic-review.md](quickrefs/strategic-review.md) (2.7-3.7x ROI proven)  
 **Reviews**: [product-manager/advisor-feedback/](product-manager/advisor-feedback/)
+
+**Sprint 3 Patterns**:
+
+- **Strategic Review Decision Matrix**: Simple optional, Moderate recommended, Complex mandatory
+- **Sanctuary Architecture Checklist**: 5 validated patterns (reversibility, non-punitive, teaching, supportive, generous)
+- **Component Reuse Check**: Consult [patterns/component-registry.md](patterns/component-registry.md)
 
 **Key Docs**:
 
@@ -76,24 +92,25 @@
 - [Ontology (ONE dimension map)](../../project/platform/ontology/) - 6-dimension framework
 - [Migration Strategy](08-migration-and-audit-strategy.md) - Blockchain readiness
 
-**Review Types** (see [quickrefs/advisor.md](quickrefs/advisor.md) for checklists):
+**Review Types** (see [quickrefs/strategic-review.md](quickrefs/strategic-review.md) for detailed checklists):
 
-- **Pre-implementation**: 30-45 min (feature) or 15 min (infrastructure)
-- **Post-implementation**: Grade story (A/B+/B/C), assess migration readiness
-- Reviews saved in: [product-manager/advisor-feedback/](product-manager/advisor-feedback/)
+- **Simple stories (≤4 pts)**: Review optional (break-even ROI)
+- **Moderate stories (5-7 pts)**: Review recommended (2-3x ROI, 45 min)
+- **Complex stories (≥8 pts)**: Review **MANDATORY** (3-4x ROI, 90 min)
 
 ---
 
 ### Retro Facilitator
 
-**Quick Start**: Read latest [story retro](retros/) → Check [PATTERN-ANALYSIS.md](meta/PATTERN-ANALYSIS.md) for recurring patterns
+**Quick Start**: Read latest [story retro](retros/) → Check [learnings-and-guidelines.md](retros/sprint-3-learnings-and-guidelines.md) for patterns
 
 **Retro Workflow**:
 
 1. Read story + QA report + strategic review
 2. Document: What went well? What could improve? Learnings? Action items?
 3. Ask: "Were patterns easy to find?" (doc friction feedback)
-4. Save to: `retros/story-SX-XX-{title}-retro.md`
+4. Ask: "Which infrastructure dependencies should have been sequenced earlier?"
+5. Save to: `retros/story-SX-XX-{title}-retro.md`
 
 **Reference**:
 
@@ -127,10 +144,14 @@
 | --------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------- |
 | Implement API endpoint?     | [patterns/api-endpoint.md](patterns/api-endpoint.md)               | [04: Data Model & API Design](04-data-model-and-api-design.md) |
 | Add event logging?          | [patterns/event-sourcing.md](patterns/event-sourcing.md)           | [05: Smart Contract Spec](05-smart-contract-behaviour-spec.md) |
-| Calculate Trust Scores?     | [06: Trust Score Rules](06-incentive-and-trust-score-rules.md)     | —                                                              |
-| Validate sanctuary culture? | [quickrefs/advisor.md](quickrefs/advisor.md) (sanctuary checklist) | [00: Product Vision](00-product-vision-and-goals.md)           |
-| Check migration readiness?  | [quickrefs/qa.md](quickrefs/qa.md) (migration checklist)           | [08: Migration Strategy](08-migration-and-audit-strategy.md)   |
-| Run/write tests?            | [quickrefs/developer.md](quickrefs/developer.md) (testing section) | README.md (Testing section)                                    |
+| Use CTE atomic pattern?     | [patterns/cte-atomic-pattern.md](patterns/cte-atomic-pattern.md) **⭐ GOLD** | [Sprint 3 Learnings](retros/sprint-3-learnings-and-guidelines.md) |
+| Find reusable components?   | [patterns/component-registry.md](patterns/component-registry.md)   | — |
+| When is strategic review needed? | [quickrefs/strategic-review.md](quickrefs/strategic-review.md) **⭐ ROI: 2.7-3.7x** | [Sprint 3 Learnings](retros/sprint-3-learnings-and-guidelines.md) |
+| Calculate Trust Scores?     | [06: Trust Score Rules](06-incentive-and-trust-score-rules.md)     | — |
+| Validate sanctuary culture? | [quickrefs/advisor.md](quickrefs/advisor.md) (sanctuary checklist) | [00: Product Vision](00-product-vision-and-goals.md) |
+| Write supportive, non-punitive messaging? | [patterns/sanctuary-messaging.md](patterns/sanctuary-messaging.md) **⭐ GOLD** (S3-03 9.5/10) | [Sprint 3 Learnings](retros/sprint-3-learnings-and-guidelines.md) |
+| Check migration readiness?  | [quickrefs/qa.md](quickrefs/qa.md) (migration checklist)           | [08: Migration Strategy](08-migration-and-audit-strategy.md) |
+| Run/write tests?            | [quickrefs/developer.md](quickrefs/developer.md) (testing section) | README.md (Testing section) |
 
 ---
 
@@ -139,7 +160,7 @@
 ### Updated Each Sprint
 
 - [BACKLOG.md](product-manager/BACKLOG.md) - Prioritized stories
-- [SPRINT-X-PLAN.md](product-manager/SPRINT-3-PLAN.md) - Current sprint goals
+- [learnings-and-guidelines.md](retros/sprint-3-learnings-and-guidelines.md) - Latest sprint learnings (S3: 1,748 lines, comprehensive playbook)
 - [PATTERN-ANALYSIS.md](meta/PATTERN-ANALYSIS.md) - Recurring patterns, blockers
 
 ### Updated Each Story
@@ -203,11 +224,16 @@ trust-builder/
 ├── quickrefs/                ← ⚡ Quick references (3-10 min, ~500 tokens)
 │   ├── developer.md          ← ✅ Developer patterns + checklist
 │   ├── qa.md                 ← ✅ QA workflow + migration checklist
-│   └── advisor.md            ← ✅ Review types + grading rubric
+│   ├── advisor.md            ← ✅ Review types + grading rubric
+│   └── strategic-review.md   ← ⭐ Review decision matrix (2.7-3.7x ROI proven)
 │
 ├── patterns/                 ← 📋 Copy-paste templates (~1000 tokens)
 │   ├── api-endpoint.md       ← ✅ REST API with auth + transaction + events
-│   └── event-sourcing.md     ← ✅ Event logging with before/after state
+│   ├── event-sourcing.md     ← ✅ Event logging with before/after state
+│   ├── cte-atomic-pattern.md ← ⭐ CTE atomic transactions (S3 gold standard)
+│   ├── component-registry.md ← ⭐ Reusable React components (saves 2-3 hrs/story)
+│   ├── sanctuary-messaging.md ← ⭐ Supportive, non-punitive language templates (S3-03 gold)
+│   └── UI-layout-pattern.md  ← ✅ Layout patterns and sanctuary spacing
 │
 ├── 00-08-*.md                ← 📚 Core specs (reference, read as needed)
 │    ├── 00-product-vision-and-goals.md
@@ -218,8 +244,9 @@ trust-builder/
 ├── product-manager/          ← 📝 Stories + sprints + reviews
 │   ├── stories/              ← User story specs (S3-XX-*.md)
 │   ├── advisor-feedback/     ← Strategic reviews (S3-XX-strategic-review.md)
-│   ├── BACKLOG.md            ← Prioritized backlog
-│   └── SPRINT-3-PLAN.md      ← Current sprint
+│   ├── BACKLOG.mXX-*.md      ← Story retrospectives (S3-01 through S3-04)
+│   ├── sprint-3-retrospective.md  ← Sprint 3 retro (2,988 lines, 4 perspectives)
+│   └── sprint-3-learnings-and-guidelines.md  ← ⭐ S3 learnings playbook (1,748 lines
 │
 ├── retros/                   ← 🔄 Learnings (updated each story/sprint)
 │   ├── story-S3-01-*.md      ← Story retrospectives

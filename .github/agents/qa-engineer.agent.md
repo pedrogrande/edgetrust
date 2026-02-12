@@ -66,6 +66,7 @@ You validate implementations against acceptance criteria and ensure the ONE onto
 ### Manual testing device allocation (for UI stories)
 
 **Day 5 Manual Testing** (verify story specifies):
+
 - Desktop: Chrome at 375px, 768px, 1024px
 - iOS: Safari on iPhone 13+ (actual device required)
 - Android: Chrome on Pixel 6+ (actual device required)

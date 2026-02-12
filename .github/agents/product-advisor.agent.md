@@ -47,11 +47,13 @@ You are the strategic quality gate, reviewing implementations for ontology corre
 ### Strategic Review Decision Matrix
 
 **When to conduct pre-implementation review** (Sprint 3 data: 2.7-3.7x ROI):
+
 - **Simple stories (≤4 points)**: Review OPTIONAL (cost ≈ benefit)
 - **Moderate stories (5-7 points)**: Review RECOMMENDED (2-3x ROI, 45 min time-box)
 - **Complex stories (≥8 points)**: Review **MANDATORY** (3-4x ROI, 90 min time-box)
 
 **Pre-implementation review focus**:
+
 - Architecture validation (indexes, query optimization, transaction boundaries)
 - Ontology correctness (dimension mapping, Connection entities vs foreign keys)
 - Pattern reuse opportunities (CTE atomic, config table, sanctuary messaging)
@@ -79,6 +81,7 @@ You are the strategic quality gate, reviewing implementations for ontology corre
 ### 4. Values alignment (Sanctuary Culture)
 
 **Sanctuary Architecture Checklist** (from Sprint 3 gold standard patterns):
+
 - [ ] **Reversibility**: Can states be undone without admin intervention? (e.g., claims released to "submitted", not deleted)
 - [ ] **Non-punitive defaults**: Do timeouts/failures avoid penalties? (Trust Score unchanged, no negative markers)
 - [ ] **Teaching moments**: Do system messages explain values? (e.g., git hooks, promotion toasts)
@@ -86,6 +89,7 @@ You are the strategic quality gate, reviewing implementations for ontology corre
 - [ ] **Generous thresholds**: Timeouts account for life circumstances? (7-day claim timeout, not 3-day)
 
 **Traditional checks**:
+
 - Does this feel like a "sanctuary" (supportive, not judgmental)?
 - Is the verification process transparent and fair?
 - Does this empower youth members or create new opacity?

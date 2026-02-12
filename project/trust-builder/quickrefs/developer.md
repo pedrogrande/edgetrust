@@ -1,8 +1,8 @@
 # Developer Quick Reference
 
 **Purpose**: Fast lookup for common tasks (3-10 min read)  
-**Full Details**: [Sprint 2 Learnings](../retros/sprint-2-learnings-and-guidance.md) | [Standards Checklist](../meta/developer-standards-checklist.md)  
-**Last Updated**: 11 February 2026
+**Full Details**: [Sprint 3 Learnings](../retros/sprint-3-learnings-and-guidelines.md) ⭐ **PRIMARY REFERENCE** | [Standards Checklist](../meta/developer-standards-checklist.md)  
+**Last Updated**: 12 February 2026 (Sprint 3 complete)
 
 ---
 
@@ -10,16 +10,59 @@
 
 ### Pre-Implementation Checklist
 
-- [ ] Create feature branch: `git checkout -b S3-XX-feature-name`
-- [ ] Check story complexity: If Medium+, wait for product-advisor pre-review
+- [ ] Create feature branch: `git checkout -b S4-XX-feature-name`
+- [ ] Check story complexity: If Moderate+ (≥5 pts), wait for product-advisor pre-review (2.7-3.7x ROI proven)
+- [ ] **Check component registry**: [patterns/component-registry.md](../patterns/component-registry.md) for reusable components (saves 2-3 hours)
+- [ ] **Verify environment** (if DB story): Run `echo $DATABASE_URL` → Astro uses `.env` not `.dev.vars`
 - [ ] Check git hooks installed: `.husky/pre-commit` and `.husky/pre-push`
 - [ ] Run tests: `pnpm test` (should pass before you start)
+
+**Sprint 3 Standard**: Test-first is default (not "at least one test"). Write integration tests BEFORE implementation.
 
 ---
 
 ## 🎯 Core Patterns (Copy These!)
 
-### 1. API Endpoint with Transaction
+### 1. CTE Atomic Transaction (⭐ GOLD STANDARD - Sprint 3)
+
+**Use when**: Any state change requiring event logging (state + event atomic, matches blockchain transactions)
+
+```typescript
+import { withTransaction } from '@/lib/db/connection';
+
+async function updateStateAndLogEvent(params) {
+  return await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
+    // Single query: State change + event logging (atomic)
+    const result = await client.query(`
+      WITH state_change AS (
+        UPDATE table_name 
+        SET column = $1, updated_at = NOW()
+        WHERE condition
+        RETURNING *
+      )
+      INSERT INTO events (entity_type, entity_id, event_type, actor_id, metadata)
+      SELECT 
+        'entity_type',
+        sc.id,
+        $2::VARCHAR,
+        $3::UUID,
+        jsonb_build_object('field_changed', 'column', 'old_value', sc.old_column_value, 'new_value', sc.column)
+      FROM state_change sc
+      RETURNING *
+    `, [newValue, eventType, actorId]);
+    
+    return result.rows;
+  });
+}
+```
+
+**Why**: Atomicity guaranteed (state + event succeed/fail together), single round-trip (performance), no manual rollback logic, 95-98% blockchain migration compatible.
+
+**Full Details**: [patterns/cte-atomic-pattern.md](../patterns/cte-atomic-pattern.md) (proven across 3 stories: S3-01, S3-03, S3-04)
+
+---
+
+### 2. API Endpoint with Transaction
 
 ```typescript
 import { withTransaction } from '@/lib/db/connection';
@@ -218,17 +261,14 @@ Before `git commit`:
 
 ## 📚 Full References
 
-**Detailed Patterns**:
+**Full References**:
 
-- [Event Sourcing](../patterns/event-sourcing.md)
-- [API Endpoint](../patterns/api-endpoint.md)
-- [API Testing](../patterns/api-testing.md)
-- [Auth Middleware](../patterns/auth-middleware.md)
+- **⭐ Sprint 3 Learnings** (PRIMARY): [sprint-3-learnings-and-guidelines.md](../retros/sprint-3-learnings-and-guidelines.md) (1,748 lines, comprehensive playbook)
+- CTE Atomic Pattern: [patterns/cte-atomic-pattern.md](../patterns/cte-atomic-pattern.md)
+- Component Registry: [patterns/component-registry.md](../patterns/component-registry.md) (saves 2-3 hours per story)
+- Strategic Review ROI: [quickrefs/strategic-review.md](../quickrefs/strategic-review.md) (2.7-3.7x proven)
+- Event Sourcing: [patterns/event-sourcing.md](../patterns/event-sourcing.md)
+- API Endpoint: [patterns/api-endpoint.md](../patterns/api-endpoint.md)
+- Developer Standards: [meta/developer-standards-checklist.md](../meta/developer-standards-checklist.md)
 
-**Long-Form Guides**:
-
-- [Sprint 2 Learnings](../retros/sprint-2-learnings-and-guidance.md) (1066 lines)
-- [Developer Standards Checklist](../meta/developer-standards-checklist.md) (686 lines)
-- [Smart Contract Spec](../05-smart-contract-behaviour-spec.md)
-
-**Questions?** Check [PATTERN-ANALYSIS.md](../meta/PATTERN-ANALYSIS.md) for recurring issues.
+**Questions?** Check [sprint-3-learnings-and-guidelines.md](../retros/sprint-3-learnings-and-guidelines.md) first (organized by: Team Successes, Struggles, Action Items, Architectural Patterns, Sanctuary Culture, Migration Readiness).

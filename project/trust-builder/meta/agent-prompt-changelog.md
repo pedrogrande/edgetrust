@@ -26,7 +26,7 @@ Sprint 3 delivered sustained excellence (4.0 GPA, 20/20 points, 92-95% migration
 
 **Agents affected**:
 
-- **product-owner**: 
+- **product-owner**:
   - Added **Strategic Review Decision Matrix** to sprint planning (Simple ≤4pts optional, Moderate 5-7pts recommended, Complex ≥8pts mandatory)
   - Added **Infrastructure Dependencies** check during sprint planning (sequence foundation stories before dependent features)
   - Added **Component Registry** reference requirement (`/project/trust-builder/patterns/component-registry.md`)
@@ -60,17 +60,20 @@ Sprint 3 delivered sustained excellence (4.0 GPA, 20/20 points, 92-95% migration
 ### Expected Impact
 
 **Quality Improvements**:
+
 - Catch accessibility issues during QA, not post-launch
 - Prevent database environment confusion (S3-03 had 7 bug categories from this)
 - Component discovery waste eliminated (S3-04: 30 min search time becomes 0 min with registry)
 - Strategic reviews prevent 3-4 hours of rework per Complex story
 
 **Process Efficiency**:
+
 - Test-first as default reduces rework cycles (Sprint 3: 0 bugs escaped, 100% first-pass QA)
 - CTE pattern as default ensures atomic transactions (no manual rollback logic needed)
 - Infrastructure dependencies mapped during planning prevents sequencing mistakes (S3-03 hardcoded threshold, S3-04 created config table)
 
 **Cultural Consistency**:
+
 - Sanctuary Architecture Checklist ensures systematic validation (not just S3-03 gold standard by luck)
 - Teaching moments embedded in automation (git hooks, promotion toasts, system messages)
 
@@ -86,6 +89,7 @@ Sprint 3 delivered sustained excellence (4.0 GPA, 20/20 points, 92-95% migration
 ### Documentation Dependencies
 
 This change assumes creation of:
+
 - `/project/trust-builder/patterns/component-registry.md` (action item for product-owner)
 - Sanctuary messaging pattern docs (action item for meta-coach/doc-whisperer)
 

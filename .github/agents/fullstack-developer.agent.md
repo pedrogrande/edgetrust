@@ -263,17 +263,21 @@ You own the git workflow for the user stories you implement:
 12. Hand off to qa-engineer
 
 **CTE Atomic Transaction Pattern** (default for state + event):
+
 ```typescript
 await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
   // CTE: State change + event logging in single query (atomic)
-  await client.query(`
+  await client.query(
+    `
     WITH state_change AS (
       UPDATE table_name SET column = $1 WHERE condition RETURNING *
     )
     INSERT INTO events (entity_type, entity_id, event_type, metadata)
     SELECT 'entity', sc.id, $2, jsonb_build_object('key', 'value')
     FROM state_change sc
-  `, [newValue, eventType]);
+  `,
+    [newValue, eventType]
+  );
 });
 ```
 
