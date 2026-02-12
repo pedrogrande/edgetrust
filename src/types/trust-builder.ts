@@ -82,6 +82,10 @@ export enum EventType {
   CLAIM_REVIEW_ASSIGNED = 'claim.review_assigned',
   CLAIM_REVIEW_TIMEOUT = 'claim.review_timeout',
   CLAIM_REVIEW_RELEASED = 'claim.review_released',
+
+  // S3: Automated workflows
+  CLAIM_TIMEOUT_RELEASED = 'claim.timeout_released',
+  MEMBER_ROLE_PROMOTED = 'member.role_promoted',
 }
 
 // ============================================================================

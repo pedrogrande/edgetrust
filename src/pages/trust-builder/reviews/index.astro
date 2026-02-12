@@ -9,8 +9,10 @@ if (!currentUser) {
   return Astro.redirect('/trust-builder/signin');
 }
 
-// Check reviewer eligibility
-const isEligibleReviewer = currentUser.trust_score_cached >= 250;
+// S3-04 AC13: Check role-based permissions (not hardcoded trust score)
+// Only Stewards (role >= steward) can review claims
+const canReview = ['steward', 'guardian'].includes(currentUser.role.toLowerCase());
+const isEligibleReviewer = canReview;
 ---
 
 <Layout title="Review Queue - Trust Builder">
@@ -32,12 +34,20 @@ const isEligibleReviewer = currentUser.trust_score_cached >= 250;
       ) : (
         <div class="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
           <p class="text-amber-800 dark:text-amber-200">
-            You need a Trust Score of at least 250 (Contributor level) to review claims.
-            Your current score: <strong>{currentUser.trust_score_cached}</strong>
+            You need to be a <strong>Steward</strong> (250 Trust Score) to review claims.
           </p>
           <p class="text-amber-700 dark:text-amber-300 text-sm mt-2">
-            Keep completing tasks to unlock reviewer privileges!
+            Your current role: <strong>{currentUser.role}</strong> ({currentUser.trust_score_cached} points)
           </p>
+          <p class="text-amber-700 dark:text-amber-300 text-sm mt-2">
+            Keep completing tasks to reach 250 points and unlock reviewer privileges!
+          </p>
+          <a 
+            href="/trust-builder/dashboard" 
+            class="inline-block mt-4 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors"
+          >
+            Return to Dashboard
+          </a>
         </div>
       )}
     </div>

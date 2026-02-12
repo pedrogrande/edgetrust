@@ -17,8 +17,9 @@ import TrustScoreCard from './TrustScoreCard';
 import IncentiveRadarChart from './IncentiveRadarChart';
 import ClaimHistoryTable from './ClaimHistoryTable';
 import ProgressToSteward from './ProgressToSteward';
-import DashboardEmptyState from './Dashboard EmptyState';
-
+import DashboardEmptyState from './DashboardEmptyState';
+import RoleBadge from './RoleBadge';
+import PromotionToast from './PromotionToast';
 interface DashboardData {
   member: {
     id: string;
@@ -179,11 +180,12 @@ export default function MemberDashboard() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
               My Dashboard
             </h1>
-            <p className="text-muted-foreground mt-2">
-              {data.member.displayName || data.member.memberId} •{' '}
-              {data.member.role}
+            <p className="text-muted-foreground mt-2 flex items-center gap-2 flex-wrap">
+              <span>{data.member.displayName || data.member.memberId}</span>
+              <span>•</span>
+              <RoleBadge role={data.member.role} />
               {loadTime && loadTime < 2000 && (
-                <span className="ml-2 text-xs text-green-600">
+                <span className="text-xs text-green-600">
                   Loaded in {loadTime}ms
                 </span>
               )}
@@ -198,6 +200,9 @@ export default function MemberDashboard() {
             </button>
           </form>
         </div>
+
+        {/* S3-04: Promotion toast (AC11) */}
+        <PromotionToast role={data.member.role} memberId={data.member.id} />
 
         {/* Trust Score & Progress */}
         <section

@@ -16,6 +16,7 @@ import {
 } from '@/types/trust-builder';
 import { logEventBatch } from '@/lib/events/logger';
 import { validateUUID, validateProofText } from './validators';
+import { checkAndPromoteMember } from '@/lib/db/role-helpers';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -34,6 +35,8 @@ export interface ClaimResult {
   pointsEarned?: number;
   newTrustScore?: number;
   message: string;
+  promoted?: boolean; // S3-04: Promotion occurred
+  newRole?: string; // S3-04: Role after promotion
 }
 
 export interface PointsBreakdown {
@@ -592,12 +595,27 @@ export async function approveClaimWithReview(
   );
 
   // Update member trust score (atomic)
-  await client.query(
-    'UPDATE members SET trust_score_cached = trust_score_cached + $1 WHERE id = $2',
+  const memberResult = await client.query<{
+    role: string;
+    trust_score_cached: number;
+  }>(
+    'UPDATE members SET trust_score_cached = trust_score_cached + $1 WHERE id = $2 RETURNING role, trust_score_cached',
     [pointsEarned, claim.member_id]
   );
 
   const trustScoreAfter = trustScoreBefore + pointsEarned;
+  const currentRole = memberResult.rows[0].role;
+  const currentTrustScore = memberResult.rows[0].trust_score_cached;
+
+  // S3-04: Check for role promotion after trust score update
+  // AC2: Promotion happens atomically with claim approval (same transaction)
+  const promotionResult = await checkAndPromoteMember(
+    client,
+    claim.member_id,
+    currentRole,
+    currentTrustScore,
+    'system'
+  );
 
   // Log events
   await logEventBatch(client, [
@@ -634,7 +652,11 @@ export async function approveClaimWithReview(
     status: ClaimStatus.APPROVED,
     pointsEarned,
     newTrustScore: trustScoreAfter,
-    message: `Claim approved by peer reviewer! You earned ${pointsEarned} points.`,
+    promoted: promotionResult.promoted,
+    newRole: promotionResult.newRole,
+    message: promotionResult.promoted
+      ? `Claim approved! You earned ${pointsEarned} points and were promoted to ${promotionResult.newRole}!`
+      : `Claim approved by peer reviewer! You earned ${pointsEarned} points.`,
   };
 }
 

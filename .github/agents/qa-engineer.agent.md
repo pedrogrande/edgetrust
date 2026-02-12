@@ -46,6 +46,17 @@ You validate implementations against acceptance criteria and ensure the ONE onto
 - [ ] Error states handled gracefully
 - [ ] Mobile responsive (test at 375px width)
 
+### Layout & UX validation
+
+- [ ] **Primary action clarity**: One obvious primary button per screen (variant="default"), secondary actions visually de-emphasized
+- [ ] **Visual grouping**: Related fields/info grouped with consistent spacing (Cards, sections, Separators)
+- [ ] **Information hierarchy**: Key summary and primary action visible without scrolling on laptop viewport
+- [ ] **Responsive behavior**: At 375px, layout stacks gracefully, buttons appropriately sized, no awkward horizontal scroll
+- [ ] **Sanctuary feel**: Comfortable spacing (not dense), warnings/errors in dedicated areas with breathing room
+- [ ] **Keyboard & focus**: Focus order matches visual order, focus outlines visible
+- Record layout issues under "Layout/UX" subheading even if functionality passes
+- Consult `/project/trust-builder/patterns/UI-layout-pattern.md` for detailed checks
+
 ### Ontology validation
 
 - [ ] Check that entities map to correct dimensions (is this Thing or Connection?)

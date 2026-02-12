@@ -1,13 +1,13 @@
 ---
 /**
  * Trust Builder Member Dashboard Page (S3-02)
- * 
+ *
  * Displays:
  * - Trust Score (event-sourced)
  * - Incentive breakdown chart (5 dimensions)
  * - Claim history table
  * - Progress to next role
- * 
+ *
  * AC16: Mobile responsive (375px, 768px, 1024px viewports)
  * AC21: Keyboard navigable
  */
@@ -16,32 +16,10 @@ import Layout from '@/layouts/Layout.astro';
 import MemberDashboard from '@/components/trust-builder/MemberDashboard';
 
 const title = 'My Dashboard | Trust Builder';
-const description = 'View your Trust Score, contributions, and progress toward Steward role.';
+const description =
+  'View your Trust Score, contributions, and progress toward Steward role.';
 ---
 
 <Layout title={title} description={description}>
   <MemberDashboard client:load />
-</Layout>
-
-                <p><strong>Trust Score:</strong> ${data.member.trust_score_cached}</p>
-              </div>
-            `;
-          }
-        } else {
-          // Not authenticated, redirect to sign-in
-          window.location.href = '/trust-builder/signin';
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch user:', err);
-        window.location.href = '/trust-builder/signin';
-      });
-  </script>
-
-  <!-- Member info will be injected here -->
-  <div
-    id="member-info"
-    class="max-w-7xl mx-auto mt-4 bg-card p-6 rounded-lg border"
-  >
-  </div>
 </Layout>
