@@ -1,0 +1,98 @@
+---
+/**
+ * S4-01: Admin Configuration Page
+ * Single-column form pattern for system config management
+ */
+
+import Layout from '@/layouts/Layout.astro';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@/components/ui/card';
+import { ConfigForm } from '@/components/trust-builder/ConfigForm';
+import { Toaster } from '@/components/ui/toaster';
+import { getCurrentUser } from '@/lib/auth';
+import { sql } from '@/lib/db/connection';
+
+// Auth check: Admin only
+const member = await getCurrentUser(Astro.request, sql);
+
+if (!member || !['admin', 'guardian'].includes(member.role.toLowerCase())) {
+  return Astro.redirect('/trust-builder/dashboard');
+}
+---
+
+<Layout title="System Configuration - Trust Builder">
+  <div class="container max-w-2xl mx-auto py-8 space-y-6">
+    <!-- Page Header -->
+    <div class="space-y-2">
+      <h1 class="text-3xl font-bold">System Configuration</h1>
+      <p class="text-muted-foreground">
+        Manage Trust Builder system settings. Changes are logged in the event
+        ledger for transparency.
+      </p>
+    </div>
+
+    <!-- Configuration Form -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Trust Builder Settings</CardTitle>
+        <CardDescription>
+          Adjust timeout thresholds and Trust Score requirements. These values
+          affect automated workflows and role promotions.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ConfigForm client:load />
+      </CardContent>
+    </Card>
+
+    <!-- Sanctuary Context -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Sanctuary-Aligned Defaults</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm text-muted-foreground">
+        <p>
+          <strong>Claim Timeout:</strong> Default 7 days provides generous breathing
+          room for reviewers. Life happens—deadlines should account for that.
+        </p>
+        <p>
+          <strong>Steward Threshold (250 Trust Score):</strong> An aspirational milestone,
+          not an arbitrary barrier. Members see this as something to grow into.
+        </p>
+        <p>
+          <strong>Admin Threshold (1000 Trust Score):</strong> High bar reflects
+          governance responsibility. Future use when admin promotions are automated.
+        </p>
+        <p class="pt-2 border-t">
+          💡 <strong>Cultural Note:</strong> These thresholds embody Trust Builder's
+          values—generous, transparent, and designed for human capacity.
+        </p>
+      </CardContent>
+    </Card>
+
+    <!-- Event Logging Info -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Audit Trail</CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm text-muted-foreground">
+        <p>
+          All configuration changes are logged as <code
+            class="px-1 py-0.5 bg-muted rounded text-xs">config.updated</code
+          > events with before/after values. This ensures transparency and enables
+          rollback if needed.
+        </p>
+        <p class="mt-2">
+          View the event log in the admin dashboard to see full configuration
+          history.
+        </p>
+      </CardContent>
+    </Card>
+  </div>
+  <Toaster client:load />
+</Layout>

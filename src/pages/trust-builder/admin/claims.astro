@@ -4,7 +4,7 @@
  *
  * Guardian-only interface for:
  * - Viewing pending review queue
- * - Releasing orphaned claims (>7 days under review)
+ * - Releasing orphaned claims (configurable timeout from system_config)
  *
  * AC8: Displays orphaned claim count (badge)
  * AC9: "Release Orphaned Claims" button (only if count > 0)
@@ -13,8 +13,18 @@
 import Layout from '@/layouts/Layout.astro';
 import { getCurrentUser } from '@/lib/auth';
 import { sql } from '@/lib/db/connection';
+import { getConfigNumber } from '@/lib/db/config';
 import { OrphanedClaimsBadge } from '@/components/trust-builder/OrphanedClaimsBadge';
 import { ReleaseOrphanedDialog } from '@/components/trust-builder/ReleaseOrphanedDialog';
+
+interface OrphanedClaimRow {
+  id: string;
+  task_id: string;
+  task_title: string;
+  reviewer_id: string;
+  reviewer_name: string;
+  days_orphaned: number;
+}
 
 const member = await getCurrentUser(Astro.request, sql);
 
@@ -23,8 +33,11 @@ if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
   return Astro.redirect('/trust-builder/signin');
 }
 
+// Get configurable timeout from system_config
+const timeoutDays = await getConfigNumber('claim_timeout_days');
+
 // Fetch orphaned claims for dialog
-const orphanedClaims = await sql`
+const orphanedClaimsRows = await sql`
   SELECT
     c.id,
     c.task_id,
@@ -36,9 +49,17 @@ const orphanedClaims = await sql`
   JOIN tasks t ON t.id = c.task_id
   LEFT JOIN members m ON m.id = c.reviewer_id
   WHERE c.status = 'under_review'
-    AND c.reviewed_at < NOW() - INTERVAL '7 days'
+    AND c.reviewed_at < NOW() - (${timeoutDays} || ' days')::INTERVAL
   ORDER BY c.reviewed_at ASC
 `;
+
+// Map to component interface (exclude task_id, reviewer_id)
+const orphanedClaims = orphanedClaimsRows.map((row: any) => ({
+  id: row.id as string,
+  task_title: row.task_title as string,
+  reviewer_name: row.reviewer_name as string,
+  days_orphaned: Number(row.days_orphaned),
+}));
 
 // Fetch all pending claims for review queue display
 const pendingClaims = await sql`
@@ -76,7 +97,7 @@ const queueStats = await sql`
     COUNT(*) FILTER (WHERE status = 'under_review') AS under_review_count,
     COUNT(*) FILTER (
       WHERE status = 'under_review' 
-      AND reviewed_at < NOW() - INTERVAL '7 days'
+      AND reviewed_at < NOW() - (${timeoutDays} || ' days')::INTERVAL
     ) AS orphaned_count
   FROM claims
 `;
@@ -101,7 +122,11 @@ const stats = queueStats[0] || {
           <span class="text-sm text-muted-foreground">
             Guardian: {member.member_id}
           </span>
-          <ReleaseOrphanedDialog orphanedClaims={orphanedClaims} client:load />
+          <ReleaseOrphanedDialog
+            orphanedClaims={orphanedClaims}
+            timeoutDays={timeoutDays}
+            client:load
+          />
         </div>
       </div>
 
@@ -124,13 +149,15 @@ const stats = queueStats[0] || {
           >
             {stats.orphaned_count}
           </div>
-          <div class="text-sm text-muted-foreground">Orphaned >7d</div>
+          <div class="text-sm text-muted-foreground">
+            Orphaned >{timeoutDays}d
+          </div>
         </div>
       </div>
 
       <p class="text-muted-foreground">
-        Monitor the claim review queue. Orphaned claims (>7 days under review)
-        can be released back to the queue for other reviewers.
+        Monitor the claim review queue. Orphaned claims (>{timeoutDays} days under
+        review) can be released back to the queue for other reviewers.
       </p>
     </div>
 
@@ -178,10 +205,10 @@ const stats = queueStats[0] || {
                             claim.status === 'submitted',
                           'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
                             claim.status === 'under_review' &&
-                            Number(claim.days_in_review) <= 7,
+                            Number(claim.days_in_review) <= timeoutDays,
                           'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
                             claim.status === 'under_review' &&
-                            Number(claim.days_in_review) > 7,
+                            Number(claim.days_in_review) > timeoutDays,
                         },
                       ]}
                     >
@@ -189,7 +216,7 @@ const stats = queueStats[0] || {
                         ? 'Awaiting Review'
                         : 'Under Review'}
                       {claim.days_in_review &&
-                        Number(claim.days_in_review) > 7 &&
+                        Number(claim.days_in_review) > timeoutDays &&
                         ' (Orphaned)'}
                     </span>
                   </td>
@@ -229,10 +256,11 @@ const stats = queueStats[0] || {
     <div class="mt-6 p-4 bg-muted/50 rounded-lg text-sm">
       <p class="font-medium mb-2">💡 About Orphaned Claims</p>
       <p class="text-muted-foreground">
-        Claims marked as "orphaned" have been under review for more than 7 days.
-        Life happens! Use the "Release Orphaned Claims" button to return them to
-        the queue with <strong>no penalties</strong> to the original reviewer. This
-        helps maintain review velocity and supports our learning culture.
+        Claims marked as "orphaned" have been under review for more than {
+          timeoutDays
+        } days. Life happens! Use the "Release Orphaned Claims" button to return
+        them to the queue with <strong>no penalties</strong> to the original reviewer.
+        This helps maintain review velocity and supports our learning culture.
       </p>
     </div>
   </div>

@@ -30,10 +30,12 @@ interface OrphanedClaim {
 
 interface ReleaseOrphanedDialogProps {
   orphanedClaims: OrphanedClaim[];
+  timeoutDays: number;
 }
 
 export function ReleaseOrphanedDialog({
   orphanedClaims,
+  timeoutDays,
 }: ReleaseOrphanedDialogProps) {
   const { toast } = useToast();
   const [isReleasing, setIsReleasing] = useState(false);
@@ -98,7 +100,8 @@ export function ReleaseOrphanedDialog({
           </AlertDialogTitle>
           {/* AC11, AC19: Sanctuary culture messaging */}
           <AlertDialogDescription>
-            Life happens! These claims have been under review for more than 7
+            Life happens! These claims have been under review for more than{' '}
+            {timeoutDays}
             days and need fresh eyes. <strong>No penalties</strong> will be
             applied to reviewers.
           </AlertDialogDescription>
