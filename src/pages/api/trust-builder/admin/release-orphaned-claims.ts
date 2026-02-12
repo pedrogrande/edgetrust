@@ -64,7 +64,7 @@ export const POST: APIRoute = async ({ request }) => {
           JOIN tasks t ON t.id = c.task_id
           LEFT JOIN members m ON m.id = c.reviewer_id
           WHERE c.status = 'under_review'
-            AND c.reviewed_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'
+            AND c.reviewed_at < NOW() - INTERVAL '7 days'
           ORDER BY c.reviewed_at ASC
         `);
 
@@ -79,12 +79,11 @@ export const POST: APIRoute = async ({ request }) => {
           WITH released AS (
             UPDATE claims
             SET status = 'submitted',
-                reviewer_id = NULL,
-                updated_at = NOW()
+                reviewer_id = NULL
             WHERE status = 'under_review'
-              AND updated_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'
+              AND reviewed_at < NOW() - INTERVAL '7 days'
             RETURNING id, task_id, reviewer_id,
-              EXTRACT(DAY FROM (NOW() - updated_at))::NUMERIC AS days_orphaned
+              EXTRACT(DAY FROM (NOW() - reviewed_at))::NUMERIC AS days_orphaned
           )
           INSERT INTO events (actor_id, entity_type, entity_id, event_type, metadata)
           SELECT
@@ -97,7 +96,7 @@ export const POST: APIRoute = async ({ request }) => {
               'task_id', r.task_id,
               'reviewer_id', r.reviewer_id,
               'days_orphaned', r.days_orphaned,
-              'timeout_threshold_days', ${TIMEOUT_THRESHOLD_DAYS},
+              'timeout_threshold_days', 7,
               'admin_id', $1,
               'release_reason', 'timeout'
             )

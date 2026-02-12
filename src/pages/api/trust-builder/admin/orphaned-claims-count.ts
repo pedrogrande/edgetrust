@@ -25,7 +25,7 @@ export const GET: APIRoute = async ({ request }) => {
       SELECT COUNT(*)::INTEGER AS count
       FROM claims
       WHERE status = 'under_review'
-        AND reviewed_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'
+        AND reviewed_at < NOW() - INTERVAL '7 days'
     `;
 
     return new Response(JSON.stringify({ count: result[0]?.count || 0 }), {

@@ -33,7 +33,7 @@ export const GET: APIRoute = async ({ request }) => {
       JOIN tasks t ON t.id = c.task_id
       LEFT JOIN members m ON m.id = c.reviewer_id
       WHERE c.status = 'under_review'
-        AND c.reviewed_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'
+        AND c.reviewed_at < NOW() - INTERVAL '7 days'
       ORDER BY c.reviewed_at ASC
     `;
 
