@@ -87,17 +87,17 @@ export const POST: APIRoute = async ({ request }) => {
           )
           INSERT INTO events (actor_id, entity_type, entity_id, event_type, metadata)
           SELECT
-            $1,
+            $1::UUID,
             'claim',
             r.id,
-            $2,
+            $2::VARCHAR,
             jsonb_build_object(
               'claim_id', r.id,
               'task_id', r.task_id,
               'reviewer_id', r.reviewer_id,
               'days_orphaned', r.days_orphaned,
               'timeout_threshold_days', 7,
-              'admin_id', $1,
+              'admin_id', $1::UUID,
               'release_reason', 'timeout'
             )
           FROM released r
