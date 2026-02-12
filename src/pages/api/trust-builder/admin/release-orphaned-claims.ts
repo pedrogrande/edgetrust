@@ -1,7 +1,8 @@
 /**
  * S3-03: Release Orphaned Claims (Admin Endpoint)
+ * S4-01: Updated to use system_config table for timeout threshold
  *
- * Manual trigger for releasing claims that have been under review for >7 days.
+ * Manual trigger for releasing claims that have been under review for >N days (configurable).
  * Phase 1: Manual admin trigger (this endpoint)
  * Phase 2 (S4+): Scheduled cron job
  *
@@ -20,9 +21,7 @@ import type { APIRoute } from 'astro';
 import { getCurrentUser } from '@/lib/auth';
 import { sql, withTransaction } from '@/lib/db/connection';
 import { EventType } from '@/types/trust-builder';
-
-// TODO: Move to system_config table in S4+ governance story (per strategic review)
-const TIMEOUT_THRESHOLD_DAYS = 7;
+import { getConfigNumber } from '@/lib/db/config';
 
 interface OrphanedClaim {
   id: string;
@@ -48,10 +47,13 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
+    // S4-01: Read timeout from config table
+    const timeoutDays = await getConfigNumber('claim_timeout_days');
+
     const result = await withTransaction(
       import.meta.env.DATABASE_URL,
       async (client) => {
-        // AC1: Identify orphaned claims (>7 days under review)
+        // AC1: Identify orphaned claims (>N days under review, N from config)
         const { rows: orphaned } = await client.query<OrphanedClaim>(`
           SELECT
             c.id,
@@ -64,7 +66,7 @@ export const POST: APIRoute = async ({ request }) => {
           JOIN tasks t ON t.id = c.task_id
           LEFT JOIN members m ON m.id = c.reviewer_id
           WHERE c.status = 'under_review'
-            AND c.reviewed_at < NOW() - INTERVAL '7 days'
+            AND c.reviewed_at < NOW() - INTERVAL '${timeoutDays} days'
           ORDER BY c.reviewed_at ASC
         `);
 
@@ -81,7 +83,7 @@ export const POST: APIRoute = async ({ request }) => {
             SET status = 'submitted',
                 reviewer_id = NULL
             WHERE status = 'under_review'
-              AND reviewed_at < NOW() - INTERVAL '7 days'
+              AND reviewed_at < NOW() - INTERVAL '${timeoutDays} days'
             RETURNING id, task_id, reviewer_id,
               EXTRACT(DAY FROM (NOW() - reviewed_at))::NUMERIC AS days_orphaned
           )
@@ -96,7 +98,7 @@ export const POST: APIRoute = async ({ request }) => {
               'task_id', r.task_id,
               'reviewer_id', r.reviewer_id,
               'days_orphaned', r.days_orphaned,
-              'timeout_threshold_days', 7,
+              'timeout_threshold_days', ${timeoutDays},
               'admin_id', $1::UUID,
               'release_reason', 'timeout'
             )

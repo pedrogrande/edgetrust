@@ -1,7 +1,7 @@
 /**
  * S3-03: Orphaned Claims Badge
  *
- * Displays count of claims orphaned >7 days (AC8)
+ * Displays count of claims orphaned (configurable timeout from system_config)
  * Fetches count on mount, updates on page refresh
  */
 

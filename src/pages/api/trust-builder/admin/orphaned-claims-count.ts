@@ -1,5 +1,6 @@
 /**
  * S3-03: Orphaned Claims Count (Admin Endpoint)
+ * S4-01: Updated to use system_config table for timeout threshold
  *
  * Fast query for badge display - returns count only (no claim details)
  */
@@ -7,8 +8,7 @@
 import type { APIRoute } from 'astro';
 import { getCurrentUser } from '@/lib/auth';
 import { sql } from '@/lib/db/connection';
-
-const TIMEOUT_THRESHOLD_DAYS = 7;
+import { getConfigNumber } from '@/lib/db/config';
 
 export const GET: APIRoute = async ({ request }) => {
   const member = await getCurrentUser(request, sql);
@@ -21,11 +21,14 @@ export const GET: APIRoute = async ({ request }) => {
   }
 
   try {
+    // S4-01: Read timeout from config table
+    const timeoutDays = await getConfigNumber('claim_timeout_days');
+
     const result = await sql`
       SELECT COUNT(*)::INTEGER AS count
       FROM claims
       WHERE status = 'under_review'
-        AND reviewed_at < NOW() - INTERVAL '7 days'
+        AND reviewed_at < NOW() - INTERVAL ${timeoutDays} || ' days'
     `;
 
     return new Response(JSON.stringify({ count: result[0]?.count || 0 }), {
