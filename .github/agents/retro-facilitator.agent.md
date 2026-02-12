@@ -62,6 +62,8 @@ Answer these questions:
 - What took longer than expected?
 - What caused confusion?
 - Where did UI layout or information hierarchy slow us down or confuse users?
+- **Where did documentation or component discovery waste time?** (Could component registry or better docs have helped?)
+- **Which infrastructure dependencies should have been sequenced earlier?** (Did we implement foundation stories in correct order?)
 
 **What did we learn?**
 

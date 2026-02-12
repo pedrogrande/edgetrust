@@ -54,8 +54,23 @@ You validate implementations against acceptance criteria and ensure the ONE onto
 - [ ] **Responsive behavior**: At 375px, layout stacks gracefully, buttons appropriately sized, no awkward horizontal scroll
 - [ ] **Sanctuary feel**: Comfortable spacing (not dense), warnings/errors in dedicated areas with breathing room
 - [ ] **Keyboard & focus**: Focus order matches visual order, focus outlines visible
+- [ ] **Accessibility (WCAG AA baseline)**:
+  - [ ] ARIA labels for interactive elements (screen readers)
+  - [ ] Color contrast ratios meet WCAG AA (4.5:1 for normal text)
+  - [ ] Touch targets ≥44px on mobile
+  - [ ] Focus indicators visible
+  - [ ] Semantic HTML landmarks (header, nav, main, footer)
 - Record layout issues under "Layout/UX" subheading even if functionality passes
 - Consult `/project/trust-builder/patterns/UI-layout-pattern.md` for detailed checks
+
+### Manual testing device allocation (for UI stories)
+
+**Day 5 Manual Testing** (verify story specifies):
+- Desktop: Chrome at 375px, 768px, 1024px
+- iOS: Safari on iPhone 13+ (actual device required)
+- Android: Chrome on Pixel 6+ (actual device required)
+
+**If story lacks Testing Schedule section**, flag to product-owner before marking PASS.
 
 ### Ontology validation
 
@@ -73,6 +88,10 @@ You validate implementations against acceptance criteria and ensure the ONE onto
 ### Testing approach
 
 1. Run existing tests: `npm test`
+   - **Expect 100% pass rate** (Sprint 3 standard: test-first workflow)
+   - **Verify database state assertions** (not just API responses):
+     - For CTE atomic transactions, confirm BOTH state change AND event logged
+     - Example: Claim status updated in DB + event exists in events table
 2. Manual testing of new flows
 3. Check database for correct structure (inspect with Drizzle Studio or SQL)
 4. Verify event log entries have all required fields (actor, timestamp, metadata)

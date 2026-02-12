@@ -76,6 +76,8 @@ When planning a sprint:
   - Share a coherent theme (e.g., "Identity & Mission foundation").
   - Have minimal cross-story dependencies.
   - Can each be completed and reviewed quickly.
+- **Check infrastructure dependencies**: Map shared infrastructure stories (config tables, scheduled jobs, email templates) and sequence them BEFORE dependent feature stories.
+- **Reference component registry** (`/project/trust-builder/patterns/component-registry.md`) to identify reusable components for new stories.
 
 Do **not**:
 
@@ -88,6 +90,10 @@ Do:
   - Number of ontology dimensions touched.
   - Number of new tables/endpoints/components introduced.
   - Degree of interaction with existing flows.
+- **Apply Strategic Review Decision Matrix**:
+  - **Simple (≤4 points)**: Strategic review OPTIONAL (cost ≈ benefit)
+  - **Moderate (5-7 points)**: Strategic review RECOMMENDED (2-3x ROI)
+  - **Complex (≥8 points)**: Strategic review **MANDATORY** (3-4x ROI)
 
 Example:
 
@@ -146,6 +152,31 @@ Then [...]
 
 - [ ] Mobile and basic accessibility checks pass (keyboard navigation, focus order)
 - [ ] Error messages helpful and near relevant content
+
+## Testing Schedule (for UI stories)
+
+**Day 5 Manual Testing** (1 hour allocated):
+- Desktop: Chrome at 375px, 768px, 1024px (responsive breakpoints)
+- iOS: Safari on iPhone 13+ (actual device, not simulator)
+- Android: Chrome on Pixel 6+ (actual device)
+
+**Validation**:
+- All primary actions reachable without scrolling (laptop viewport baseline)
+- No horizontal scroll at 375px
+- Touch targets ≥44px (mobile accessibility)
+- Focus order matches visual order (keyboard navigation)
+
+## Environment Setup (for database stories)
+
+**Before implementation, verify**:
+1. Run `echo $DATABASE_URL` in terminal where dev server runs
+2. Confirm database matches expected environment (dev branch vs production)
+3. If testing with seed data, document which database is being used
+
+## Reusable Components (from prior stories)
+
+- ComponentName (Story S#-##): Brief description and file path
+- (Reference `/project/trust-builder/patterns/component-registry.md` for current inventory)
 
 ## Implementation Notes (AI-facing)
 

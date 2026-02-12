@@ -2058,7 +2058,8 @@ This sprint demonstrated **mature product development**—intentional architectu
 
 **S3 Status**: No new Group entities created (deferred to S4 Mission Joining).
 
-**Architectural Readiness**: 
+**Architectural Readiness**:
+
 - Events table captures group interactions (when implemented)
 - Foreign key patterns established for People→Groups connections
 - Migration readiness: 95% for future Group stories
@@ -2072,6 +2073,7 @@ This sprint demonstrated **mature product development**—intentional architectu
 **S3-04 (Role Promotion)**: Moved People entity modeling from basic to sophisticated.
 
 **Ontology Correctness**:
+
 - `members` table correctly maps to People dimension
 - Role progression (`member` → `steward` → `reviewer`) encoded in state
 - Trust Score as calculated property (not mutable field)—blockchain-compatible
@@ -2093,6 +2095,7 @@ This sprint demonstrated **mature product development**—intentional architectu
 **Migration Readiness**: 95% (config table pattern is migration-ready)
 
 **Strategic Value**: People dimension modeling now supports:
+
 - Role-based access control (authorization)
 - Trust Score evolution (incentive mechanism)
 - Promotion history (audit trail for blockchain)
@@ -2106,11 +2109,13 @@ This sprint demonstrated **mature product development**—intentional architectu
 **S3-02 (Dashboard)**: Dashboard as Thing entity (lifecycle: draft → published).
 
 **S3-03 (Orphaned Claims)**: Claims as Thing with complete state machine:
+
 - `submitted` → `under_review` → `approved`/`rejected`/`revision_requested`
 - **NEW**: Timeout path (`under_review` → `submitted` after 7 days)
 - All transitions logged in Events table with actor_id, metadata
 
 **Ontology Correctness**:
+
 - Claims have reviewers (foreign key to People)
 - Claims have evidence (file uploads with content hashes in Events)
 - Claims are stateful (status enum) but immutable once published
@@ -2119,6 +2124,7 @@ This sprint demonstrated **mature product development**—intentional architectu
 **Migration Readiness**: 95% average (S3-03 has hardcoded threshold, fixable in S4)
 
 **Strategic Assessment**: Things dimension is now **production-ready**:
+
 - Complete lifecycle paths modeled
 - Edge cases handled (orphaned, voluntary release)
 - Audit trail comprehensive (all state changes logged)
@@ -2165,7 +2171,7 @@ connections {
 
 **Migration Readiness Impact**: This gap is why stories are 92-95% not 100%. Foreign keys work for MVP, but Connection entities needed for blockchain.
 
-**Strategic Recommendation for S4**: 
+**Strategic Recommendation for S4**:
 
 - **Immediate**: Document Connection dimension pattern
 - **S4 Story**: Refactor reviewer assignment to use Connection entity (2-3 points)
@@ -2181,12 +2187,12 @@ connections {
 
 **Event Logging Quality**:
 
-| Story | Events Logged | Metadata Quality | Atomicity | Immutability |
-| ----- | ------------- | ---------------- | --------- | ------------ |
-| S3-01 | Test events (infra) | Comprehensive | ✅ | ✅ |
-| S3-02 | Dashboard views (implicit) | N/A (read-only) | N/A | ✅ |
-| S3-03 | claim.timeout.released | ✅✅ Exemplary | ✅ CTE | ✅ Append-only |
-| S3-04 | member.promoted | ✅✅ Exemplary | ✅ CTE | ✅ Append-only |
+| Story | Events Logged              | Metadata Quality | Atomicity | Immutability   |
+| ----- | -------------------------- | ---------------- | --------- | -------------- |
+| S3-01 | Test events (infra)        | Comprehensive    | ✅        | ✅             |
+| S3-02 | Dashboard views (implicit) | N/A (read-only)  | N/A       | ✅             |
+| S3-03 | claim.timeout.released     | ✅✅ Exemplary   | ✅ CTE    | ✅ Append-only |
+| S3-04 | member.promoted            | ✅✅ Exemplary   | ✅ CTE    | ✅ Append-only |
 
 **S3-04 Event Excellence** (Gold Standard Example):
 
@@ -2220,6 +2226,7 @@ connections {
 **Migration Readiness**: **98-100%** for Events dimension specifically.
 
 **Strategic Value**: Event log is becoming comprehensive audit trail. In S4, can add:
+
 - Merkle root calculation endpoint
 - Event replay for state reconstruction
 - Trust Score derivation from events (eliminate mutable field entirely)
@@ -2266,6 +2273,7 @@ knowledge_base {
 ```
 
 **For S4**: Knowledge dimension is **lower priority** (documentation works for now), but consider:
+
 - Pattern library (sanctuary messaging templates, CTE examples)
 - Decision log (why we chose Drizzle over Prisma, why CTE over separate queries)
 - Learning archive (searchable retrospective insights)
@@ -2281,11 +2289,13 @@ knowledge_base {
 #### S3-01: Test Infrastructure (95%)
 
 **Strengths**:
+
 - Vitest config is portable (no environment-specific dependencies)
 - Mock patterns are reusable across environments
 - Git hooks are local tooling (not migrated, but not blocking)
 
 **5% Gap**:
+
 - Git hooks specific to local development (not applicable to blockchain environment)
 - Test database connection uses Neon (serverless-specific, but easily swapped)
 
@@ -2296,11 +2306,13 @@ knowledge_base {
 #### S3-02: Member Dashboard (92%)
 
 **Strengths**:
+
 - Read-only queries (no state changes to migrate)
 - Trust Score calculation derivable from Events table
 - Dashboard UI is client-side (blockchain provides API, UI unchanged)
 
 **8% Gap** (Identified in Strategic Review):
+
 - **Missing composite index**: `events(event_type, metadata->>'member_id')`
 - This index is **PostgreSQL-specific optimization**
 - Blockchain query patterns differ (no SQL indexes, use graph traversal)
@@ -2308,6 +2320,7 @@ knowledge_base {
 **Strategic Review Impact**: Caught CRITICAL performance issue (90 min review saved 4 hours rework)
 
 **Migration Strategy**:
+
 - Keep index for MVP (performance critical)
 - Document that blockchain will use different query optimization
 - Events table structure is portable (just query mechanism changes)
@@ -2319,16 +2332,19 @@ knowledge_base {
 #### S3-03: Background Jobs (95%)
 
 **Strengths**:
+
 - CTE atomic transaction pattern matches blockchain transaction atomicity
 - Event logging is comprehensive (all metadata needed for Merkle root)
 - State transitions are reversible (sanctuary culture = blockchain-compatible)
 - Orphaned claims released to `submitted`, not deleted (immutability principle)
 
 **5% Gap**:
+
 - Hardcoded 7-day threshold (should be in config table)
 - Background job scheduler (Astro-specific, blockchain will use smart contract timers)
 
 **Migration Strategy**:
+
 - S4 story to migrate threshold to config table → 98%
 - Scheduled automation pattern proven, just execution environment changes
 
@@ -2339,12 +2355,14 @@ knowledge_base {
 #### S3-04: Role Promotion (95%)
 
 **Strengths**:
+
 - Config table pattern is **migration-ready** (key-value storage portable to blockchain state)
 - Event logging exemplary (all promotion metadata captured)
 - Atomic transaction (role update + event log in single CTE)
 - Trust Score calculated from events (not mutable field)—blockchain-compatible
 
 **5% Gap**:
+
 - Config table is SQL (blockchain will use contract state variables)
 - But pattern translates directly (key-value → state mapping)
 
@@ -2354,15 +2372,15 @@ knowledge_base {
 
 ### Migration Readiness Trends 📈
 
-| Dimension | S2 Avg | S3 Avg | S4 Target | Trend |
-| --------- | ------ | ------ | --------- | ----- |
-| **Overall** | 91% | 94% | 95-98% | ⬆️ Improving |
-| Groups | 90% | N/A (deferred) | 95% | Mission joining |
-| People | 92% | 95% | 98% | S3-04 config pattern |
-| Things | 93% | 95% | 98% | State machine complete |
-| Connections | 85% | **Gap identified** | 95% | S4 refactor needed |
-| Events | 95% | 98% | 100% | Gold standard |
-| Knowledge | 80% | 80% | 85% | Pattern library S4+ |
+| Dimension   | S2 Avg | S3 Avg             | S4 Target | Trend                  |
+| ----------- | ------ | ------------------ | --------- | ---------------------- |
+| **Overall** | 91%    | 94%                | 95-98%    | ⬆️ Improving           |
+| Groups      | 90%    | N/A (deferred)     | 95%       | Mission joining        |
+| People      | 92%    | 95%                | 98%       | S3-04 config pattern   |
+| Things      | 93%    | 95%                | 98%       | State machine complete |
+| Connections | 85%    | **Gap identified** | 95%       | S4 refactor needed     |
+| Events      | 95%    | 98%                | 100%      | Gold standard          |
+| Knowledge   | 80%    | 80%                | 85%       | Pattern library S4+    |
 
 **Strategic Insight**: **Connections dimension is the migration bottleneck**.
 
@@ -2379,10 +2397,12 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 #### S3-01: Git Hooks with Teaching Moments ✅
 
 **Cultural Implementation**:
+
 - Pre-push hook message: "🌱 Let's use a feature branch to keep main stable!"
 - **Not**: "ERROR: Direct push to main forbidden"
 
 **Values Demonstrated**:
+
 - Teaching over enforcement
 - Supportive tone (emoji, "Let's" not "You must")
 - Explains WHY (stability) not just WHAT (use branch)
@@ -2394,17 +2414,20 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 #### S3-03: Orphaned Claims with Life Happens! ✅✅
 
 **Cultural Implementation**:
+
 - Badge: "Orphaned Claims" (not "Overdue" or "Violations")
 - Dialog heading: "Life happens!"
 - Help text: "These claims need fresh eyes. **No penalties** will be applied."
 - Button: "Release Orphaned Claims" (not "Penalize Reviewer")
 
 **Architectural Choices**:
+
 - Claims released to `submitted` (not deleted)—**reversible**
 - Trust Score unchanged on timeout—**non-punitive**
 - 7-day threshold (not 3 days)—**generous**
 
 **Values Demonstrated**:
+
 - Language removes judgment
 - System assumes good faith (life happens!)
 - Explicit statement "no penalties" (removes anxiety)
@@ -2417,10 +2440,12 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 #### S3-04: Role Promotion with Teaching ✅
 
 **Cultural Implementation**:
+
 - Promotion toast: "They've shown commitment to the community!"
 - Admin role description: "Your role is to **help members succeed**, not gatekeep."
 
 **Values Demonstrated**:
+
 - Celebration language (not "granted access")
 - Role definition teaches values (help succeed, not gatekeep)
 - Positive framing (commitment shown, not "achieved minimum")
@@ -2435,12 +2460,12 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 
 **Review ROI Analysis**:
 
-| Story | Complexity | Review Time | Critical Findings | Prevented Rework | ROI | Decision |
-| ----- | ---------- | ----------- | ----------------- | ---------------- | --- | -------- |
-| S3-01 | Simple (3) | Skipped | N/A | N/A | N/A | Correct (optional) |
-| S3-02 | Complex (8) | 90 min | Missing composite index (CRITICAL) | 4 hours | 3.7x | MANDATORY |
-| S3-03 | Moderate (5) | 45 min | Atomic CTE clarity, threshold docs | 2 hours | 3.0x | Recommended |
-| S3-04 | Simple (4) | Skipped | N/A | N/A | N/A | Correct (optional) |
+| Story | Complexity   | Review Time | Critical Findings                  | Prevented Rework | ROI  | Decision           |
+| ----- | ------------ | ----------- | ---------------------------------- | ---------------- | ---- | ------------------ |
+| S3-01 | Simple (3)   | Skipped     | N/A                                | N/A              | N/A  | Correct (optional) |
+| S3-02 | Complex (8)  | 90 min      | Missing composite index (CRITICAL) | 4 hours          | 3.7x | MANDATORY          |
+| S3-03 | Moderate (5) | 45 min      | Atomic CTE clarity, threshold docs | 2 hours          | 3.0x | Recommended        |
+| S3-04 | Simple (4)   | Skipped     | N/A                                | N/A              | N/A  | Correct (optional) |
 
 **Strategic Review Decision Matrix** (Validated in S3):
 
@@ -2453,6 +2478,7 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 **Issue Found**: Missing composite index on `events(event_type, metadata->>'member_id')`.
 
 **Why Critical**:
+
 - Dashboard queries would be slow after 10k+ events
 - Would pass QA (low event count in test DB)
 - Would degrade in production over weeks
@@ -2460,7 +2486,8 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 
 **Time Investment**: 90 minutes strategic review
 
-**Time Saved**: 
+**Time Saved**:
+
 - 2 hours debugging slow queries in staging
 - 1 hour implementing fix
 - 1 hour re-testing + QA validation
@@ -2477,6 +2504,7 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 #### S3-01: Grade A - Test Infrastructure ✅
 
 **Rationale**:
+
 - **Ontology**: Test infrastructure aligns with Trust Builder patterns (95%)
 - **Migration**: Portable test patterns, environment-agnostic (95%)
 - **Values**: Git hooks demonstrate sanctuary culture (teaching moments)
@@ -2484,6 +2512,7 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 - **Strategic Value**: 5-hour investment pays back in S3-02, S3-03, S3-04 (break-even same sprint)
 
 **Grade Criteria Met**:
+
 - Ontology correctness: ✅
 - Migration readiness: 95% ✅
 - Values alignment: ✅
@@ -2496,6 +2525,7 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 #### S3-02: Grade A - Member Dashboard ✅
 
 **Rationale**:
+
 - **Ontology**: Dashboard as Thing entity, Trust Score as People dimension (92%)
 - **Migration**: Strategic review caught CRITICAL index issue → prevented production fire
 - **Values**: Dashboard celebrates progress (sanctuary feel)
@@ -2503,11 +2533,13 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 - **Strategic Value**: First member value delivery (visibility into Trust Score path)
 
 **Index Issue** (caught in strategic review):
+
 - Missing composite index would cause performance degradation
 - Reduced migration readiness from developer's 95% to 92%
 - But implementation was excellent—issue was PostgreSQL-specific optimization
 
 **Grade Criteria Met**:
+
 - Ontology correctness: ✅
 - Migration readiness: 92% ✅ (within A range, 90-95%)
 - Values alignment: ✅
@@ -2520,6 +2552,7 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 #### S3-03: Grade A - Background Jobs ✅✅ (Gold Standard)
 
 **Rationale**:
+
 - **Ontology**: Claims state machine completion—all 5 paths validated (95%)
 - **Migration**: CTE atomic pattern, comprehensive events, reversible state (95%)
 - **Values**: **Gold standard sanctuary automation** (orphaned not overdue, no penalties, life happens)
@@ -2527,12 +2560,14 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 - **Strategic Value**: State machine completion = production readiness milestone
 
 **Sanctuary Architecture Excellence**:
+
 - Language: "Orphaned Claims" (removes judgment)
 - Messaging: "Life happens!" (assumes good faith)
 - Design: Claims released, not deleted (reversible)
 - Business logic: Trust Score unchanged (non-punitive)
 
 **Grade Criteria Met**:
+
 - Ontology correctness: ✅✅ (state machine complete)
 - Migration readiness: 95% ✅
 - Values alignment: ✅✅✅ (gold standard reference implementation)
@@ -2545,6 +2580,7 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 #### S3-04: Grade A - Role Promotion ✅
 
 **Rationale**:
+
 - **Ontology**: People dimension role progression, Trust Score as calculated property (95%)
 - **Migration**: Config table pattern addresses S3-02 concern, event logging exemplary (95%)
 - **Values**: Promotion celebrates values alignment (help succeed, not gatekeep)
@@ -2554,6 +2590,7 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 **Component Reuse**: ProgressToSteward from S3-02 reused (2-3 hour savings)
 
 **Grade Criteria Met**:
+
 - Ontology correctness: ✅
 - Migration readiness: 95% ✅
 - Values alignment: ✅
@@ -2594,17 +2631,18 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 
 **S4 Application**:
 
-| Story Candidate | Complexity | Review? | Rationale |
-| --------------- | ---------- | ------- | --------- |
-| Pre-commit hooks | Simple (1) | No | Pattern reuse, low risk |
-| DB indicator | Simple (1) | No | Straightforward UI, low risk |
-| Test seed scripts | Simple (1) | No | Tooling, not production code |
-| SQL docs | Simple (1) | No | Documentation, low risk |
-| Config migration | Simple (3) | Optional | Pattern reuse from S3-04 |
-| Mission Joining | Complex (8) | **MANDATORY** | New Group dimension, layout patterns, strategic feature |
-| Reviewer dashboard | Moderate (5) | Recommended | Layout refactor, performance considerations |
+| Story Candidate    | Complexity   | Review?       | Rationale                                               |
+| ------------------ | ------------ | ------------- | ------------------------------------------------------- |
+| Pre-commit hooks   | Simple (1)   | No            | Pattern reuse, low risk                                 |
+| DB indicator       | Simple (1)   | No            | Straightforward UI, low risk                            |
+| Test seed scripts  | Simple (1)   | No            | Tooling, not production code                            |
+| SQL docs           | Simple (1)   | No            | Documentation, low risk                                 |
+| Config migration   | Simple (3)   | Optional      | Pattern reuse from S3-04                                |
+| Mission Joining    | Complex (8)  | **MANDATORY** | New Group dimension, layout patterns, strategic feature |
+| Reviewer dashboard | Moderate (5) | Recommended   | Layout refactor, performance considerations             |
 
 **Mission Joining Review Focus**:
+
 - Group-dimension ontology correctness
 - Member → Mission as Connection entity (not foreign key)
 - Layout: List + detail pattern (primary action clarity, mobile responsive)
@@ -2628,6 +2666,7 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 - `sanctuary-spacing.md`: Comfortable whitespace, calm layouts
 
 **Why This Matters**:
+
 - Developers reference explicit patterns (not invent each time)
 - QA validates against documented standards (objective, not subjective)
 - Layout quality becomes **scalable** (not dependent on individual judgment)
@@ -2751,11 +2790,11 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 
 **Grade Consistency**:
 
-| Reviewer | S3-01 | S3-02 | S3-03 | S3-04 | Avg |
-| -------- | ----- | ----- | ----- | ----- | --- |
-| QA Recommendation | A | A | A | A | 4.0 |
-| Advisor Final | A | A | A | A | 4.0 |
-| Agreement | 100% | 100% | 100% | 100% | **100%** |
+| Reviewer          | S3-01 | S3-02 | S3-03 | S3-04 | Avg      |
+| ----------------- | ----- | ----- | ----- | ----- | -------- |
+| QA Recommendation | A     | A     | A     | A     | 4.0      |
+| Advisor Final     | A     | A     | A     | A     | 4.0      |
+| Agreement         | 100%  | 100%  | 100%  | 100%  | **100%** |
 
 **Grade Trend**:
 
@@ -2831,12 +2870,14 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 **Risk**: Mission Joining is first Complex story touching Group dimension + layout patterns + Connection entities.
 
 **Potential Issues**:
+
 - Layout: List + detail pattern not yet established (first use case)
 - Ontology: Mission as Group entity, Member→Mission as Connection (new patterns)
 - Performance: Query optimization for mission browsing (n+1 query risk)
 - Values: Mission descriptions need sanctuary feel (approachable, not intimidating)
 
 **Mitigation**:
+
 - ✅ Strategic review MANDATORY (catch architectural issues early)
 - ✅ Layout pattern reference: UI-layout-pattern.md (objective checklist)
 - ⏳ Create list-plus-detail.md pattern doc before story starts (owner: product-owner)
@@ -2853,11 +2894,13 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 **Risk**: Refactoring reviewer assignment from foreign key to Connection entity could break existing queries.
 
 **Potential Issues**:
+
 - Existing claims queries expect `claims.reviewer_id` foreign key
 - Migration script needs to populate `connections` table from existing assignments
 - Backward compatibility (dual-write period? View layer?)
 
 **Mitigation**:
+
 - Start with Mission Joining (new Connection pattern, no migration needed)
 - Document Connection dimension pattern thoroughly
 - Reviewer assignment refactor is separate story (not bundled with features)
@@ -2874,11 +2917,13 @@ Current schema uses foreign keys (relational thinking). Blockchain requires Conn
 **Risk**: S4 stories require manual testing (layout validation), but seed scripts + device allocation not yet established.
 
 **Potential Issues**:
+
 - QA creates test data manually (15-20 min waste per story)
 - Mobile devices not allocated (S3-02 "NEEDS TEST" repeat)
 - Layout issues discovered late (after implementation, not during)
 
 **Mitigation**:
+
 - ✅ Create test data seed scripts before S4 stories start (owner: fullstack-developer, 30-45 min)
 - ✅ Add Testing Schedule section to story template (owner: product-owner, 20 min)
 - ✅ Allocate devices for S4 sprint (iOS, Android, desktop viewports)

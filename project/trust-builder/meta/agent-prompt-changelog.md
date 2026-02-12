@@ -6,6 +6,91 @@
 
 ---
 
+## [2026-02-12] Sprint 3 Learnings → Agent Spec Updates
+
+**Analysis Source**: Sprint 3 retrospectives (4 stories + sprint review) + learnings-and-guidelines.md  
+**Key Patterns**: Test-first workflow proven (100% pass rate), strategic review ROI validated (2.7-3.7x), CTE atomic pattern proven across 3 stories, sanctuary culture architectural patterns established, component reuse acceleration identified  
+**Status**: ✅ IMPLEMENTED (5 agent specs updated)
+
+### Rationale
+
+Sprint 3 delivered sustained excellence (4.0 GPA, 20/20 points, 92-95% migration readiness) and validated several hypotheses from Sprint 2. Key patterns are now proven at scale and should be institutionalized:
+
+1. **Test-first workflow**: 129 tests, <2s execution, 100% pass rate, zero bugs escaped → Should be default expectation, not "recommended"
+2. **Strategic review ROI**: 2.7-3.7x time savings proven → Formalize decision matrix (Simple optional, Moderate recommended, Complex mandatory)
+3. **CTE atomic transactions**: Proven across S3-01, S3-03, S3-04 → Should be default pattern for state + event changes
+4. **Component reuse**: Saved 5-7 hours in Sprint 3 → Needs explicit registry and story references
+5. **Gaps identified**: Testing schedule undefined (S3-02), environment confusion (S3-03), accessibility superficial, component discovery manual (S3-04)
+
+### Changes Applied
+
+**Agents affected**:
+
+- **product-owner**: 
+  - Added **Strategic Review Decision Matrix** to sprint planning (Simple ≤4pts optional, Moderate 5-7pts recommended, Complex ≥8pts mandatory)
+  - Added **Infrastructure Dependencies** check during sprint planning (sequence foundation stories before dependent features)
+  - Added **Component Registry** reference requirement (`/project/trust-builder/patterns/component-registry.md`)
+  - Added **Testing Schedule** section to story template (devices, viewports, Day 5 allocation)
+  - Added **Environment Setup** section to story template for database stories (verify DATABASE_URL, document test data usage)
+  - Added **Reusable Components** section to story template (explicit references to prior components)
+
+- **fullstack-developer**:
+  - Made **test-first workflow explicit default** (not "at least one integration test" but "write tests FIRST before implementation")
+  - Added **CTE atomic transaction pattern as gold standard** for state + event changes (code example included)
+  - Added **environment verification step** before DB implementation (echo $DATABASE_URL, check .env vs .dev.vars)
+  - Added **pre-commit hook verification** reminder (TypeScript validation, non-ASCII characters)
+  - Reordered implementation workflow to prioritize test-first (tests at step 3, before schema implementation)
+
+- **qa-engineer**:
+  - Added **accessibility validation checklist** (WCAG AA baseline: ARIA labels, color contrast 4.5:1, touch targets ≥44px, focus indicators, semantic HTML)
+  - Added **database state assertions requirement** for CTE atomic transactions (validate BOTH state change AND event logged, not just API response)
+  - Added **manual testing device allocation** expectations (Desktop Chrome 375/768/1024px, iOS Safari iPhone 13+, Android Chrome Pixel 6+)
+  - Added requirement to **flag missing Testing Schedule** section to product-owner before marking PASS
+
+- **product-advisor**:
+  - Added **Strategic Review Decision Matrix** to review lens (when pre-implementation review mandatory vs optional, ROI expectations)
+  - Added **Sanctuary Architecture Checklist** (5 validated patterns: reversibility, non-punitive defaults, teaching moments, supportive language, generous thresholds)
+  - Added **component reuse check** (has developer referenced existing components? consult component-registry.md)
+  - Enhanced **pre-implementation review focus** section (architecture, ontology, pattern reuse, migration forecast)
+
+- **retro-facilitator**:
+  - Added reflection question: **"Where did documentation or component discovery waste time?"** (Could component registry or better docs have helped?)
+  - Added reflection question: **"Which infrastructure dependencies should have been sequenced earlier?"** (foundation stories in correct order?)
+
+### Expected Impact
+
+**Quality Improvements**:
+- Catch accessibility issues during QA, not post-launch
+- Prevent database environment confusion (S3-03 had 7 bug categories from this)
+- Component discovery waste eliminated (S3-04: 30 min search time becomes 0 min with registry)
+- Strategic reviews prevent 3-4 hours of rework per Complex story
+
+**Process Efficiency**:
+- Test-first as default reduces rework cycles (Sprint 3: 0 bugs escaped, 100% first-pass QA)
+- CTE pattern as default ensures atomic transactions (no manual rollback logic needed)
+- Infrastructure dependencies mapped during planning prevents sequencing mistakes (S3-03 hardcoded threshold, S3-04 created config table)
+
+**Cultural Consistency**:
+- Sanctuary Architecture Checklist ensures systematic validation (not just S3-03 gold standard by luck)
+- Teaching moments embedded in automation (git hooks, promotion toasts, system messages)
+
+### Metrics to Watch (Sprint 4+)
+
+- **Test coverage trend**: Expect continued growth from 47% (S3) as test-first becomes default
+- **Strategic review adoption**: Track % of Moderate/Complex stories receiving pre-implementation review
+- **Component reuse frequency**: Track mentions of prior components in story Implementation Notes
+- **Environment issues**: Expect zero database confusion issues (testing schedule + environment setup sections)
+- **Accessibility findings**: Expect increase initially (awareness), then decrease (patterns established)
+- **QA first-pass success rate**: Maintain 100% (S3 baseline with test-first default)
+
+### Documentation Dependencies
+
+This change assumes creation of:
+- `/project/trust-builder/patterns/component-registry.md` (action item for product-owner)
+- Sanctuary messaging pattern docs (action item for meta-coach/doc-whisperer)
+
+---
+
 ## [2026-02-12] UI Layout Made First-Class Quality Dimension
 
 **Analysis Source**: ImprovingUILayout.md recommendations + S3-03 retrospective review  

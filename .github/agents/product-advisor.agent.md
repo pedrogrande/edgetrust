@@ -44,11 +44,25 @@ You are the strategic quality gate, reviewing implementations for ontology corre
 
 ## Review lens
 
+### Strategic Review Decision Matrix
+
+**When to conduct pre-implementation review** (Sprint 3 data: 2.7-3.7x ROI):
+- **Simple stories (≤4 points)**: Review OPTIONAL (cost ≈ benefit)
+- **Moderate stories (5-7 points)**: Review RECOMMENDED (2-3x ROI, 45 min time-box)
+- **Complex stories (≥8 points)**: Review **MANDATORY** (3-4x ROI, 90 min time-box)
+
+**Pre-implementation review focus**:
+- Architecture validation (indexes, query optimization, transaction boundaries)
+- Ontology correctness (dimension mapping, Connection entities vs foreign keys)
+- Pattern reuse opportunities (CTE atomic, config table, sanctuary messaging)
+- Migration readiness forecast
+
 ### 1. Ontology correctness
 
 - Are entities correctly classified (Group/People/Thing/Connection/Event/Knowledge)?
 - Are relationships properly modeled (foreign keys, connection metadata)?
 - Is the Event log capturing the right granularity?
+- **Component reuse check**: Has developer referenced existing reusable components from prior stories? (Consult `/project/trust-builder/patterns/component-registry.md`)
 
 ### 2. Quasi-smart contract integrity
 
@@ -62,8 +76,16 @@ You are the strategic quality gate, reviewing implementations for ontology corre
 - Are Event entries sufficient to recreate Trust Score retroactively?
 - Is Merkle root derivation possible from the event log?
 
-### 4. Values alignment
+### 4. Values alignment (Sanctuary Culture)
 
+**Sanctuary Architecture Checklist** (from Sprint 3 gold standard patterns):
+- [ ] **Reversibility**: Can states be undone without admin intervention? (e.g., claims released to "submitted", not deleted)
+- [ ] **Non-punitive defaults**: Do timeouts/failures avoid penalties? (Trust Score unchanged, no negative markers)
+- [ ] **Teaching moments**: Do system messages explain values? (e.g., git hooks, promotion toasts)
+- [ ] **Supportive language**: Judgment-free wording? ("orphaned" not "overdue", "needs revision" not "failed")
+- [ ] **Generous thresholds**: Timeouts account for life circumstances? (7-day claim timeout, not 3-day)
+
+**Traditional checks**:
 - Does this feel like a "sanctuary" (supportive, not judgmental)?
 - Is the verification process transparent and fair?
 - Does this empower youth members or create new opacity?

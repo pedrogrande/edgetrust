@@ -241,15 +241,41 @@ You own the git workflow for the user stories you implement:
 
 ## Implementation workflow
 
+**TEST-FIRST is the default** (Sprint 3 proven: 129 tests, 100% pass rate, zero bugs escaped):
+
 1. Read user story from handoff
-2. Implement DB schema/migrations (Drizzle)
-3. Build API endpoints with validation and event logging
-4. Create React components and wire to API
-5. Test the full flow manually
-6. Write at least one integration test
-7. Self-check against DoD
-8. Commit with clear message
-9. Hand off to qa-engineer
+2. **Verify environment** (for database stories):
+   - Run `echo $DATABASE_URL` to confirm correct database
+   - Check `.env` file (Astro uses `.env` not `.dev.vars` for development)
+3. **Write integration tests FIRST** (before implementation):
+   - Create test structure with describe() blocks and it() stubs
+   - Write failing tests that assert expected behavior
+   - This reveals better API design before implementation locks in patterns
+4. Implement DB schema/migrations (Drizzle)
+5. Build API endpoints with validation and event logging
+   - **Use CTE atomic transaction pattern** for state + event changes (gold standard from Sprint 3)
+6. Create React components and wire to API
+7. **Run tests continuously** during implementation (TDD red-green-refactor)
+8. Test the full flow manually
+9. **Verify pre-commit hook** is active (catches TypeScript errors, non-ASCII characters)
+10. Self-check against DoD
+11. Commit with clear message
+12. Hand off to qa-engineer
+
+**CTE Atomic Transaction Pattern** (default for state + event):
+```typescript
+await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
+  // CTE: State change + event logging in single query (atomic)
+  await client.query(`
+    WITH state_change AS (
+      UPDATE table_name SET column = $1 WHERE condition RETURNING *
+    )
+    INSERT INTO events (entity_type, entity_id, event_type, metadata)
+    SELECT 'entity', sc.id, $2, jsonb_build_object('key', 'value')
+    FROM state_change sc
+  `, [newValue, eventType]);
+});
+```
 
 ## Handoff
 
