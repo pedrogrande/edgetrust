@@ -69,6 +69,7 @@ async function updateStateAndLogEvent(params) {
 If event insert fails, state update rolls back automatically. No partial updates, no manual cleanup.
 
 **Without CTE** (BAD):
+
 ```typescript
 // ❌ Two separate queries = race condition risk
 await client.query('UPDATE claims SET status = $1', ['approved']);
@@ -76,6 +77,7 @@ await client.query('INSERT INTO events ...'); // If this fails, claim is approve
 ```
 
 **With CTE** (GOOD):
+
 ```typescript
 // ✅ One query = atomic by construction
 WITH state_change AS (UPDATE ...) INSERT INTO events SELECT FROM state_change;
@@ -141,6 +143,7 @@ async function releaseOrphanedClaims(adminId: string) {
 ```
 
 **What this achieves**:
+
 - Updates N claims to `submitted` status
 - Logs N events (one per claim)
 - If any event insert fails, ALL claim updates roll back
@@ -202,6 +205,7 @@ async function promoteMember(
 ## When to Use This Pattern
 
 **Use CTE atomic pattern when**:
+
 - ✅ Any state change (CREATE, UPDATE, DELETE) that needs event logging
 - ✅ Trust Score updates
 - ✅ Role changes
@@ -209,6 +213,7 @@ async function promoteMember(
 - ✅ Mission lifecycle changes
 
 **Skip CTE pattern when**:
+
 - ❌ Read-only queries (SELECT without INSERT)
 - ❌ Batch operations where partial success is acceptable
 - ❌ Event logging not required (rare in Trust Builder)
@@ -223,7 +228,10 @@ async function promoteMember(
 describe('releaseOrphanedClaims (CTE atomic)', () => {
   it('should update claim status AND log event atomically', async () => {
     // Arrange: Create orphaned claim
-    const claim = await createClaim({ status: 'under_review', createdAt: eightDaysAgo });
+    const claim = await createClaim({
+      status: 'under_review',
+      createdAt: eightDaysAgo,
+    });
 
     // Act: Release orphaned claims
     const result = await releaseOrphanedClaims(adminId);
@@ -232,12 +240,16 @@ describe('releaseOrphanedClaims (CTE atomic)', () => {
     expect(result.released).toBe(1);
 
     // Assert database state
-    const updatedClaim = await db.query.claims.findFirst({ where: eq(claims.id, claim.id) });
+    const updatedClaim = await db.query.claims.findFirst({
+      where: eq(claims.id, claim.id),
+    });
     expect(updatedClaim.status).toBe('submitted');
     expect(updatedClaim.reviewer_id).toBeNull();
 
     // Assert event logged
-    const events = await db.query.events.findMany({ where: eq(events.entity_id, claim.id) });
+    const events = await db.query.events.findMany({
+      where: eq(events.entity_id, claim.id),
+    });
     expect(events).toHaveLength(1);
     expect(events[0].event_type).toBe('claim.timeout.released');
     expect(events[0].metadata.reason).toBe('timeout_7_days');
@@ -245,13 +257,17 @@ describe('releaseOrphanedClaims (CTE atomic)', () => {
 
   it('should rollback state change if event insert fails', async () => {
     // Arrange: Mock event insert failure
-    mockQuery.mockRejectedValueOnce(new Error('Event insert constraint violation'));
+    mockQuery.mockRejectedValueOnce(
+      new Error('Event insert constraint violation')
+    );
 
     // Act + Assert: Entire transaction should fail
     await expect(releaseOrphanedClaims(adminId)).rejects.toThrow();
 
     // Assert: State did NOT change (rollback confirmed)
-    const claim = await db.query.claims.findFirst({ where: eq(claims.id, claimId) });
+    const claim = await db.query.claims.findFirst({
+      where: eq(claims.id, claimId),
+    });
     expect(claim.status).toBe('under_review'); // Still under_review, not submitted
   });
 });
@@ -303,7 +319,8 @@ INSERT INTO events SELECT * FROM state_change  -- Can access all columns
 ```typescript
 // ❌ BAD: No transaction wrapper
 const result = await client.query('WITH state_change AS ...');
-if (someBusinessLogicCheck) {  // Too late to rollback!
+if (someBusinessLogicCheck) {
+  // Too late to rollback!
   throw new Error('Validation failed');
 }
 ```
@@ -314,7 +331,7 @@ if (someBusinessLogicCheck) {  // Too late to rollback!
 // ✅ GOOD: Transaction wrapper handles rollback
 return await withTransaction(pool, async (client) => {
   if (!someBusinessLogicCheck) {
-    throw new Error('Validation failed');  // Rolls back entire transaction
+    throw new Error('Validation failed'); // Rolls back entire transaction
   }
   const result = await client.query('WITH state_change AS ...');
   return result;
@@ -327,13 +344,14 @@ return await withTransaction(pool, async (client) => {
 
 **Benchmark** (Neon serverless, 1000 claim updates):
 
-| Approach | Time | Queries |
-|----------|------|---------|
-| Sequential (UPDATE then INSERT × 1000) | 8.2s | 2000 |
-| CTE atomic (× 1000) | 3.1s | 1000 |
-| **Improvement** | **62% faster** | **50% fewer queries** |
+| Approach                               | Time           | Queries               |
+| -------------------------------------- | -------------- | --------------------- |
+| Sequential (UPDATE then INSERT × 1000) | 8.2s           | 2000                  |
+| CTE atomic (× 1000)                    | 3.1s           | 1000                  |
+| **Improvement**                        | **62% faster** | **50% fewer queries** |
 
 **Why faster**:
+
 - Single round-trip per transaction (no network latency between UPDATE and INSERT)
 - Postgres query planner optimizes CTE execution
 - Fewer connection pool acquisitions

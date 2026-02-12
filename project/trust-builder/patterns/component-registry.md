@@ -30,6 +30,7 @@
 **Location**: `/src/components/trust-builder/DashboardCard.tsx`  
 **Purpose**: Card wrapper with title, description, optional actions  
 **Props**:
+
 ```typescript
 interface DashboardCardProps {
   title: string;
@@ -53,6 +54,7 @@ interface DashboardCardProps {
 **Location**: `/src/components/trust-builder/ProgressToSteward.tsx`  
 **Purpose**: Progress bar showing path to 250 Trust Score points  
 **Props**:
+
 ```typescript
 interface ProgressToStewardProps {
   currentPoints: number;
@@ -72,6 +74,7 @@ interface ProgressToStewardProps {
 **Location**: `/src/components/trust-builder/OrphanedClaimsBadge.tsx`  
 **Purpose**: Badge with orphaned claim count + dialog launcher  
 **Props**:
+
 ```typescript
 interface OrphanedClaimsBadgeProps {
   count: number;
@@ -89,6 +92,7 @@ interface OrphanedClaimsBadgeProps {
 **Location**: `/src/components/trust-builder/PromotionToast.tsx`  
 **Purpose**: Celebration toast for role promotions (sanctuary messaging built-in)  
 **Props**:
+
 ```typescript
 interface PromotionToastProps {
   memberName: string;
@@ -108,6 +112,7 @@ interface PromotionToastProps {
 _No reusable form components created in Sprint 3. Future components will be documented here._
 
 **S4 Candidates**:
+
 - Email input with magic link validation
 - Mission selection dropdown
 - Claim submission form
@@ -122,6 +127,7 @@ _No reusable form components created in Sprint 3. Future components will be docu
 **Location**: `/src/components/trust-builder/OrphanedClaimsDialog.tsx` (integrated with badge)  
 **Purpose**: Dialog showing orphaned claim details with bulk release action  
 **Props**:
+
 ```typescript
 interface OrphanedClaimsDialogProps {
   claims: OrphanedClaim[];
@@ -198,6 +204,7 @@ After each story completion, **retro-facilitator** or **product-owner** should:
 ## Metrics
 
 **Sprint 3 Component Reuse**:
+
 - ProgressToSteward: 1 creation + 1 reuse = **2-3 hours saved**
 - DashboardCard: 1 creation + 2 reuses = **3-4 hours saved**
 - **Total**: 5-7 hours saved across 4 stories

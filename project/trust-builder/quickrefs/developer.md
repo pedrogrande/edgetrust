@@ -33,7 +33,8 @@ import { withTransaction } from '@/lib/db/connection';
 async function updateStateAndLogEvent(params) {
   return await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
     // Single query: State change + event logging (atomic)
-    const result = await client.query(`
+    const result = await client.query(
+      `
       WITH state_change AS (
         UPDATE table_name 
         SET column = $1, updated_at = NOW()
@@ -49,8 +50,10 @@ async function updateStateAndLogEvent(params) {
         jsonb_build_object('field_changed', 'column', 'old_value', sc.old_column_value, 'new_value', sc.column)
       FROM state_change sc
       RETURNING *
-    `, [newValue, eventType, actorId]);
-    
+    `,
+      [newValue, eventType, actorId]
+    );
+
     return result.rows;
   });
 }

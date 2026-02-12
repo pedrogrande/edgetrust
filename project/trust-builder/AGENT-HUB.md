@@ -140,18 +140,18 @@
 
 ## 🔍 Common Questions ("How do I...?")
 
-| Question                    | Quick Answer (< 5 min)                                             | Full Reference                                                 |
-| --------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------- |
-| Implement API endpoint?     | [patterns/api-endpoint.md](patterns/api-endpoint.md)               | [04: Data Model & API Design](04-data-model-and-api-design.md) |
-| Add event logging?          | [patterns/event-sourcing.md](patterns/event-sourcing.md)           | [05: Smart Contract Spec](05-smart-contract-behaviour-spec.md) |
-| Use CTE atomic pattern?     | [patterns/cte-atomic-pattern.md](patterns/cte-atomic-pattern.md) **⭐ GOLD** | [Sprint 3 Learnings](retros/sprint-3-learnings-and-guidelines.md) |
-| Find reusable components?   | [patterns/component-registry.md](patterns/component-registry.md)   | — |
-| When is strategic review needed? | [quickrefs/strategic-review.md](quickrefs/strategic-review.md) **⭐ ROI: 2.7-3.7x** | [Sprint 3 Learnings](retros/sprint-3-learnings-and-guidelines.md) |
-| Calculate Trust Scores?     | [06: Trust Score Rules](06-incentive-and-trust-score-rules.md)     | — |
-| Validate sanctuary culture? | [quickrefs/advisor.md](quickrefs/advisor.md) (sanctuary checklist) | [00: Product Vision](00-product-vision-and-goals.md) |
+| Question                                  | Quick Answer (< 5 min)                                                                        | Full Reference                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Implement API endpoint?                   | [patterns/api-endpoint.md](patterns/api-endpoint.md)                                          | [04: Data Model & API Design](04-data-model-and-api-design.md)    |
+| Add event logging?                        | [patterns/event-sourcing.md](patterns/event-sourcing.md)                                      | [05: Smart Contract Spec](05-smart-contract-behaviour-spec.md)    |
+| Use CTE atomic pattern?                   | [patterns/cte-atomic-pattern.md](patterns/cte-atomic-pattern.md) **⭐ GOLD**                  | [Sprint 3 Learnings](retros/sprint-3-learnings-and-guidelines.md) |
+| Find reusable components?                 | [patterns/component-registry.md](patterns/component-registry.md)                              | —                                                                 |
+| When is strategic review needed?          | [quickrefs/strategic-review.md](quickrefs/strategic-review.md) **⭐ ROI: 2.7-3.7x**           | [Sprint 3 Learnings](retros/sprint-3-learnings-and-guidelines.md) |
+| Calculate Trust Scores?                   | [06: Trust Score Rules](06-incentive-and-trust-score-rules.md)                                | —                                                                 |
+| Validate sanctuary culture?               | [quickrefs/advisor.md](quickrefs/advisor.md) (sanctuary checklist)                            | [00: Product Vision](00-product-vision-and-goals.md)              |
 | Write supportive, non-punitive messaging? | [patterns/sanctuary-messaging.md](patterns/sanctuary-messaging.md) **⭐ GOLD** (S3-03 9.5/10) | [Sprint 3 Learnings](retros/sprint-3-learnings-and-guidelines.md) |
-| Check migration readiness?  | [quickrefs/qa.md](quickrefs/qa.md) (migration checklist)           | [08: Migration Strategy](08-migration-and-audit-strategy.md) |
-| Run/write tests?            | [quickrefs/developer.md](quickrefs/developer.md) (testing section) | README.md (Testing section) |
+| Check migration readiness?                | [quickrefs/qa.md](quickrefs/qa.md) (migration checklist)                                      | [08: Migration Strategy](08-migration-and-audit-strategy.md)      |
+| Run/write tests?                          | [quickrefs/developer.md](quickrefs/developer.md) (testing section)                            | README.md (Testing section)                                       |
 
 ---
 
@@ -244,13 +244,14 @@ trust-builder/
 ├── product-manager/          ← 📝 Stories + sprints + reviews
 │   ├── stories/              ← User story specs (S3-XX-*.md)
 │   ├── advisor-feedback/     ← Strategic reviews (S3-XX-strategic-review.md)
-│   ├── BACKLOG.mXX-*.md      ← Story retrospectives (S3-01 through S3-04)
-│   ├── sprint-3-retrospective.md  ← Sprint 3 retro (2,988 lines, 4 perspectives)
-│   └── sprint-3-learnings-and-guidelines.md  ← ⭐ S3 learnings playbook (1,748 lines
+│   ├── BACKLOG.md            ← Prioritized backlog
+│   ├── SPRINT-X-PLAN.md      ← Sprint planning docs
+│   └── (Various reports)     ← QA reports, implementation notes
 │
 ├── retros/                   ← 🔄 Learnings (updated each story/sprint)
-│   ├── story-S3-01-*.md      ← Story retrospectives
-│   └── sprint-2-learnings-and-guidance.md  ← Sprint learnings (long-form)
+│   ├── story-SX-XX-*.md      ← Story retrospectives (S1-01 through S3-04)
+│   ├── sprint-X-retrospective.md     ← Sprint retros (all agents' perspectives)
+│   └── sprint-X-learnings-and-guidelines.md  ← ⭐ Sprint learnings playbooks
 │
 └── meta/                     ← 🛠️ Agent management
     ├── PATTERN-ANALYSIS.md   ← Recurring patterns/blockers
@@ -317,4 +318,4 @@ trust-builder/
 - **Feedback**: If you can't find something in <2 min, mention in retro → doc-whisperer will fix
 - **Incremental**: New patterns added when requested 3+ times (signals common need)
 
-**Last Reorganization**: 11 February 2026 (Post-S3-01, by doc-whisperer)
+**Last Reorganization**: 12 February 2026 (Post-Sprint 3, documentation restructure complete)

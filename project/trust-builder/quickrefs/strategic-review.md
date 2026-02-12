@@ -8,11 +8,11 @@
 
 ## ⚡ Decision Matrix (< 30 seconds)
 
-| Story Complexity | Points | Review Required | Expected ROI | Time Budget |
-|------------------|--------|-----------------|--------------|-------------|
+| Story Complexity | Points | Review Required | Expected ROI | Time Budget           |
+| ---------------- | ------ | --------------- | ------------ | --------------------- |
 | **Simple**       | ≤4     | Optional        | Break-even   | 30 min (if conducted) |
-| **Moderate**     | 5-7    | **Recommended** | 2-3x         | 45 min |
-| **Complex**      | ≥8     | **MANDATORY**   | 3-4x         | 90 min |
+| **Moderate**     | 5-7    | **Recommended** | 2-3x         | 45 min                |
+| **Complex**      | ≥8     | **MANDATORY**   | 3-4x         | 90 min                |
 
 **Rule of thumb**: If story touches 3+ ontology dimensions or introduces new architectural patterns → Recommended or Mandatory.
 
@@ -20,11 +20,11 @@
 
 ## 📊 Proven ROI Data (Sprint 3)
 
-| Story | Complexity | Review Time | Critical Finding | Prevented Rework | ROI |
-|-------|------------|-------------|------------------|------------------|-----|
-| S3-02 | Complex | 90 min | Missing composite index (performance bug) | 4 hours emergency hotfix | **3.7x** |
-| S3-03 | Moderate | 45 min | Threshold hardcoding clarity, atomic transaction pattern | 2 hours mid-dev refactor | **3.0x** |
-| S3-04 | Simple | Skipped | Pattern reuse, no architecture changes | N/A | N/A |
+| Story | Complexity | Review Time | Critical Finding                                         | Prevented Rework         | ROI      |
+| ----- | ---------- | ----------- | -------------------------------------------------------- | ------------------------ | -------- |
+| S3-02 | Complex    | 90 min      | Missing composite index (performance bug)                | 4 hours emergency hotfix | **3.7x** |
+| S3-03 | Moderate   | 45 min      | Threshold hardcoding clarity, atomic transaction pattern | 2 hours mid-dev refactor | **3.0x** |
+| S3-04 | Simple     | Skipped     | Pattern reuse, no architecture changes                   | N/A                      | N/A      |
 
 **Lesson**: S3-02 would have passed QA and shipped to production with critical performance bug. Strategic review caught it at 0 cost (pre-implementation).
 
@@ -33,6 +33,7 @@
 ## 🎯 When to Skip Review (Simple Stories)
 
 **Skip if ALL true**:
+
 - ≤4 points estimated
 - Touches 1-2 ontology dimensions only
 - Reuses existing patterns (no new architecture)
@@ -40,6 +41,7 @@
 - UI-only or read-only feature
 
 **Examples**:
+
 - "Member sees their Member ID on dashboard" (People + UI)
 - "Add tooltip explaining Trust Score" (Knowledge + UI)
 - "Format dates in ISO 8601 on leaderboard" (UI polish)
@@ -49,6 +51,7 @@
 ## 🚨 When Review is Mandatory (Complex Stories)
 
 **Conduct review if ANY true**:
+
 - ≥8 points estimated
 - Touches 3+ ontology dimensions
 - Introduces new database tables/indexes
@@ -56,6 +59,7 @@
 - First story in new domain (e.g., first mission story, first payment story)
 
 **Examples**:
+
 - "Member submits claim and Trust Score updates" (Things + Events + Knowledge + scoring logic)
 - "Mission joining workflow" (Groups + People + Connections + Events)
 - "Email magic link authentication" (People + new auth pattern)
@@ -67,6 +71,7 @@
 ### Part 1: Ontology Validation (15-20 min)
 
 **Questions**:
+
 - Which dimensions does this story touch?
 - Are entities mapped to correct dimensions?
 - Are relationships modeled as Connection entities (not foreign keys)?
@@ -75,6 +80,7 @@
 ### Part 2: Architecture Review (20-30 min)
 
 **Questions**:
+
 - **Performance**: What indexes are needed? Any n+1 query risks?
 - **Transactions**: What must be atomic? (Use CTE pattern?)
 - **Pattern reuse**: Which existing patterns apply? (CTE, config table, event logging)
@@ -83,6 +89,7 @@
 ### Part 3: Migration Readiness (10-15 min)
 
 **Questions**:
+
 - Which patterns are blockchain-compatible?
 - What gaps exist? (5-10% acceptable, >10% flag for discussion)
 - Is event metadata complete for Merkle root generation?
@@ -90,6 +97,7 @@
 ### Part 4: Sanctuary Culture (10-15 min)
 
 **Checklist** (see [sanctuary-messaging.md](../patterns/sanctuary-messaging.md)):
+
 - [ ] Are state changes reversible?
 - [ ] Do timeouts/failures avoid penalties?
 - [ ] Is language supportive (not judgmental)?
@@ -98,6 +106,7 @@
 ### Part 5: Implementation Guidance (10-20 min)
 
 **Document**:
+
 - **MUST items**: Non-negotiable for story acceptance
 - **SHOULD items**: Recommended, can defer if time-constrained
 - **NICE-TO-HAVE items**: Explicitly marked for future stories
@@ -117,6 +126,7 @@
 **Review Duration**: [minutes]
 
 ## Ontology Assessment
+
 - Dimensions touched: [Groups? People? Things? Connections? Events? Knowledge?]
 - Entity mapping: [Correct / Needs adjustment]
 - Relationships: [Connection entities or foreign keys?]
@@ -124,30 +134,37 @@
 ## Architecture Recommendations
 
 ### MUST (Non-Negotiable)
+
 1. [Critical finding with rationale - e.g., "Add composite index on (mission_id, status) for dashboard query"]
 
 ### SHOULD (Recommended)
+
 1. [Recommended pattern - e.g., "Use CTE atomic pattern for claim approval + Trust Score update"]
 
 ### NICE-TO-HAVE (Future Story)
+
 1. [Enhancement deferred - e.g., "Real-time notifications for claim status (defer to S4)"]
 
 ## Migration Readiness Forecast
+
 - Initial estimate: [85-95%]
 - Gaps identified: [e.g., "Foreign key instead of Connection entity for reviewer assignment"]
 - Mitigation plan: [e.g., "Refactor in S4-02"]
 
 ## Sanctuary Culture Check
+
 - Reversibility: [Yes - claims released to 'submitted', not deleted]
 - Non-punitive: [Yes - Trust Score unchanged on timeout]
 - Language: [Supportive - 'orphaned' not 'overdue']
 
 ## Implementation Notes
+
 - Patterns to reuse: [CTE atomic transactions, config table thresholds]
 - Performance considerations: [Add index before testing with 10k+ claims]
 - Testing guidance: [Test timeout path separately - create claim 8 days ago]
 
 ## Decision Log
+
 - **Decision**: Use 7-day timeout (not 3-day)
 - **Rationale**: Life happens - generous threshold aligns with sanctuary values
 - **Alternatives considered**: 3-day (too aggressive), 14-day (too long for system responsiveness)
@@ -170,6 +187,7 @@ In story file, add at top if Moderate or Complex:
 **Focus Areas**: Database indexes, CTE atomic pattern, migration readiness
 
 **Questions for Review**:
+
 1. Should reviewer assignment use Connection entity or foreign key?
 2. What indexes needed for dashboard query (1000+ members)?
 3. Is 7-day timeout generous enough for sanctuary culture?
@@ -198,22 +216,26 @@ When conducting review:
 ## 📈 Metrics to Track
 
 **Per Story**:
+
 - Review duration (actual vs time-boxed)
 - Number of MUST items identified
 - Estimate of prevented rework hours
 
 **Per Sprint**:
+
 - % of Moderate stories that received review
 - % of Complex stories that received review (target: 100%)
 - Average ROI (prevented hours / review hours)
 - Review findings that became action items
 
 **Sprint 3 Baseline**:
+
 - Complex stories reviewed: 100% (1/1)
 - Moderate stories reviewed: 50% (1/2)
 - Average ROI: 3.4x
 
 **Sprint 4 Target**:
+
 - Complex stories reviewed: 100%
 - Moderate stories reviewed: 75%+
 - Average ROI: 2.5-3.5x
