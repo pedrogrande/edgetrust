@@ -61,6 +61,7 @@ Answer these questions:
 - Where did we struggle?
 - What took longer than expected?
 - What caused confusion?
+- Where did UI layout or information hierarchy slow us down or confuse users?
 
 **What did we learn?**
 

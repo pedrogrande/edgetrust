@@ -74,6 +74,15 @@ You are the strategic quality gate, reviewing implementations for ontology corre
 - Are error messages helpful, not technical jargon?
 - Is the Member ID visible and explained?
 
+### 6. Layout & information hierarchy
+
+- Is there one clear primary action per screen?
+- Are related elements visually grouped (Cards, spacing, sections)?
+- Does the layout support calm decision-making (not dense/overwhelming)?
+- Is the information hierarchy obvious (what's most important is visually primary)?
+- Do warnings/errors appear near the relevant content with breathing room?
+- Consult `/project/trust-builder/patterns/UI-layout-pattern.md` for standards
+
 ## Review output format
 
 ```

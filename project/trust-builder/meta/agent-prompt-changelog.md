@@ -6,6 +6,75 @@
 
 ---
 
+## [2026-02-12] UI Layout Made First-Class Quality Dimension
+
+**Analysis Source**: ImprovingUILayout.md recommendations + S3-03 retrospective review  
+**Key Insight**: Layout quality currently implied under "UX" but not operationalized with explicit checks  
+**Status**: ✅ IMPLEMENTED (4 agent specs updated)
+
+### Rationale
+
+While sanctuary culture, ontology correctness, and migration readiness are explicitly validated at every stage, UI layout and information hierarchy have been evaluated implicitly. This creates risk of:
+
+- Developers delivering functionally correct but visually confusing interfaces
+- QA passing stories with unclear primary actions or poor visual grouping
+- Product Advisor catching layout issues only at final review (late feedback)
+- Inconsistent application of layout patterns across stories
+
+### Changes Applied
+
+**Agents affected**:
+
+- **product-advisor**: Added new section "6. Layout & information hierarchy" to review lens:
+  - Check for one clear primary action per screen
+  - Verify related elements are visually grouped
+  - Assess whether layout supports calm decision-making (not dense/overwhelming)
+  - Validate information hierarchy (most important is visually primary)
+  - Confirm warnings/errors appear near relevant content with breathing room
+  - Reference `/project/trust-builder/patterns/UI-layout-pattern.md` for standards
+
+- **qa-engineer**: Added "Layout & UX validation" section to validation checklist:
+  - Primary action clarity (one obvious Button variant="default")
+  - Visual grouping (Cards, sections, consistent spacing)
+  - Information hierarchy (key content visible without scrolling)
+  - Responsive behavior (375px stacking, no awkward scroll)
+  - Sanctuary feel (comfortable spacing, dedicated warning areas)
+  - Keyboard & focus order
+  - Record layout issues under "Layout/UX" subheading even if functionality passes
+  - Reference `/project/trust-builder/patterns/UI-layout-pattern.md` for detailed checks
+
+- **fullstack-developer**: Added "UI Layout composition" subsection to React UI patterns:
+  - Follow `/project/trust-builder/patterns/UI-layout-pattern.md` for:
+    - Standard page patterns (list+detail, single-column form, wizard)
+    - One primary action per screen (Button variant="default")
+    - Comfortable spacing (container max-w-2xl or max-w-6xl, space-y-4/6)
+    - Visual grouping (Cards, sections, consistent spacing)
+    - Sanctuary-aligned information hierarchy (calm, not dense)
+
+- **retro-facilitator**: Added layout-specific reflection question:
+  - "Where did UI layout or information hierarchy slow us down or confuse users?"
+
+### Expected Impact
+
+- **Earlier detection**: QA catches layout issues before strategic review
+- **Clearer guidance**: Developer has concrete layout patterns to follow during implementation
+- **Consistent quality**: Layout validated at same rigor as ontology, events, migration readiness
+- **Faster iterations**: Layout feedback in QA cycle (1-2 hours) vs strategic review (end of story)
+- **Better documentation**: Layout issues captured in retros for pattern extraction
+
+### Metrics to Watch (Sprint 4+)
+
+- % of strategic reviews mentioning layout concerns (expect decrease from ~40% baseline)
+- % of QA reports with "Layout/UX" findings (expect increase initially as awareness grows)
+- Retro mentions of "confusing layout" or "hard to find primary action" (expect decrease)
+- Time from implementation → strategic approval (expect decrease if layout feedback shifts left)
+
+### Documentation Context
+
+This change operationalizes the existing `/project/trust-builder/patterns/UI-layout-pattern.md` (created earlier) by explicitly requiring all agents to reference and validate against it. The pattern doc provides concrete examples, checklists, and standard compositions.
+
+---
+
 ## [2026-02-11] Sprint 2 Pattern Analysis → Sprint 3 Improvements
 
 **Analysis Source**: 10 story retros (S1-01 through S2-04) + 2 sprint retros  

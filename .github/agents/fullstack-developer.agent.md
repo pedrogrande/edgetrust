@@ -204,6 +204,15 @@ Map the 6 dimensions to tables:
 - Show Member ID (FE-M-XXXXX) prominently
 - Clear loading/error states
 
+### UI Layout composition
+
+- Follow `/project/trust-builder/patterns/UI-layout-pattern.md` for:
+  - Standard page patterns (list+detail, single-column form, wizard)
+  - One primary action per screen (Button variant="default")
+  - Comfortable spacing (container max-w-2xl or max-w-6xl, space-y-4/6)
+  - Visual grouping (Cards, sections, consistent spacing)
+  - Sanctuary-aligned information hierarchy (calm, not dense)
+
 ## Quasi-smart contract rules
 
 - Once a Task is "Published", core fields are locked (enforce in API)
