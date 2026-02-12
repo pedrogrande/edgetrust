@@ -13,6 +13,7 @@
 **What Changed**: Layout quality moved from implicit "UX" to explicit validation at every stage.
 
 **Agent Updates**:
+
 - ✅ **product-owner**: Story template includes Layout & UX acceptance criteria section
 - ✅ **fullstack-developer**: Instructions reference UI-layout-pattern.md for composition guidance
 - ✅ **qa-engineer**: Dedicated "Layout & UX validation" checklist with 6 explicit checks
@@ -41,6 +42,7 @@ When writing Sprint 4 stories:
    - Complex: Novel interaction model or multiple coordinated patterns
 
 **Expected Outcomes**:
+
 - Earlier layout feedback (QA cycle vs Advisor review)
 - Reduced layout-related grade reductions
 - Consistent visual quality across stories
@@ -171,11 +173,13 @@ When writing Sprint 4 stories:
 **Target**: 18-22 points (4-5 stories, AI-optimized for 1-2 days each)
 
 **Complexity Distribution**:
+
 - 1-2 Simple stories (2-3 points each): Quick wins, confidence builders
 - 2-3 Moderate stories (5-8 points each): Core value delivery
 - 0-1 Complex stories (8-13 points): Only if foundational and well-understood
 
 **Layout Complexity Overlay**:
+
 - Simple layout: Existing pattern (list+detail, form) with minor adaptation → No point increase
 - Moderate layout: New pattern or complex responsive → +1 point
 - Complex layout: Novel interaction or multiple coordinated patterns → +2 points
@@ -185,18 +189,21 @@ When writing Sprint 4 stories:
 ## Sprint 4 Success Metrics
 
 **Quality Targets**:
+
 - 🎯 Grade A average (maintain S2-S3 trend)
 - 🎯 95%+ migration readiness (all stories)
 - 🎯 100% git workflow compliance (pre-push hooks working)
 - 🎯 Zero layout issues in strategic reviews (shifted left to QA)
 
 **Process Targets**:
+
 - 🎯 100% strategic reviews for Moderate+ stories
 - 🎯 100% manual testing schedules followed
 - 🎯 100% stories use layout AC template
 - 🎯 QA reports include "Layout/UX" subheading
 
 **Documentation Targets**:
+
 - 🎯 All retros capture layout learnings
 - 🎯 Neon SQL patterns doc created
 - 🎯 Test data seed scripts operational
