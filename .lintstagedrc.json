@@ -1,0 +1,4 @@
+{
+  "*.{ts,tsx,astro}": ["prettier --check", "bash -c 'tsc --noEmit'"],
+  "*.{js,jsx,json,md,css}": ["prettier --check"]
+}
