@@ -127,11 +127,22 @@ Then [...]
 
 ## Acceptance Criteria
 
+### Functional
 - [ ] Functional behavior (end-to-end)
 - [ ] Ontology mapping is implemented as described
 - [ ] All relevant state changes write Events
 - [ ] Trust Score derivation unaffected or updated as specified
-- [ ] Mobile and basic accessibility checks pass
+
+### Layout & UX (refer to `/project/trust-builder/patterns/UI-layout-pattern.md`)
+- [ ] One clear primary action per screen (Button variant="default")
+- [ ] Related elements visually grouped (Cards, spacing, sections)
+- [ ] Information hierarchy obvious (key content visible without scrolling on laptop viewport)
+- [ ] Mobile responsive (375px: stacks gracefully, no awkward horizontal scroll)
+- [ ] Sanctuary feel (comfortable spacing, warnings in dedicated areas with breathing room)
+
+### Quality
+- [ ] Mobile and basic accessibility checks pass (keyboard navigation, focus order)
+- [ ] Error messages helpful and near relevant content
 
 ## Implementation Notes (AI-facing)
 
