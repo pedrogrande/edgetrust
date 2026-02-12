@@ -31,6 +31,7 @@ S3-03 implementation successfully delivers the automated workflow for releasing 
 ✅ **Branch Status**: Clean state (all implementations committed)
 
 **Commit History** (oldest to newest):
+
 ```
 c8649c0 feat(S3-03): Background jobs - orphaned claims release
 d2cf24f fix(S3-03): Pass sql parameter to getCurrentUser in admin/claims
@@ -50,6 +51,7 @@ b08b84b fix(S3-03): Use reviewed_at instead of non-existent updated_at column
 ```
 
 **Implementation Files** (New):
+
 - 3 API endpoints: `release-orphaned-claims.ts`, `orphaned-claims-count.ts`, `orphaned-claims.ts`
 - 2 React components: `OrphanedClaimsBadge.tsx`, `ReleaseOrphanedDialog.tsx`
 - 1 Admin page: `admin/claims.astro`
@@ -57,6 +59,7 @@ b08b84b fix(S3-03): Use reviewed_at instead of non-existent updated_at column
 - 1 Event type: `EventType.CLAIM_TIMEOUT_RELEASED`
 
 **Documentation** (New):
+
 - Strategic review: `S3-03-PRE-IMPLEMENTATION-REVIEW.md` (1019 lines)
 - Challenges report: `S3-03-IMPLEMENTATION-CHALLENGES.md` (407 lines)
 - UI pattern: `UI-layout-pattern.md` (235 lines)
@@ -83,6 +86,7 @@ b08b84b fix(S3-03): Use reviewed_at instead of non-existent updated_at column
 **Requirement**: Manual API endpoint identifies claims with `status = 'under_review'` AND `reviewed_at > NOW() - INTERVAL '7 days'`
 
 **Implementation** (release-orphaned-claims.ts, lines 57-72):
+
 ```typescript
 WHERE c.status = 'under_review'
   AND c.reviewed_at < NOW() - INTERVAL '7 days'
@@ -90,6 +94,7 @@ ORDER BY c.reviewed_at ASC
 ```
 
 **Validation**:
+
 - ✅ Query uses correct status filter (`'under_review'`)
 - ✅ Time comparison uses `reviewed_at < NOW() - INTERVAL '7 days'` (correct logic)
 - ✅ Ordered by `reviewed_at ASC` (oldest first)
@@ -97,9 +102,10 @@ ORDER BY c.reviewed_at ASC
 - ✅ Manual test: Database confirmed 1 orphaned claim exists
 
 **Database Test**:
+
 ```sql
-SELECT COUNT(*) FROM claims 
-WHERE status = 'under_review' 
+SELECT COUNT(*) FROM claims
+WHERE status = 'under_review'
 AND reviewed_at < NOW() - INTERVAL '7 days';
 -- Result: 1 orphaned claim ✅
 ```
@@ -109,6 +115,7 @@ AND reviewed_at < NOW() - INTERVAL '7 days';
 **Requirement**: Endpoint transitions orphaned claims to `status = 'submitted'`
 
 **Implementation** (release-orphaned-claims.ts, lines 78-81):
+
 ```typescript
 WITH released AS (
   UPDATE claims
@@ -117,6 +124,7 @@ WITH released AS (
 ```
 
 **Validation**:
+
 - ✅ UPDATE sets `status = 'submitted'` explicitly
 - ✅ Integration test verifies state transition (test "AC2, AC3")
 - ✅ Manual test confirmed: User reported "Claims transition to submitted" ✅
@@ -128,6 +136,7 @@ WITH released AS (
 **Implementation**: Same UPDATE statement as AC2
 
 **Validation**:
+
 - ✅ UPDATE sets `reviewer_id = NULL` explicitly
 - ✅ Integration test confirms reviewer cleared
 - ✅ Manual test confirmed: Claims return to unassigned state
@@ -137,6 +146,7 @@ WITH released AS (
 **Requirement**: Endpoint logs `claim.timeout_released` event for each affected claim
 
 **Implementation** (release-orphaned-claims.ts, lines 85-104):
+
 ```typescript
 INSERT INTO events (actor_id, entity_type, entity_id, event_type, metadata)
 SELECT
@@ -149,6 +159,7 @@ FROM released r
 ```
 
 **Validation**:
+
 - ✅ Event type defined: `EventType.CLAIM_TIMEOUT_RELEASED = 'claim.timeout_released'` (types/trust-builder.ts:87)
 - ✅ CTE pattern ensures one event per released claim (SELECT from released CTE)
 - ✅ Integration test verifies event metadata structure (test "AC4, AC14")
@@ -159,6 +170,7 @@ FROM released r
 **Requirement**: Endpoint returns list of affected claims (id, title, reviewer_name, days_orphaned)
 
 **Implementation** (release-orphaned-claims.ts, lines 109-116):
+
 ```typescript
 return {
   released: orphaned.map((claim) => ({
@@ -172,6 +184,7 @@ return {
 ```
 
 **Validation**:
+
 - ✅ Response includes all required fields
 - ✅ `claim_id` (mapped from `id`)
 - ✅ `task_title` (from JOIN with tasks table)
@@ -184,11 +197,12 @@ return {
 **Requirement**: Transaction atomic (state update + event log in same tx)
 
 **Implementation** (release-orphaned-claims.ts, lines 56-107):
+
 ```typescript
 await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
   // 1. Identify orphaned claims
   const { rows: orphaned } = await client.query<OrphanedClaim>(...);
-  
+
   // 2. Atomic CTE: UPDATE + INSERT in single query
   await client.query(`
     WITH released AS (
@@ -202,6 +216,7 @@ await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
 ```
 
 **Validation**:
+
 - ✅ Uses `withTransaction` from connection.ts (established pattern from S3-04)
 - ✅ CTE pattern ensures atomicity: UPDATE and INSERT in single statement
 - ✅ If INSERT fails, UPDATE rolls back automatically (PostgreSQL transaction semantics)
@@ -216,6 +231,7 @@ await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
 **Implementation**: No code modifying `members.trust_score_cached`
 
 **Validation**:
+
 - ✅ Release endpoint only touches `claims` table and `events` table
 - ✅ No UPDATE on `members` table anywhere in release logic
 - ✅ Integration test verifies: "AC7, AC20: No Trust Score penalty for reviewer"
@@ -231,15 +247,17 @@ await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
 **Requirement**: `/trust-builder/admin/claims` page displays orphaned claim count (badge notation)
 
 **Implementation**:
+
 - Component: `OrphanedClaimsBadge.tsx` (31 lines)
 - API Endpoint: `orphaned-claims-count.ts` (42 lines)
 - Integration: `admin/claims.astro` line 98
 
 **Badge Component** (OrphanedClaimsBadge.tsx):
+
 ```tsx
 export function OrphanedClaimsBadge() {
   const [count, setCount] = useState<number>(0);
-  
+
   useEffect(() => {
     fetch('/api/trust-builder/admin/orphaned-claims-count')
       .then((res) => res.json())
@@ -258,6 +276,7 @@ export function OrphanedClaimsBadge() {
 ```
 
 **Count API Endpoint** (orphaned-claims-count.ts):
+
 ```typescript
 const result = await sql`
   SELECT COUNT(*)::INTEGER AS count
@@ -269,6 +288,7 @@ return new Response(JSON.stringify({ count: result[0]?.count || 0 }), ...);
 ```
 
 **Validation**:
+
 - ✅ Badge renders only if count > 0 (defensive check)
 - ✅ Red variant (`variant="destructive"`) for visual prominence
 - ✅ Label: "{count} orphaned" (sanctuary culture: no blame language)
@@ -281,6 +301,7 @@ return new Response(JSON.stringify({ count: result[0]?.count || 0 }), ...);
 **Requirement**: "Release Orphaned Claims" button visible (only if count > 0)
 
 **Implementation** (ReleaseOrphanedDialog.tsx, lines 82-84):
+
 ```tsx
 // AC9: Only show button if orphaned claims exist
 if (orphanedClaims.length === 0) return null;
@@ -298,6 +319,7 @@ return (
 ```
 
 **Validation**:
+
 - ✅ Defensive check: Returns `null` if `orphanedClaims.length === 0`
 - ✅ Button label shows count: "Release Orphaned Claims (X)"
 - ✅ Outline variant for secondary action (not destructive)
@@ -309,6 +331,7 @@ return (
 **Requirement**: Confirmation dialog lists affected claims (title, reviewer, days orphaned)
 
 **Implementation** (ReleaseOrphanedDialog.tsx, lines 105-127):
+
 ```tsx
 <div className="max-h-60 overflow-y-auto">
   <ul className="space-y-2">
@@ -316,7 +339,8 @@ return (
       <li key={claim.id} className="text-sm border-l-2 border-yellow-500 pl-2">
         <div className="font-medium">{claim.task_title}</div>
         <div className="text-muted-foreground">
-          Reviewer: {claim.reviewer_name} · {Math.floor(claim.days_orphaned)} days ago
+          Reviewer: {claim.reviewer_name} · {Math.floor(claim.days_orphaned)}{' '}
+          days ago
         </div>
       </li>
     ))}
@@ -330,6 +354,7 @@ return (
 ```
 
 **Validation**:
+
 - ✅ Task title displayed prominently (`font-medium`)
 - ✅ Reviewer name shown (`claim.reviewer_name` from query)
 - ✅ Days orphaned calculated and displayed (`Math.floor(claim.days_orphaned)`)
@@ -343,15 +368,16 @@ return (
 **Requirement**: Dialog explains action: "These claims will return to the review queue. No penalties applied."
 
 **Implementation** (ReleaseOrphanedDialog.tsx, lines 97-101):
+
 ```tsx
 <AlertDialogDescription>
-  Life happens! These claims have been under review for more than 7
-  days and need fresh eyes. <strong>No penalties</strong> will be
-  applied to reviewers.
+  Life happens! These claims have been under review for more than 7 days and
+  need fresh eyes. <strong>No penalties</strong> will be applied to reviewers.
 </AlertDialogDescription>
 ```
 
 **Validation**:
+
 - ✅ Sanctuary messaging: "Life happens!" (empathetic framing)
 - ✅ Explains reason: "need fresh eyes" (not "reviewer failed")
 - ✅ Explicit no-penalty statement: `<strong>No penalties</strong>`
@@ -363,6 +389,7 @@ return (
 **Requirement**: Success toast message after release: "X claims released successfully"
 
 **Implementation** (ReleaseOrphanedDialog.tsx, lines 61-65):
+
 ```tsx
 toast({
   title: 'Claims Released',
@@ -371,6 +398,7 @@ toast({
 ```
 
 **Validation**:
+
 - ✅ Toast shows count: `${count} claim${count !== 1 ? 's' : ''}`
 - ✅ Plural handling for grammatically correct message
 - ✅ Positive framing: "successfully" + "back in the queue"
@@ -382,12 +410,14 @@ toast({
 **Requirement**: Page refreshes to show updated queue (orphaned claims now available)
 
 **Implementation** (ReleaseOrphanedDialog.tsx, line 68):
+
 ```tsx
 // AC13: Page refreshes to show updated queue
 window.location.reload();
 ```
 
 **Validation**:
+
 - ✅ Full page reload after successful release
 - ✅ Ensures all queue stats updated (orphaned count → 0)
 - ✅ Badge disappears (no orphaned claims after release)
@@ -401,6 +431,7 @@ window.location.reload();
 #### ✅ AC14: Event Metadata Includes Required Fields
 
 **Requirement**: Event metadata includes 7 fields:
+
 - `claim_id` (affected claim)
 - `reviewer_id` (who had the claim)
 - `days_orphaned` (calculated: NOW() - reviewed_at)
@@ -410,6 +441,7 @@ window.location.reload();
 - `release_reason` (bonus: "timeout")
 
 **Implementation** (release-orphaned-claims.ts, lines 93-102):
+
 ```typescript
 jsonb_build_object(
   'claim_id', r.id,
@@ -423,6 +455,7 @@ jsonb_build_object(
 ```
 
 **Validation**:
+
 - ✅ All 7 required fields present in metadata
 - ✅ `claim_id`: UUID from released CTE
 - ✅ `task_id`: Bonus field for additional context
@@ -441,6 +474,7 @@ jsonb_build_object(
 **Implementation**: CTE pattern (see AC6 validation above)
 
 **Validation**:
+
 - ✅ Single `client.query()` call with CTE (UPDATE + INSERT)
 - ✅ PostgreSQL MVCC guarantees atomicity
 - ✅ If event INSERT fails, UPDATE automatically rolls back
@@ -452,6 +486,7 @@ jsonb_build_object(
 **Requirement**: Event metadata sufficient for audit ("Why was this claim released?")
 
 **Validation**:
+
 - ✅ Can reconstruct full context from metadata alone:
   - **Who**: `admin_id` field (who triggered release)
   - **What**: `claim_id` + `task_id` (which claim for which task)
@@ -469,6 +504,7 @@ jsonb_build_object(
 #### ✅ AC17: Timeout Path Validates All 5 State Machine Paths
 
 **Requirement**: Timeout path validates all 5 state machine paths:
+
 1. Happy path: Reviewer approves (S2-04) ✅
 2. Failure path: Reviewer rejects (S2-04) ✅
 3. Retry path: Reviewer requests revision (S2-04) ✅
@@ -478,6 +514,7 @@ jsonb_build_object(
 **Implementation**: State transitions in claim-engine.ts + release endpoint
 
 **Claims State Machine** (Complete):
+
 ```
 submitted → under_review → approved (path 1)
               ↓
@@ -491,6 +528,7 @@ submitted → under_review → approved (path 1)
 ```
 
 **Validation**:
+
 - ✅ Path 4 (Timeout) implemented: `under_review` → `submitted` (when `reviewed_at > 7 days`)
 - ✅ Integration test: "AC17: Timeout path completes claim state machine (5th path)"
 - ✅ Test verifies all 5 paths exist in conceptual state machine
@@ -506,12 +544,14 @@ submitted → under_review → approved (path 1)
 **Requirement**: No punitive language ("timeout violation" → "released back to queue")
 
 **Validation - UI Messages**:
+
 - ✅ Badge label: "orphaned" (not "overdue", "failed", "violation")
 - ✅ Button label: "Release Orphaned Claims" (not "Penalize Reviewers")
 - ✅ Dialog message: "Life happens!" (empathetic framing)
 - ✅ Help text: "Life happens! Use the Release button" (positive framing)
 
 **Validation - Code Comments**:
+
 ```typescript
 // "Release Orphaned Claims" (not "Force Timeout")
 // "orphaned claims" (not "timeout violations")
@@ -519,6 +559,7 @@ submitted → under_review → approved (path 1)
 ```
 
 **Validation - Event Metadata**:
+
 - ✅ `release_reason: 'timeout'` (neutral term, not `'reviewer_failure'`)
 - ✅ No penalty fields in metadata (no `penalty_amount`, `score_deduction`)
 
@@ -529,15 +570,16 @@ submitted → under_review → approved (path 1)
 **Requirement**: Confirmation dialog educational: "Life happens! These claims need fresh eyes."
 
 **Implementation** (ReleaseOrphanedDialog.tsx, lines 97-101):
+
 ```tsx
 <AlertDialogDescription>
-  Life happens! These claims have been under review for more than 7
-  days and need fresh eyes. <strong>No penalties</strong> will be
-  applied to reviewers.
+  Life happens! These claims have been under review for more than 7 days and
+  need fresh eyes. <strong>No penalties</strong> will be applied to reviewers.
 </AlertDialogDescription>
 ```
 
 **Validation**:
+
 - ✅ Lead with empathy: "Life happens!"
 - ✅ Explain need: "need fresh eyes" (positive framing, not "reviewer failed")
 - ✅ Reassure: `<strong>No penalties</strong>` (explicit sanctuary promise)
@@ -551,6 +593,7 @@ submitted → under_review → approved (path 1)
 **Validation**: Same as AC7 - No code modifying `members.trust_score_cached`
 
 **Strategic Context**:
+
 - Season 0 goal: Learning environment, build trust
 - Future seasons: May introduce gentle nudges (email reminders), but never penalties
 - Event log captures data for future analytics, but no punitive action
@@ -564,6 +607,7 @@ submitted → under_review → approved (path 1)
 **Implementation Status**: ⚠️ **NOT IMPLEMENTED** (Deferred to Phase 2/S4+)
 
 **Rationale**:
+
 - S3-03 scope: Manual trigger only (Phase 1)
 - Email reminders require:
   - Scheduled cron job (Phase 2)
@@ -573,6 +617,7 @@ submitted → under_review → approved (path 1)
 - Strategic review acknowledged: "Manual trigger sufficient for Phase 1"
 
 **Validation**:
+
 - ⚠️ AC21 marked as optional: "if time allows"
 - ✅ No blocker for story completion
 - 📝 Recommendation: Add to S4+ backlog (scheduled workflows + notifications)
@@ -582,19 +627,21 @@ submitted → under_review → approved (path 1)
 ### Help Text & Educational Content
 
 **Admin Page Help Section** (admin/claims.astro, lines 223-231):
+
 ```astro
 <div class="mt-6 p-4 bg-muted/50 rounded-lg text-sm">
   <p class="font-medium mb-2">💡 About Orphaned Claims</p>
   <p class="text-muted-foreground">
     Claims marked as "orphaned" have been under review for more than 7 days.
-    Life happens! Use the "Release Orphaned Claims" button to return them to
-    the queue with <strong>no penalties</strong> to the original reviewer. This
-    helps maintain review velocity and supports our learning culture.
+    Life happens! Use the "Release Orphaned Claims" button to return them to the
+    queue with <strong>no penalties</strong> to the original reviewer. This helps
+    maintain review velocity and supports our learning culture.
   </p>
 </div>
 ```
 
 **Validation**:
+
 - ✅ Explains threshold: "more than 7 days"
 - ✅ Sanctuary messaging: "Life happens!"
 - ✅ Explicit no-penalty promise: `<strong>no penalties</strong>`
@@ -608,19 +655,23 @@ submitted → under_review → approved (path 1)
 ### Dimensions Correctly Mapped
 
 ✅ **Connections**: Claim-to-reviewer assignment cleared
+
 - `reviewer_id = NULL` in UPDATE statement (line 80)
 - Connection severed when claim orphaned
 
 ✅ **Events**: `claim.timeout_released` logged with complete metadata
+
 - Event type defined in `types/trust-builder.ts:87`
 - Event inserted atomically in CTE (lines 85-104)
 - All 7 metadata fields present
 
 ✅ **Things**: Claim state transition (`under_review` → `submitted`)
+
 - Status change in UPDATE statement (line 79)
 - Claim returns to available queue
 
 ✅ **People**: Reviewer freed from stalled review
+
 - No reviewer record modified (no penalty)
 - Reviewer can claim new tasks immediately
 
@@ -651,30 +702,36 @@ Success toast + page refresh
 ### Immutability & Append-Only Patterns
 
 ✅ **Published Claims**: No modification to approved/rejected claims
+
 - Only `status = 'under_review'` claims affected (line 69)
 - Immutable claims protected by status filter
 
 ✅ **Events Table**: Append-only (no UPDATE/DELETE)
+
 - Only INSERT in release endpoint (lines 85-104)
 - No UPDATE events_log anywhere in codebase
 - Event metadata frozen at creation time
 
 ✅ **Content Hashes**: N/A for timeout release
+
 - No file uploads in orphaned claims workflow
 - Hash validation not required for this story
 
 ✅ **Trust Score**: Calculated, not stored (no mutable field)
+
 - No `UPDATE members.trust_score_cached` in release logic
 - Score remains untouched (sanctuary culture)
 
 ### Transaction Integrity
 
 ✅ **Atomic State Changes**: UPDATE + INSERT in single CTE
+
 - PostgreSQL transaction semantics guarantee atomicity
 - `withTransaction` wrapper provides connection pooling
 - Integration test verifies rollback on failure
 
 ✅ **Event Metadata Completeness**: All 7 audit fields present
+
 - Can reconstruct full context from event alone
 - Threshold frozen at release time (retroactive validation)
 
@@ -687,6 +744,7 @@ Success toast + page refresh
 **Test File**: `src/pages/api/trust-builder/__tests__/orphaned-claims-release.test.ts` (342 lines)
 
 **Test Suites**:
+
 1. ✅ **Query Logic** (3 tests)
    - Identifies claims >7 days ✅
    - Excludes claims <7 days ✅
@@ -716,6 +774,7 @@ Success toast + page refresh
    - Release logic deterministic (no external state) ✅
 
 **Test Execution**:
+
 ```
 ✓ src/pages/api/trust-builder/__tests__/orphaned-claims-release.test.ts (15 tests) 5ms
 
@@ -725,6 +784,7 @@ Test Files  1 passed (1)
 ```
 
 **Coverage Assessment**:
+
 - ✅ Query logic: 100%
 - ✅ State transitions: 100%
 - ✅ Event logging: 100%
@@ -748,6 +808,7 @@ Test Files  1 passed (1)
 #### ✅ Scenario 1: Page Load & UI Rendering
 
 **Steps**:
+
 1. Navigate to `/trust-builder/admin/claims`
 2. Verify Guardian authorization (redirects if not authenticated)
 3. Check queue statistics display
@@ -755,6 +816,7 @@ Test Files  1 passed (1)
 5. Check release button visibility
 
 **Expected**:
+
 - Page loads successfully
 - Queue stats: "1 Awaiting Review, 2 Under Review, 1 Orphaned >7d"
 - Badge: "1 orphaned" in red (destructive variant)
@@ -765,17 +827,19 @@ Test Files  1 passed (1)
 #### ✅ Scenario 2: Orphaned Claims Identification
 
 **Database Query**:
+
 ```sql
-SELECT COUNT(*) FROM claims 
-WHERE status = 'under_review' 
+SELECT COUNT(*) FROM claims
+WHERE status = 'under_review'
 AND reviewed_at < NOW() - INTERVAL '7 days';
 ```
 
 **Expected**: 1 orphaned claim
 
 **Result**: ✅ **PASS**
+
 ```
- orphaned_claims 
+ orphaned_claims
 -----------------
                1
 (1 row)
@@ -784,6 +848,7 @@ AND reviewed_at < NOW() - INTERVAL '7 days';
 #### ✅ Scenario 3: Release Button Click & Dialog Display
 
 **Steps**:
+
 1. Click "Release Orphaned Claims (1)" button
 2. Verify dialog opens
 3. Check dialog title
@@ -791,6 +856,7 @@ AND reviewed_at < NOW() - INTERVAL '7 days';
 5. Check claim list rendering
 
 **Expected**:
+
 - Dialog opens with title: "Release 1 orphaned claim?"
 - Message: "Life happens! These claims have been under review for more than 7 days and need fresh eyes. **No penalties** will be applied to reviewers."
 - Claim list shows: task title, reviewer name, days orphaned
@@ -800,6 +866,7 @@ AND reviewed_at < NOW() - INTERVAL '7 days';
 #### ✅ Scenario 4: Confirm Release Action
 
 **Steps**:
+
 1. Click "Release Claims" button in dialog
 2. Wait for API response
 3. Verify success toast
@@ -808,6 +875,7 @@ AND reviewed_at < NOW() - INTERVAL '7 days';
 6. Check claim status in table
 
 **Expected**:
+
 - Toast: "1 claim released successfully. They're back in the queue for other reviewers."
 - Page refreshes automatically
 - Badge disappears (0 orphaned claims)
@@ -818,8 +886,9 @@ AND reviewed_at < NOW() - INTERVAL '7 days';
 #### ✅ Scenario 5: Database State Verification
 
 **Event Logging Check**:
+
 ```sql
-SELECT * FROM events 
+SELECT * FROM events
 WHERE event_type = 'claim.timeout_released'
 ORDER BY timestamp DESC LIMIT 1;
 ```
@@ -829,6 +898,7 @@ ORDER BY timestamp DESC LIMIT 1;
 **Result**: ⏳ **PENDING VERIFICATION** (will check after release action in production)
 
 **Claim State Check**:
+
 ```sql
 SELECT id, status, reviewer_id, reviewed_at
 FROM claims
@@ -837,6 +907,7 @@ ORDER BY submitted_at DESC LIMIT 5;
 ```
 
 **Expected**: Released claim has:
+
 - `status = 'submitted'`
 - `reviewer_id = NULL`
 - `reviewed_at` unchanged (original assignment time preserved)
@@ -874,13 +945,17 @@ During implementation, 7 bug categories were discovered and fixed:
 **Review Requirement**: S3-03 must use `withTransaction` + CTE pattern for state update + event logging
 
 **Implementation**:
+
 ```typescript
 await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
   // CTE: UPDATE + INSERT atomic
-  await client.query(`
+  await client.query(
+    `
     WITH released AS (UPDATE claims ... RETURNING ...)
     INSERT INTO events (...) SELECT ... FROM released r
-  `, [member.id, EventType.CLAIM_TIMEOUT_RELEASED]);
+  `,
+    [member.id, EventType.CLAIM_TIMEOUT_RELEASED]
+  );
 });
 ```
 
@@ -891,6 +966,7 @@ await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
 **Review Recommendation**: Hardcode for S3-03, document migration to `system_config` table in S4+
 
 **Implementation**:
+
 ```typescript
 // TODO: Move to system_config in S4+ governance story (per strategic review)
 const TIMEOUT_THRESHOLD_DAYS = 7;
@@ -912,13 +988,15 @@ metadata: {
 **Review Requirement**: Endpoint restricted to Guardian/Admin roles
 
 **Implementation** (release-orphaned-claims.ts, lines 39-47):
+
 ```typescript
 const member = await getCurrentUser(request, sql);
 
 if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
   return new Response(
     JSON.stringify({
-      error: 'Admin or Guardian access required to release orphaned claims. Contact your Guardian if you need this permission.',
+      error:
+        'Admin or Guardian access required to release orphaned claims. Contact your Guardian if you need this permission.',
     }),
     { status: 403, headers: { 'Content-Type': 'application/json' } }
   );
@@ -940,6 +1018,7 @@ if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
 **Review Requirement**: "Life happens!" messaging demonstrates sanctuary culture
 
 **Implementation Locations**:
+
 - Badge: "orphaned" (not "overdue")
 - Button: "Release Orphaned Claims" (not "Force Timeout")
 - Dialog: "Life happens!" opening
@@ -954,6 +1033,7 @@ if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
 **QA Assessment**: **A** (exceeded expectations, all MUST items met, comprehensive testing)
 
 **Rationale for Upgrade**:
+
 - All 21 acceptance criteria met (including optional AC21 properly deferred)
 - 15/15 integration tests passing (100% coverage)
 - Comprehensive documentation (challenges report + strategic review)
@@ -1043,17 +1123,20 @@ if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
 ### Query Performance
 
 ✅ **Count Query** (orphaned-claims-count.ts):
+
 - Simple WHERE filter + COUNT aggregate
 - No JOINs
 - Fast execution (<100ms expected)
 
 ✅ **List Query** (orphaned-claims.ts):
+
 - 2 JOINs (tasks, members)
 - Filtered by status + timestamp
 - Ordered by reviewed_at
 - Performance acceptable for admin dashboard (<500ms expected)
 
 ✅ **Release Query** (release-orphaned-claims.ts):
+
 - CTE with UPDATE + INSERT
 - Single transaction
 - Performance acceptable for manual trigger (<2s expected)
@@ -1063,14 +1146,15 @@ if (!member || !['guardian', 'admin'].includes(member.role.toLowerCase())) {
 **Current Indexes**: Not reviewed in this QA
 
 **Recommended Indexes** (for future optimization):
+
 ```sql
 -- Speed up orphaned claims identification
-CREATE INDEX idx_claims_orphaned 
-ON claims (status, reviewed_at) 
+CREATE INDEX idx_claims_orphaned
+ON claims (status, reviewed_at)
 WHERE status = 'under_review';
 
 -- Composite index for common filters
-CREATE INDEX idx_claims_status_reviewed 
+CREATE INDEX idx_claims_status_reviewed
 ON claims (status, reviewed_at DESC);
 ```
 
@@ -1083,6 +1167,7 @@ ON claims (status, reviewed_at DESC);
 ### Authorization
 
 ✅ **API Endpoints**: All 3 endpoints check Guardian/Admin role
+
 - `release-orphaned-claims.ts`: Line 41
 - `orphaned-claims-count.ts`: Line 16
 - `orphaned-claims.ts`: Line 16
@@ -1094,6 +1179,7 @@ ON claims (status, reviewed_at DESC);
 ### SQL Injection
 
 ✅ **Parameterized Queries**: All queries use Neon `sql` tagged template or `client.query` with parameters
+
 - No string concatenation
 - Parameters passed via array: `[member.id, EventType.CLAIM_TIMEOUT_RELEASED]`
 
@@ -1114,6 +1200,7 @@ ON claims (status, reviewed_at DESC);
 ✅ **Ready to Merge**: All acceptance criteria met, tests passing, documentation complete
 
 **Pre-Merge Checklist**:
+
 1. ✅ All tests passing (15/15)
 2. ✅ No TypeScript errors
 3. ✅ Feature branch clean (all changes committed)
@@ -1125,6 +1212,7 @@ ON claims (status, reviewed_at DESC);
 **Merge Strategy**: Squash merge (11 commits → 1 comprehensive commit)
 
 **Commit Message Template**:
+
 ```
 feat(S3-03): Background jobs - orphaned claims release
 
@@ -1145,6 +1233,7 @@ See: S3-03-QA-REPORT.md, S3-03-PRE-IMPLEMENTATION-REVIEW.md
 ### For Product Advisor
 
 **Strategic Alignment**:
+
 - ✅ All 5 MUST items from strategic review implemented correctly
 - ✅ Sanctuary culture demonstrated throughout (messaging, no penalties)
 - ✅ Migration readiness: 95% (exceeds 85% target)
@@ -1153,6 +1242,7 @@ See: S3-03-QA-REPORT.md, S3-03-PRE-IMPLEMENTATION-REVIEW.md
 **Grade Recommendation**: **A** (exceeded forecast of A-)
 
 **Justification**:
+
 - All acceptance criteria met (21/21, including proper deferral of optional AC21)
 - Zero remaining technical debt (all bugs fixed)
 - Comprehensive documentation (strategic review + challenges report + QA report)
@@ -1162,6 +1252,7 @@ See: S3-03-QA-REPORT.md, S3-03-PRE-IMPLEMENTATION-REVIEW.md
 ### For Future Stories
 
 **Technical Debt Items** (S4+ Backlog):
+
 1. 📝 Migrate threshold to `system_config` table (per strategic review)
 2. 📝 Implement scheduled cron job (Phase 2: automated daily checks)
 3. 📝 Add email reminders at Day 5 (AC21 optional, deferred)
@@ -1169,6 +1260,7 @@ See: S3-03-QA-REPORT.md, S3-03-PRE-IMPLEMENTATION-REVIEW.md
 5. 📝 Add mobile responsiveness testing for admin features
 
 **Process Improvements** (from challenges report):
+
 1. 📝 Pre-commit TypeScript validation (catch import errors early)
 2. 📝 Schema verification checklist before SQL implementation
 3. 📝 Database connection indicator in admin UI (prevent dev/prod confusion)
@@ -1184,6 +1276,7 @@ See: S3-03-QA-REPORT.md, S3-03-PRE-IMPLEMENTATION-REVIEW.md
 ✅ **PASS - Ready for Product Advisor Review**
 
 **Summary**:
+
 - ✅ 21/21 acceptance criteria met (100%)
 - ✅ 15/15 integration tests passing (100%)
 - ✅ Manual testing confirmed: All expected behavior validated
@@ -1196,6 +1289,7 @@ See: S3-03-QA-REPORT.md, S3-03-PRE-IMPLEMENTATION-REVIEW.md
 ### Handoff to Product Advisor
 
 **Artifacts for Review**:
+
 1. This QA report (`S3-03-QA-REPORT.md`)
 2. Strategic review (`S3-03-PRE-IMPLEMENTATION-REVIEW.md`)
 3. Challenges report (`S3-03-IMPLEMENTATION-CHALLENGES.md`)
@@ -1204,6 +1298,7 @@ See: S3-03-QA-REPORT.md, S3-03-PRE-IMPLEMENTATION-REVIEW.md
 6. Feature branch: `feature/S3-03-background-jobs` (11 commits)
 
 **Recommended Actions**:
+
 1. Review this QA report for completeness
 2. Compare implementation vs strategic review (all MUST items met)
 3. Grade assignment: **Recommend A** (exceeded A- forecast)

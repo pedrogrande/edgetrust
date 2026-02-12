@@ -23,12 +23,14 @@ S3-03 delivered automated workflow for releasing orphaned claims (>7 days under 
 **Context**: Mandatory 45-minute pre-implementation review with product-advisor
 
 **Impact**:
+
 - All 5 MUST items clearly defined before implementation
 - No architecture changes during development
 - Atomic transaction pattern from S3-04 reused successfully
 - Threshold hardcoding decision documented upfront (S4+ migration path clear)
 
 **Evidence**:
+
 - Zero scope changes during implementation
 - Pre-review accurately forecast A- grade (actual: A)
 - Implementation guidance prevented over-engineering (config table deferred appropriately)
@@ -42,21 +44,26 @@ S3-03 delivered automated workflow for releasing orphaned claims (>7 days under 
 **Context**: Pattern established in S3-04, reused in S3-03
 
 **Implementation**:
+
 ```typescript
 await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
   // CTE: UPDATE + INSERT in single query (atomic)
-  await client.query(`
+  await client.query(
+    `
     WITH released AS (
       UPDATE claims SET status = 'submitted', reviewer_id = NULL
       WHERE status = 'under_review' AND reviewed_at < NOW() - INTERVAL '7 days'
       RETURNING id, task_id, reviewer_id, days_orphaned
     )
     INSERT INTO events (...) SELECT ... FROM released r
-  `, [member.id, EventType.CLAIM_TIMEOUT_RELEASED]);
+  `,
+    [member.id, EventType.CLAIM_TIMEOUT_RELEASED]
+  );
 });
 ```
 
 **Impact**:
+
 - State update + event logging guaranteed atomic
 - Integration test validated rollback on failure
 - Pattern now proven across 3 stories (S3-01, S3-04, S3-03)
@@ -70,6 +77,7 @@ await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
 **Context**: Manual testing caught 7 bug categories before production
 
 **Bug Categories** (all resolved):
+
 1. Database environment configuration (CRITICAL)
 2. Schema column mismatch (`updated_at` vs `reviewed_at`)
 3. Function signature errors (missing `sql` parameter)
@@ -79,6 +87,7 @@ await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
 7. Dashboard syntax errors (duplicate code)
 
 **Impact**:
+
 - Zero bugs escaped to production
 - All issues documented with prevention measures
 - Implementation challenges report (407 lines) captures learning
@@ -93,12 +102,14 @@ await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
 **Context**: Two databases (production vs dev branch) for safe testing
 
 **Configuration**:
+
 - **Production DB** (`.env`): `ep-dark-river-ai6arthq-pooler`
 - **Dev DB** (`.dev.vars`): `ep-cold-lake-ai6ozrwj-pooler`
 
 **Discovery**: Astro reads from `.env` (production), not `.dev.vars` (initial assumption)
 
 **Resolution**:
+
 - Test data created in correct database (production for dev server)
 - All manual testing validated correctly after discovery
 - Database separation prevented accidental production data corruption
@@ -112,18 +123,21 @@ await withTransaction(import.meta.env.DATABASE_URL, async (client) => {
 **Context**: PostgreSQL type inference failure in complex CTE
 
 **Problem**:
+
 ```typescript
 // ❌ PostgreSQL can't infer types:
 SELECT $1, 'claim', r.id, $2, jsonb_build_object('admin_id', $1, ...)
 ```
 
 **Solution**:
+
 ```typescript
 // ✅ With explicit casts:
 SELECT $1::UUID, 'claim', r.id, $2::VARCHAR, jsonb_build_object('admin_id', $1::UUID, ...)
 ```
 
 **Impact**:
+
 - Single commit fix (3 lines changed)
 - Clear error message from PostgreSQL (position 805)
 - Pattern documented for future CTEs
@@ -137,6 +151,7 @@ SELECT $1::UUID, 'claim', r.id, $2::VARCHAR, jsonb_build_object('admin_id', $1::
 **Context**: "Life happens!" messaging throughout implementation
 
 **Evidence**:
+
 - Badge: "orphaned" (not "overdue", "failed", "violation")
 - Button: "Release Orphaned Claims" (not "Penalize Reviewers")
 - Dialog: "Life happens! These claims need fresh eyes. **No penalties** will be applied."
@@ -144,6 +159,7 @@ SELECT $1::UUID, 'claim', r.id, $2::VARCHAR, jsonb_build_object('admin_id', $1::
 - No Trust Score deduction anywhere in code
 
 **Impact**:
+
 - Integration tests validate sanctuary messaging (not just functional behavior)
 - Product-advisor: "Gold standard for automation with sanctuary values"
 - Pattern reusable for S4+ scheduled workflows
@@ -155,11 +171,13 @@ SELECT $1::UUID, 'claim', r.id, $2::VARCHAR, jsonb_build_object('admin_id', $1::
 ### 7. Comprehensive Documentation
 
 **Documentation Created** (2,643 lines):
+
 1. Pre-implementation review: 1,019 lines (strategic analysis)
 2. Implementation challenges: 407 lines (7 bug categories)
 3. QA report: 1,217 lines (21 AC validation)
 
 **Impact**:
+
 - Knowledge transfer complete for future developers
 - Prevention measures documented (process improvements)
 - Migration path clear (S4+ config table integration)
@@ -174,6 +192,7 @@ SELECT $1::UUID, 'claim', r.id, $2::VARCHAR, jsonb_build_object('admin_id', $1::
 **Achievement**: All 5 claim lifecycle paths now validated
 
 **Paths**:
+
 1. ✅ Happy path: Reviewer approves (S2-04)
 2. ✅ Failure path: Reviewer rejects (S2-04)
 3. ✅ Retry path: Reviewer requests revision (S2-04)
@@ -181,6 +200,7 @@ SELECT $1::UUID, 'claim', r.id, $2::VARCHAR, jsonb_build_object('admin_id', $1::
 5. ✅ Voluntary exit: Reviewer releases voluntarily (S2-04)
 
 **Strategic Impact**:
+
 - Complete claim lifecycle coverage (rare in MVP stage)
 - All edge cases handled (no "stuck" claims possible)
 - Demonstrates comprehensive requirements analysis
@@ -196,6 +216,7 @@ SELECT $1::UUID, 'claim', r.id, $2::VARCHAR, jsonb_build_object('admin_id', $1::
 **Issue**: Assumed `updated_at` column existed, but schema only has `reviewed_at`
 
 **Impact**:
+
 - 5 files affected (15+ references)
 - 2 commits to fix (b08b84b, 2a1a10c)
 - ~30 minutes debugging time
@@ -203,10 +224,11 @@ SELECT $1::UUID, 'claim', r.id, $2::VARCHAR, jsonb_build_object('admin_id', $1::
 **Root Cause**: Did not query `information_schema.columns` before writing SQL
 
 **Prevention**:
+
 ```sql
 -- Should have run this first:
-SELECT column_name, data_type 
-FROM information_schema.columns 
+SELECT column_name, data_type
+FROM information_schema.columns
 WHERE table_name = 'claims'
 ORDER BY ordinal_position;
 ```
@@ -220,11 +242,13 @@ ORDER BY ordinal_position;
 **Issue**: Manual SQL for test data, initially created in wrong database
 
 **Impact**:
+
 - Test data lost when database mismatch discovered
 - Manual recreation required (3 claims)
 - No reusable seed script for future testing
 
 **Improvement**: Create `seed-test-claims.sh` script:
+
 ```bash
 #!/bin/bash
 # Seed test claims for S3-03 manual testing
@@ -250,20 +274,23 @@ EOF
 **Issue**: Neon `sql` tagged template doesn't support `${}` inside string literals
 
 **Example**:
+
 ```typescript
 // ❌ Doesn't work (bind message error):
-sql`WHERE reviewed_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'`
+sql`WHERE reviewed_at < NOW() - INTERVAL '${TIMEOUT_THRESHOLD_DAYS} days'`;
 
 // ✅ Must hardcode:
-sql`WHERE reviewed_at < NOW() - INTERVAL '7 days'`
+sql`WHERE reviewed_at < NOW() - INTERVAL '7 days'`;
 ```
 
 **Impact**:
+
 - 3 files affected (all API endpoints)
 - Commit 6e46c11 to fix
 - Limitation not documented in project
 
 **Improvement**: Document in `/project/trust-builder/patterns/neon-sql-patterns.md`:
+
 - Tagged template is NOT standard template literal
 - Only supports parameter binding for VALUES (`${}` for values, not string parts)
 - Use config table for dynamic thresholds in SQL strings
@@ -279,6 +306,7 @@ sql`WHERE reviewed_at < NOW() - INTERVAL '7 days'`
 **Learning**: CTE + JSONB + parameter reuse = type ambiguity
 
 **Prevention Pattern**:
+
 ```typescript
 // Always add explicit casts in CTEs with:
 // - Multiple SELECT columns
@@ -302,17 +330,22 @@ SELECT
 **Issue**: No visual indicator of active database connection in admin UI
 
 **Impact**:
+
 - Developer confusion (dev vs production database)
 - Test data created in wrong database initially
 - User had to manually verify connection string
 
 **Improvement**: Add footer indicator to admin pages:
+
 ```tsx
 // In admin page layout footer:
 <div className="text-xs text-muted-foreground border-t pt-2 mt-8">
-  <span>DB: {import.meta.env.DATABASE_URL?.includes('ep-dark-river') 
-    ? '🔴 Production' 
-    : '🟢 Dev Branch'}</span>
+  <span>
+    DB:{' '}
+    {import.meta.env.DATABASE_URL?.includes('ep-dark-river')
+      ? '🔴 Production'
+      : '🟢 Dev Branch'}
+  </span>
   {' • '}
   <span>Guardian: {member.email}</span>
 </div>
@@ -327,10 +360,12 @@ SELECT
 **Issue**: Import typos and function signature errors not caught until runtime
 
 **Examples**:
+
 - `'./Dashboard EmptyState'` (space in path) - commit 2474fb5
 - Missing `sql` parameter in `getCurrentUser()` calls - commit 8d4ff5d
 
 **Prevention**: Run TypeScript compiler in watch mode during development:
+
 ```bash
 # In separate terminal during development:
 tsc --noEmit --watch
@@ -349,6 +384,7 @@ tsc --noEmit --watch
 **Learning**: Clearing `reviewer_id = NULL` severs connection without losing history
 
 **Implementation**:
+
 - Connection severed: `reviewer_id` cleared
 - History preserved: Event metadata captures original `reviewer_id`
 - Reconnection possible: Same reviewer can reclaim if available
@@ -362,6 +398,7 @@ tsc --noEmit --watch
 **Learning**: Capture policy thresholds in event metadata for retroactive validation
 
 **Implementation**:
+
 ```typescript
 metadata: {
   timeout_threshold_days: 7,      // Policy at release time
@@ -380,6 +417,7 @@ metadata: {
 **Learning**: All state transitions must be modeled upfront to prevent "stuck" entities
 
 **S3-03 Validated**:
+
 - 5 paths from `under_review` state (approve, reject, revision, timeout, voluntary exit)
 - No orphaned claims can remain stuck indefinitely
 - Automation path (timeout) completes manual paths (reviewer actions)
@@ -397,15 +435,18 @@ metadata: {
 **Impact**: Test data must be created in production database for dev server testing
 
 **Documentation Needed**:
+
 ```markdown
 # Astro Environment Variables (Dev Server)
 
 **Priority Order**:
+
 1. `.env` (highest priority - used by dev server)
 2. `.dev.vars` (ignored by Astro, only for Wrangler/Workers)
 3. System environment variables (fallback)
 
 **For Database Testing**:
+
 - Use `.env` DATABASE_URL for Astro dev server
 - Use explicit connection strings in test scripts (not env vars)
 ```
@@ -419,6 +460,7 @@ metadata: {
 **Learning**: `sql` tagged template is NOT a standard template literal
 
 **Constraints**:
+
 - ❌ No `${}` interpolation inside SQL string literals
 - ✅ Only for parameter binding (VALUES, WHERE comparisons)
 - ❌ Cannot build dynamic INTERVAL strings with variables
@@ -426,16 +468,17 @@ metadata: {
 **Workaround**: Use config table for dynamic values, hardcode for static thresholds.
 
 **Example**:
+
 ```typescript
 // ❌ Doesn't work:
 const days = 7;
-sql`INTERVAL '${days} days'`  // ERROR: bind message mismatch
+sql`INTERVAL '${days} days'`; // ERROR: bind message mismatch
 
 // ✅ Option 1: Hardcode
-sql`INTERVAL '7 days'`
+sql`INTERVAL '7 days'`;
 
 // ✅ Option 2: Use PostgreSQL parameter (not in string)
-sql`INTERVAL '1 day' * ${days}`
+sql`INTERVAL '1 day' * ${days}`;
 ```
 
 ---
@@ -445,15 +488,18 @@ sql`INTERVAL '1 day' * ${days}`
 **Learning**: Complex CTEs with parameter reuse need explicit type casts
 
 **When to Add Casts**:
+
 - CTE with INSERT statement
 - Parameter used in multiple SELECT columns
 - Parameter used inside `jsonb_build_object`
 - Same parameter reference >1 time in query
 
 **Pattern**:
+
 ```typescript
 // Always cast parameters in CTEs:
-await client.query(`
+await client.query(
+  `
   WITH cte AS (...)
   INSERT INTO events (...)
   SELECT 
@@ -462,7 +508,9 @@ await client.query(`
     jsonb_build_object(
       'field', $1::UUID    // Cast even for reuse
     )
-`, [param1, param2]);
+`,
+  [param1, param2]
+);
 ```
 
 ---
@@ -472,11 +520,13 @@ await client.query(`
 **Learning**: Transaction wrapper + CTE pattern scales reliably
 
 **Stories Using Pattern**:
+
 - S3-01: Trust score calculation + event logging
 - S3-04: Role promotion + event logging
 - S3-03: Claim release + event logging
 
 **Benefits**:
+
 - Automatic rollback on error
 - Connection pooling handled
 - Consistent error handling
@@ -493,6 +543,7 @@ await client.query(`
 **Learning**: 45-minute pre-implementation review prevents costly pivots
 
 **S3-03 Benefits**:
+
 - Threshold hardcoding decision made upfront (not debated during implementation)
 - Atomic transaction pattern identified from S3-04 (reuse vs reinvent)
 - Migration path documented before coding (S4+ config table)
@@ -509,6 +560,7 @@ await client.query(`
 **Learning**: Documenting bugs during implementation accelerates future stories
 
 **S3-03 Challenges Report** (407 lines):
+
 - 7 bug categories with root cause analysis
 - Prevention measures for each
 - Process improvements identified
@@ -525,6 +577,7 @@ await client.query(`
 **Learning**: 15/15 integration tests (vs 3-4 forecast) caught edge cases
 
 **Test Categories** (S3-03):
+
 - Query logic (3 tests)
 - Release transaction (4 tests)
 - Zero claims edge case (2 tests)
@@ -535,6 +588,7 @@ await client.query(`
 **Innovation**: Testing sanctuary culture values (not just functional behavior)
 
 **Example**:
+
 ```typescript
 it('AC18, AC19: Sanctuary messaging in UI (no blame)', () => {
   const dialogMessage = 'Life happens! These claims need fresh eyes.';
@@ -553,10 +607,12 @@ it('AC18, AC19: Sanctuary messaging in UI (no blame)', () => {
 **Learning**: Always verify active database before manual testing
 
 **New Checklist Item** (for implementation guide):
+
 ```markdown
 ## Pre-Implementation Checklist
 
 **Database Environment**:
+
 - [ ] Verify active DB connection: `psql $DATABASE_URL -c "SELECT current_database();"`
 - [ ] Check endpoint matches expected: `echo $DATABASE_URL | grep -o 'ep-[^-]*-[^-]*'`
 - [ ] Document which DB used for testing (dev branch vs production)
@@ -735,14 +791,17 @@ it('AC18, AC19: Sanctuary messaging in UI (no blame)', () => {
 ### For Fullstack Developer
 
 **Technical Debt Items** (from S3-03):
+
 - ✅ None (all bugs fixed during implementation)
 
 **Pattern Reuse Opportunities**:
+
 - CTE atomic transaction pattern (proven across 3 stories)
 - Sanctuary messaging templates (S3-03 as gold standard)
 - Integration test structure (15-test suite as template)
 
 **New Patterns Established**:
+
 - Timeout/background job workflow (manual trigger MVP → scheduled job upgrade path)
 - Badge + dialog confirmation pattern for admin actions
 - Help text in admin pages (educational, sanctuary culture)
@@ -796,22 +855,26 @@ it('AC18, AC19: Sanctuary messaging in UI (no blame)', () => {
 ### Team Shout-outs
 
 **fullstack-developer**:
+
 - Exceptional documentation (2,643 lines across 3 reports)
 - All 7 bugs resolved with prevention measures
 - Sanctuary messaging gold standard established
 - CTE atomic pattern mastered (3rd story reuse)
 
 **qa-engineer**:
+
 - Comprehensive validation (21/21 ACs, 15/15 tests)
 - QA report identified database environment discovery as critical
 - Zero bugs escaped to production
 
 **product-advisor**:
+
 - Strategic review prevented mid-development pivots
 - Grade forecast accurate (A- → A exceeded expectations)
 - Migration readiness assessment validated quasi-smart contract approach
 
 **product-owner**:
+
 - Story scoping appropriate (5 points, manual trigger MVP)
 - Phase 2 roadmap clear (scheduled cron job deferred correctly)
 - State machine completion recognized as milestone
@@ -821,6 +884,7 @@ it('AC18, AC19: Sanctuary messaging in UI (no blame)', () => {
 **🎉 CLAIM STATE MACHINE COMPLETE 🎉**
 
 All 5 claim lifecycle paths validated:
+
 1. ✅ Reviewer approves (S2-04)
 2. ✅ Reviewer rejects (S2-04)
 3. ✅ Reviewer requests revision (S2-04)
@@ -839,6 +903,7 @@ This demonstrates comprehensive requirements analysis rare in MVP development. C
 **Final Grade**: **A** (exceeded expectations)
 
 **Grade Upgrade Justifications** (5 achieved):
+
 1. ✅ Test coverage excellence: 15 tests (vs 3-4 forecast)
 2. ✅ Migration readiness: 95% (vs 85% target)
 3. ✅ Documentation quality: 2,643 lines (vs standard ~500 lines)
@@ -846,12 +911,14 @@ This demonstrates comprehensive requirements analysis rare in MVP development. C
 5. ✅ Sanctuary culture: Exemplary messaging (gold standard)
 
 **Why Not A+?**:
+
 - A+ requires architectural innovation or breakthrough strategic impact
 - S3-03 is exceptional execution of established patterns (not novel architecture)
 - Atomic transaction pattern reused from S3-04 (proven, not innovative)
 - Threshold hardcoding acceptable but not optimal (documented trade-off)
 
 **Sprint 3 Progress**:
+
 - S3-01: Trust Score ✅ (A-)
 - S3-02: Member Dashboard ✅ (A)
 - S3-03: Background Jobs ✅ (A)
@@ -865,6 +932,7 @@ This demonstrates comprehensive requirements analysis rare in MVP development. C
 S3-03 successfully delivered automated workflow for releasing orphaned claims while completing the claim state machine's 5th and final path. Implementation exceeded pre-implementation forecast through exceptional test coverage, comprehensive documentation, and exemplary sanctuary culture messaging.
 
 **Key Learnings**:
+
 1. Strategic reviews prevent costly pivots (45 min review saved ~2 hours rework)
 2. Established patterns accelerate development (CTE atomic transaction worked 3rd time)
 3. Test-driven bug discovery prevents production issues (7 bugs caught, 0 escaped)
