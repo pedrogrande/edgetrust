@@ -692,4 +692,539 @@ Ambiguity in stories compounds as technical debt. Clarity in stories accelerates
 
 ---
 
+## Fullstack Developer Perspective
+
+**Retrospective Date**: 2026-02-12  
+**Developer**: fullstack-developer (AI)  
+**Stories Implemented**: S3-01, S3-02, S3-03, S3-04 (20 points)
+
+---
+
+### What Went Well from Developer Perspective ✅
+
+#### 1. **Test Infrastructure Created Foundation for Confident Development**
+
+**S3-01 Impact**: Establishing Vitest + integration tests in first story removed fear of breaking existing code.
+
+**Development Experience**:
+- Writing tests BEFORE implementation revealed better API designs
+- Fast feedback loop (<2s test execution) enabled TDD flow state
+- Mock patterns (auth, db, contracts) were copy-paste ready for S3-02, S3-03, S3-04
+
+**Specific Example** (S3-03): 
+```typescript
+// Test revealed atomic transaction requirement BEFORE implementation
+it('should rollback if event logging fails', async () => {
+  mockQuery.mockRejectedValueOnce(new Error('Event insert failed'));
+  await expect(releaseOrphanedClaims()).rejects.toThrow();
+  // Verified claims NOT released if events fail
+});
+```
+
+This test caught that initial implementation was missing `withTransaction` wrapper.
+
+**Learning**: Test-first isn't slower—it's **faster** because you catch design issues before committing to implementation.
+
+---
+
+#### 2. **CTE Pattern Eliminated State/Event Sync Bugs**
+
+**Pattern Discovered** (S3-01): Common Table Expressions (CTEs) for atomic state + event operations.
+
+**Reuse Success**:
+- S3-03: Used CTE for orphaned claims release (state: `under_review` → `submitted` + event: `claim.timeout.released`)
+- S3-04: Used CTE for role promotion (state: role update + event: `member.promoted`)
+
+**Why It Worked**:
+```typescript
+// Single query, atomic transaction, no sync bugs possible
+await client.query(`
+  WITH updated AS (
+    UPDATE claims SET status = $1 WHERE ... RETURNING *
+  )
+  INSERT INTO events (...) SELECT ... FROM updated
+`, [newStatus, eventType]);
+```
+
+**Developer Confidence**: Can't forget to log events, can't have partial updates. Pattern enforces correctness.
+
+**Learning**: Architectural patterns that **prevent bugs by construction** are worth establishing early (S3-01) even if they take longer initially.
+
+---
+
+#### 3. **Strategic Review Saved Me 4 Hours of Rework (S3-02)**
+
+**Pre-Implementation Review Feedback**: Missing composite index on `events(event_type, metadata->>'member_id')` would cause dashboard queries to be slow after 10k+ events.
+
+**What Would Have Happened Without Review**:
+1. Implement dashboard queries WITHOUT index
+2. Pass QA (low event count in test database)
+3. Ship to staging/production
+4. Performance degradation appears weeks later
+5. Emergency hotfix: add index, test, redeploy
+6. Re-QA dashboard, re-grade by product-advisor
+
+**What Actually Happened**:
+1. Strategic review identified missing index
+2. Added index during implementation (5 minutes)
+3. All tests passing, performance validated upfront
+4. Grade A, zero rework
+
+**ROI**: 90 min strategic review → 4 hours saved (plus avoided production fire).
+
+**Learning**: Strategic reviews are not bureaucracy for developers—they're **architecture validation** that prevents costly rework.
+
+---
+
+#### 4. **Drizzle ORM + Neon Serverless = Zero Connection Pool Issues**
+
+**Developer Experience**: 
+- No complex connection pooling configuration
+- Serverless-friendly (no persistent connections)
+- SQL-first approach (I write SQL, Drizzle handles types)
+
+**Example** (S3-03):
+```typescript
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(import.meta.env.DATABASE_URL);
+const result = await sql`
+  SELECT * FROM claims WHERE status = 'under_review'
+`;
+```
+
+**Why This Matters**: Zero time spent debugging connection leaks, timeouts, or pool exhaustion. Just works.
+
+**Learning**: Serverless-first database stack (Neon) + serverless-first ORM (Drizzle) = one less thing to debug.
+
+---
+
+#### 5. **Sanctuary Messaging Felt Natural to Implement**
+
+**Cultural Alignment**: Requirements like "use word 'orphaned' not 'overdue'" felt intentional, not arbitrary.
+
+**S3-03 Examples**:
+- Badge text: "Orphaned Claims" (not "Overdue Reviews")
+- Dialog heading: "Life happens!" (not "Performance Issue")
+- Help text: "No penalties will be applied" (explicit sanctuary statement)
+- Button: "Release Orphaned Claims" (not "Penalize Reviewers")
+
+**Developer Experience**: Sanctuary culture was encoded in acceptance criteria, so I didn't have to guess tone. Clear requirements = confident implementation.
+
+**Learning**: Cultural values as **explicit ACs** remove ambiguity and ensure consistency across stories.
+
+---
+
+#### 6. **Component Reuse Accelerated S3-04 by 2-3 Hours**
+
+**S3-02 Built**: `ProgressToSteward` component showing path to 250 points.
+
+**S3-04 Reused**: Same component dropped into `MemberDashboard` with zero modifications.
+
+**What Made Reuse Easy**:
+- Component was self-contained (no tight coupling)
+- Props interface was clear (`trustScore: number, thresholds: SystemConfig`)
+- Sanctuary messaging was built-in (not hardcoded)
+
+**Time Saved**: Would have taken 2-3 hours to rebuild from scratch, took 5 minutes to import and wire up.
+
+**Learning**: Writing **reusable components** (clear props, no coupling) pays dividends within same sprint.
+
+---
+
+#### 7. **Git Workflow Compliance Reached 100% (Pre-Push Hooks)**
+
+**S3-01 Implementation**: Pre-push hooks with sanctuary messaging:
+```bash
+🌱 Let's use a feature branch to keep main stable!
+  Run: git checkout -b feature/your-feature-name
+```
+
+**Developer Experience**: Gentle reminder, not authoritarian block. Hook teaches workflow while enforcing it.
+
+**Sprint 3 Result**: 
+- 14 commits on `feature/S3-03-background-jobs` (all on branch)
+- Zero accidental pushes to main
+- 100% compliance without friction
+
+**Learning**: Engineering enforcement + sanctuary culture = compliance without resentment.
+
+---
+
+### What Could Be Improved from Developer Perspective 🔄
+
+#### 1. **Schema Verification Should Be In Pre-Implementation Checklist**
+
+**S3-03 Issue**: Assumed `claims` table had `updated_at` column, but schema only had `reviewed_at`.
+
+**Impact**:
+- 5 files needed fixes (API endpoints, queries, tests)
+- 2 commits to correct (b08b84b, 2a1a10c)
+- ~30 minutes debugging time
+
+**Root Cause**: Didn't query `information_schema.columns` before writing SQL.
+
+**Prevention** (for S4 stories):
+```bash
+# Add to pre-implementation checklist
+1. Query table schema before writing SQL:
+   SELECT column_name, data_type 
+   FROM information_schema.columns 
+   WHERE table_name = 'claims' 
+   ORDER BY ordinal_position;
+```
+
+**Learning**: **Verify assumptions** about database schema, don't rely on memory or outdated docs.
+
+---
+
+#### 2. **Database Environment Indicator Would Have Prevented 7 Bug Categories**
+
+**S3-03 Critical Discovery**: Astro dev server reads from `.env` (production DB), not `.dev.vars` (dev branch).
+
+**What Went Wrong**:
+1. Created test data in dev branch database
+2. Ran dev server (connected to production DB)
+3. Test data not found → 7 bug categories discovered
+
+**Time Lost**: ~30 minutes debugging + 7 fix commits before discovering root cause.
+
+**Prevention** (S4 action item):
+Add footer to admin pages:
+```tsx
+<footer className="text-xs text-muted-foreground">
+  Database: {process.env.DATABASE_URL.split('@')[1].split('/')[0]}
+  {/* Shows: ep-dark-river-ai6arthq-pooler */}
+</footer>
+```
+
+**Learning**: **Visibility into environment state** prevents hours of debugging wrong assumptions.
+
+---
+
+#### 3. **Neon SQL Template Limitations Not Documented**
+
+**S3-03 Surprise**: Neon `sql` tagged template doesn't support `${}` inside string literals.
+
+**What Failed**:
+```typescript
+// ❌ Doesn't work (bind message error)
+const threshold = 7;
+await sql`
+  WHERE reviewed_at < NOW() - INTERVAL '${threshold} days'
+`;
+```
+
+**What Works**:
+```typescript
+// ✅ Must hardcode in SQL string
+await sql`
+  WHERE reviewed_at < NOW() - INTERVAL '7 days'
+`;
+```
+
+**Impact**: 3 files affected, commit 6e46c11 to fix, ~20 minutes debugging.
+
+**Prevention** (S4 action item): Document in `/project/trust-builder/patterns/neon-sql-patterns.md`:
+- Tagged templates are NOT standard template literals
+- Only supports parameter binding for VALUES, not string interpolation
+- Use config table for dynamic values in SQL strings
+
+**Learning**: Framework-specific limitations should be documented when discovered, not rediscovered in every story.
+
+---
+
+#### 4. **PostgreSQL Type Casting Wasn't Obvious in Complex CTEs**
+
+**S3-03 Error**: `could not determine data type of parameter $1` in CTE with JSONB + parameter reuse.
+
+**Problem**:
+```typescript
+// ❌ PostgreSQL can't infer types
+await client.query(`
+  WITH updated AS (UPDATE ... RETURNING ...)
+  INSERT INTO events (actor_id, event_type, metadata)
+  SELECT $1, $2, jsonb_build_object('admin_id', $1, ...) FROM updated
+`, [memberId, eventType]);
+```
+
+**Solution**:
+```typescript
+// ✅ Explicit casts help PostgreSQL inference
+SELECT $1::UUID, $2::VARCHAR, jsonb_build_object('admin_id', $1::UUID, ...)
+```
+
+**Time Lost**: ~15 minutes debugging, error message pointed to position 805 in query (helpful!).
+
+**Prevention**: Add PostgreSQL type casting examples to development guide.
+
+**Learning**: Complex queries (CTE + JSONB + parameter reuse) may need explicit type hints even when types seem obvious.
+
+---
+
+#### 5. **TypeScript Compilation Not Running in Watch Mode During Development**
+
+**S3-03 & S3-04 Issues**: Import typos and function signature errors not caught until runtime.
+
+**Examples**:
+- `'./Dashboard EmptyState'` (space in path) - commit 2474fb5
+- Missing `sql` parameter in `getCurrentUser()` calls - commit 8d4ff5d
+
+**Root Cause**: Developing with `npm run dev` (Astro dev server) which doesn't run TypeScript compiler.
+
+**Prevention** (S4 immediate action):
+```bash
+# Add pre-commit hook
+#!/bin/bash
+echo "🔍 Running TypeScript compiler..."
+npm run typecheck || exit 1
+```
+
+**Learning**: **TypeScript compiler should run** before commit, not just before build.
+
+---
+
+#### 6. **Component Discovery Was Manual, Not Documented**
+
+**S3-04 Experience**: Needed progress bar component for role promotion. Spent 30 minutes searching codebase to discover `ProgressToSteward` from S3-02.
+
+**What Would Have Helped**: Story Implementation Notes could have said:
+```markdown
+## Reusable Components
+- ProgressToSteward (S3-02): `/src/components/trust-builder/ProgressToSteward.tsx`
+  Shows progress to 250-point threshold with sanctuary messaging
+```
+
+**Time Saved**: 30 minutes → 0 minutes (direct reference).
+
+**Prevention** (S4): Component registry at `/project/trust-builder/patterns/component-registry.md`.
+
+**Learning**: Developer time spent **searching for existing code** is wasted time. Documentation prevents redundant implementation.
+
+---
+
+#### 7. **Manual Testing Felt Ad-Hoc, Not Systematic**
+
+**S3-03 Experience**: After implementation, manually tested each workflow:
+- Created test claims via SQL
+- Logged in as admin
+- Clicked buttons, checked database state
+- Repeated 7 times as bugs were discovered
+
+**What Was Missing**:
+- No checklist of scenarios to test
+- No documented test data setup (SQL commands were one-off)
+- No clear "done" signal (when to stop testing?)
+
+**Impact**: 7 bug categories found during ad-hoc testing. Good that I found them! But felt inefficient.
+
+**Prevention** (S4):
+- Add manual testing checklist to story ACs
+- Create test data seed scripts (`/scripts/test-data/seed-orphaned-claims.sh`)
+- Define "manual testing complete" criteria
+
+**Learning**: **Systematic manual testing** (checklist + seed scripts) would catch bugs faster than ad-hoc exploration.
+
+---
+
+### Technical Learnings 💡
+
+#### Pattern 1: Atomic State + Event with Single CTE Query
+
+**Established**: S3-01  
+**Reused**: S3-03, S3-04  
+**Status**: Gold standard
+
+```typescript
+// Pattern Template
+await withTransaction(async (client) => {
+  const result = await client.query(`
+    WITH state_change AS (
+      UPDATE table_name SET column = $1 WHERE condition RETURNING *
+    )
+    INSERT INTO events (entity_type, entity_id, event_type, metadata)
+    SELECT 'entity', sc.id, $2, jsonb_build_object('key', 'value')
+    FROM state_change sc
+  `, [newValue, eventType]);
+  return result;
+});
+```
+
+**Benefits**:
+- Atomicity guaranteed (rollback if event fails)
+- Single database round-trip
+- No manual sync between state and events
+- Migration-ready (matches blockchain transaction atomicity)
+
+**For S4**: Default pattern for any state change that requires audit trail.
+
+---
+
+#### Pattern 2: Test-First Reveals Better APIs
+
+**Discovery**: Writing integration tests BEFORE implementation exposed:
+
+**S3-03 Example**: Test expected `releaseOrphanedClaims(adminId)` to return count of released claims:
+```typescript
+// Test expectation
+const result = await releaseOrphanedClaims(adminId);
+expect(result.released).toBe(3);
+
+// Forced better API design
+// ✅ Return useful data: { released: number }
+// ❌ Originally planned: return void
+```
+
+**Learning**: Tests aren't just validation—they're **API design feedback**.
+
+---
+
+#### Pattern 3: Explicit Type Casts in CTEs with JSONB
+
+**When Needed**: CTE + JSONB + parameter reuse = type inference ambiguity.
+
+**Solution Pattern**:
+```typescript
+await client.query(`
+  WITH updated AS (UPDATE ... RETURNING id::UUID as id)
+  INSERT INTO events (actor_id, event_type, metadata)
+  SELECT 
+    $1::UUID,                                    -- Explicit cast
+    $2::VARCHAR,                                 -- Explicit cast
+    jsonb_build_object('admin_id', $1::UUID)     -- Cast in JSONB too
+  FROM updated
+`, [memberId, eventType]);
+```
+
+**For S4**: Add explicit casts when PostgreSQL error mentions "could not determine data type".
+
+---
+
+#### Pattern 4: Sanctuary Messaging in Component Defaults
+
+**Best Practice** (S3-03 `OrphanedClaimsBadge.tsx`):
+```tsx
+<Dialog>
+  <DialogTitle>Life happens!</DialogTitle>
+  <DialogDescription>
+    These claims need fresh eyes. <strong>No penalties</strong> will be applied.
+  </DialogDescription>
+</Dialog>
+```
+
+**Why This Works**:
+- Sanctuary tone is DEFAULT, not opt-in
+- Developers don't need to remember to be supportive
+- Components encode cultural values
+
+**For S4**: Build sanctuary messaging into component defaults, not as props.
+
+---
+
+### Developer Velocity Metrics 📊
+
+| Metric                        | S3-01     | S3-02     | S3-03     | S3-04     | Trend        |
+| ----------------------------- | --------- | --------- | --------- | --------- | ------------ |
+| Implementation Time           | ~5 hours  | ~11 hours | ~9 hours  | ~7 hours  | Predictable  |
+| Test Writing Time             | 5 hours   | 2 hours   | 2 hours   | 1.5 hours | Accelerating |
+| Bug Fixes During Development  | 2 issues  | 0 issues  | 7 issues  | 2 issues  | Variance     |
+| Components Created            | 0 (infra) | 5         | 2         | 1         | Slowing      |
+| Components Reused             | 0         | 0         | 1         | 1         | Growing      |
+| Strategic Review Time Savings | N/A       | 4 hours   | 2 hours   | N/A       | Proven       |
+
+**Key Insights**:
+
+- **Test writing accelerating**: 5h → 2h → 2h → 1.5h (mock patterns pay off)
+- **Component reuse growing**: 0 → 0 → 1 → 1 (ProgressToSteward, DashboardCard)
+- **Bug variance**: S3-03 had 7 issues (database environment discovery), but all caught before QA
+
+**Velocity Trajectory**: 32 hours total for 4 stories = 8 hours/story average. Matches 1-2 day estimate from product-owner.
+
+---
+
+### Action Items for Sprint 4 (Developer Priorities) 🎯
+
+#### Immediate (Before S4 Stories)
+
+- [ ] **Add pre-commit TypeScript validation hook** (15 min)
+  - Catches import typos, function signature errors
+  - Prevents runtime-only type errors
+
+- [ ] **Create test data seed scripts** (30 min)
+  - `/scripts/test-data/seed-orphaned-claims.sh`
+  - Reproducible test environments for manual testing
+
+- [ ] **Document Neon SQL patterns** (30 min)
+  - `/project/trust-builder/patterns/neon-sql-patterns.md`
+  - Template limitations, type casting examples
+
+- [ ] **Add database connection indicator to admin pages** (20 min)
+  - Footer showing active DB (prevents S3-03 confusion)
+
+#### Next Story Improvements
+
+- [ ] **Schema verification pre-implementation checklist**
+  - Query `information_schema.columns` before writing SQL
+  - Add to fullstack-developer agent instructions
+
+- [ ] **Manual testing checklist in story template**
+  - Scenarios to test (success, failure, edge cases)
+  - Seed data setup commands
+  - "Done" criteria
+
+- [ ] **Component discovery improvement**
+  - Use component registry from product-owner action item
+  - Reference in story Implementation Notes
+
+---
+
+### Developer Self-Assessment
+
+**Strengths**:
+
+- **Pattern recognition and reuse**: CTE atomic transactions used correctly across 3 stories
+- **Test-first discipline**: 129 tests, 100% pass rate, <2s execution
+- **Cultural alignment**: Sanctuary messaging felt natural to implement (clear ACs)
+- **Problem-solving**: 7 bug categories in S3-03 all resolved before QA handoff
+
+**Growth Areas**:
+
+- **Assumption verification**: Should have queried schema before SQL (S3-03 lesson)
+- **Environment awareness**: Should have verified DATABASE_URL before testing
+- **Documentation habits**: Should document framework limitations when discovered (Neon SQL templates)
+- **TypeScript discipline**: Should run compiler during development, not just before build
+
+**Learning for Next Sprint**:
+
+As fullstack-developer, my job is to **deliver working software** through:
+
+1. **Verify assumptions** (schema, environment, framework behavior)
+2. **Test-first mindset** (tests are design tools, not afterthoughts)
+3. **Document discoveries** (limitations, patterns, gotchas)
+4. **Reuse over rebuild** (check registry before creating components)
+
+Speed without verification creates rework. Verification creates sustainable velocity.
+
+---
+
+### Looking Forward to Sprint 4
+
+**Confidence**: **High** (8/10)
+
+**Based On**:
+- ✅ Test infrastructure working (129 tests, <2s)
+- ✅ CTE pattern proven (atomic state + event)
+- ✅ Component reuse accelerating (ProgressToSteward, DashboardCard)
+- ✅ Strategic reviews prevent costly rework (proven 2x)
+- ⚠️ Database environment lessons learned (won't repeat S3-03 confusion)
+
+**Excited About**:
+- Layout patterns formalized (UI-layout-pattern.md)
+- Component registry (discover reusable code faster)
+- Test data seed scripts (systematic manual testing)
+
+**Ready For**: Mission Joining workflow (Complex, strategic review mandatory) with confidence that process improvements will prevent S3-03-style discovery issues.
+
+---
+
 **Next**: Sprint 4 planning begins with updated story template, planning checklist, and component registry.
