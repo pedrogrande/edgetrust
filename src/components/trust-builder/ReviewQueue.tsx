@@ -4,6 +4,13 @@
  * Displays claims awaiting peer review
  * AC22: Includes sanctuary culture reminder
  * AC27: Shows workload tracking (max 3 active reviews)
+ *
+ * S4-05: Layout improvements applied
+ * - Primary action clarity (AC1): "Start Review" button prominence
+ * - Visual grouping (AC2): Metadata grouped in clear sections
+ * - Information hierarchy (AC3): Key info above fold
+ * - Mobile responsive (AC4): Full-width buttons, proper touch targets
+ * - Sanctuary spacing (AC5): Comfortable spacing, warning alerts
  */
 
 'use client';
@@ -113,6 +120,21 @@ export default function ReviewQueue({ userId }: { userId: string }) {
     return 'Just now';
   };
 
+  // Calculate days pending for sanctuary-aligned badge display (SHOULD item #1)
+  const calculateDaysPending = (submittedAt: string) => {
+    const date = new Date(submittedAt);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  };
+
+  // Sanctuary-aligned badge variant based on days pending (SHOULD item #1)
+  const getBadgeVariant = (days: number): "default" | "secondary" | "destructive" => {
+    if (days >= 7) return 'destructive';  // Urgent: >7 days
+    if (days >= 5) return 'default';      // Attention needed: 5-6 days
+    return 'secondary';                    // Normal: <5 days
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -126,7 +148,7 @@ export default function ReviewQueue({ userId }: { userId: string }) {
 
   if (error) {
     return (
-      <Alert variant="destructive">
+      <Alert variant="destructive" className="mb-6">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>{error}</AlertDescription>
       </Alert>
@@ -137,7 +159,7 @@ export default function ReviewQueue({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-6">
-      {/* Workload Indicator (AC27) */}
+      {/* Workload Indicator (AC27) - Enhanced with sanctuary spacing */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Your Review Workload</CardTitle>
@@ -157,9 +179,11 @@ export default function ReviewQueue({ userId }: { userId: string }) {
             )}
           </div>
           {!queueData.canReviewMore && (
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-              Please complete or release a review before claiming another.
-            </p>
+            <Alert variant="default" className="mt-4">
+              <AlertDescription>
+                Please complete or release a review before claiming another.
+              </AlertDescription>
+            </Alert>
           )}
         </CardContent>
       </Card>
@@ -174,7 +198,7 @@ export default function ReviewQueue({ userId }: { userId: string }) {
         </Button>
       </div>
 
-      {/* Queue List */}
+      {/* Queue List - S4-05 Layout Improvements Applied */}
       {queueData.claims.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -185,72 +209,87 @@ export default function ReviewQueue({ userId }: { userId: string }) {
         </Card>
       ) : (
         <div className="space-y-4">
-          {queueData.claims.map((claim) => (
-            <Card
-              key={claim.id}
-              className="hover:border-primary transition-colors"
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-2">
-                      {claim.taskTitle}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {claim.taskDescription}
-                    </CardDescription>
-                  </div>
-                  {claim.revisionCount > 0 && (
-                    <Badge variant="secondary" className="ml-4">
-                      Revision {claim.revisionCount}
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Member Info (AC26: effort indicators) */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
+          {queueData.claims.map((claim) => {
+            const daysPending = calculateDaysPending(claim.submittedAt);
+            
+            return (
+              <Card
+                key={claim.id}
+                className="cursor-pointer transition-colors hover:bg-accent focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleAssignClaim(claim.id);
+                  }
+                }}
+              >
+                <CardContent className="pt-6 space-y-4">
+                  {/* AC2 & AC3: Grouped Metadata with Information Hierarchy */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg">{claim.taskTitle}</h3>
+                      <div className="flex items-center gap-2">
+                        {/* Days Pending Badge (AC3: key info above fold) */}
+                        <Badge variant={getBadgeVariant(daysPending)}>
+                          {daysPending}d
+                        </Badge>
+                        {/* SHOULD item #4: Proof count in header */}
+                        <Badge variant="outline" className="text-xs">
+                          <FileText className="h-3 w-3 mr-1" />
+                          {claim.proofCount}
+                        </Badge>
+                        {/* Revision indicator */}
+                        {claim.revisionCount > 0 && (
+                          <Badge variant="secondary">
+                            Rev {claim.revisionCount}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Member info grouped */}
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="font-medium">
                         {claim.memberDisplayName}
                       </span>
                       <span className="text-xs">
                         ({claim.memberIdentifier})
                       </span>
+                      <span>Trust Score: {claim.memberTrustScore}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span>Trust Score:</span>
-                      <span className="font-medium">
-                        {claim.memberTrustScore}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Submission Details */}
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
+                    
+                    {/* Submission timestamp */}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
                       <span>Submitted {formatTimeAgo(claim.submittedAt)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      <span>
-                        {claim.proofCount} proof
-                        {claim.proofCount !== 1 ? 's' : ''}
-                      </span>
-                    </div>
+                    
+                    {/* Task description (below fold acceptable per AC3) */}
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                      {claim.taskDescription}
+                    </p>
                   </div>
 
-                  {/* Action Button */}
+                  {/* AC5: Sanctuary-aligned warning for pending claims */}
+                  {daysPending >= 5 && (
+                    <Alert variant="default" className="mt-4">
+                      <AlertDescription>
+                        This claim has been pending for {daysPending} days. The member is waiting for your feedback!
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* AC1: Primary Action - ONE clear "Start Review" button */}
                   <div className="pt-2">
                     <Button
+                      variant="default"
+                      className="w-full min-h-[44px]"
                       onClick={() => handleAssignClaim(claim.id)}
                       disabled={
                         !queueData.canReviewMore ||
                         assigningClaimId === claim.id
                       }
-                      className="w-full sm:w-auto"
                     >
                       {assigningClaimId === claim.id ? (
                         <>
@@ -258,14 +297,14 @@ export default function ReviewQueue({ userId }: { userId: string }) {
                           Assigning...
                         </>
                       ) : (
-                        'Review This Claim'
+                        'Start Review'
                       )}
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
