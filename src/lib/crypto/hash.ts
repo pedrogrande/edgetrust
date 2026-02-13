@@ -48,8 +48,10 @@ export async function computeSHA256(file: File): Promise<string> {
 export async function computeSHA256FromBuffer(
   buffer: ArrayBuffer | Buffer
 ): Promise<string> {
-  const arrayBuffer = buffer instanceof Buffer ? buffer.buffer : buffer;
-  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+  // Convert Buffer to Uint8Array to ensure compatibility with crypto.subtle
+  const uint8Array =
+    buffer instanceof Buffer ? new Uint8Array(buffer) : new Uint8Array(buffer);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', uint8Array);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray
     .map((b) => b.toString(16).padStart(2, '0'))
