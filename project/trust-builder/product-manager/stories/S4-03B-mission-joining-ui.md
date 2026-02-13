@@ -182,13 +182,13 @@ And I see: "Keep completing tasks to increase your Trust Score!"
   - `entity_type: 'membership'`
   - `entity_id: <membership_id>`
   - `event_type: 'membership.created'`
-  - `metadata: { group_id, group_name, member_id, member_trust_score, joined_at }`
+  - `metadata: { group_id, group_stable_id, group_name, member_id, member_stable_id, member_trust_score, joined_at }`
 
 - [ ] **AC14**: Event `membership.ended` logged with metadata:
   - `entity_type: 'membership'`
   - `entity_id: <membership_id>`
   - `event_type: 'membership.ended'`
-  - `metadata: { group_id, group_name, member_id, left_at, days_active }`
+  - `metadata: { group_id, group_stable_id, group_name, member_id, member_stable_id, joined_at, left_at, days_active }`
 
 ### Layout & UX (refer to `/project/trust-builder/patterns/UI-layout-pattern.md`)
 
@@ -267,6 +267,7 @@ And I see: "Keep completing tasks to increase your Trust Score!"
 - `<Badge>` (S3-02): Eligibility indicators, member count
 - `<Separator>` (S2-02): Visual grouping in detail view
 - `useToast` hook (S1-04): Success/error notifications
+- `<ProgressToSteward>` (S3-02): Visual progress bar for eligibility thresholds
 - List + detail layout skeleton (S2-04 review queue): Adapt for missions
 
 ---
@@ -426,6 +427,7 @@ export async function POST({ params, locals }: APIContext) {
           group_stable_id: group.stable_id,
           group_name: group.name,
           member_id: member.id,
+          member_stable_id: member.stable_id,
           member_trust_score: member.trust_score_cached,
           joined_at: new Date().toISOString(),
         },
@@ -511,6 +513,8 @@ export async function POST({ params, locals }: APIContext) {
           group_stable_id: group.stable_id,
           group_name: group.name,
           member_id: member.id,
+          member_stable_id: member.stable_id,
+          joined_at: membership.joined_at,
           left_at: new Date().toISOString(),
           days_active: daysActive,
         },
@@ -572,6 +576,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { ProgressToSteward } from '@/components/trust-builder/ProgressToSteward';
 
 export function MissionsView({
   memberId,
@@ -782,11 +787,6 @@ function MissionDetail({
 
   const pointsNeeded = mission.min_trust_score - memberTrustScore;
   const isEligible = pointsNeeded <= 0;
-  const progressRatio = Math.min(
-    memberTrustScore / Math.max(mission.min_trust_score, 1),
-    1
-  );
-  const progressPercent = Math.round(progressRatio * 100);
 
   return (
     <div className="space-y-6">
@@ -818,9 +818,11 @@ function MissionDetail({
             </p>
           )}
           {!isEligible && (
-            <p className="text-sm text-muted-foreground">
-              You're {progressPercent}% of the way there!
-            </p>
+            <ProgressToSteward
+              currentPoints={memberTrustScore}
+              targetPoints={mission.min_trust_score}
+              showLabel={true}
+            />
           )}
         </div>
       </div>

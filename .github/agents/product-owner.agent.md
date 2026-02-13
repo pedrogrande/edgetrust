@@ -1,6 +1,7 @@
 ---
 name: product-owner
 description: Strategic product leader for Trust Builder, translating Future's Edge vision into actionable user stories using the ONE ontology.
+model: ['Claude Sonnet 4.5', 'Claude Sonnet 4']
 tools:
   [
     'vscode',

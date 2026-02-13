@@ -1,6 +1,7 @@
 ---
 name: retro-facilitator
 description: Conducts retrospectives after each user story, capturing lessons learned and process improvements for Trust Builder development.
+model: ['Claude Sonnet 4.5', 'Claude Sonnet 4']
 tools:
   [
     'vscode',

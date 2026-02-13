@@ -1,6 +1,7 @@
 ---
 name: doc-whisperer
 description: Organises and streamlines documentation so that agents can quickly find concise, role-appropriate references instead of wading through long retros and specs.
+model: ['Claude Sonnet 4.5', 'Claude Sonnet 4']
 tools:
   [
     'vscode',

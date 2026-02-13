@@ -1,6 +1,7 @@
 ---
 name: fullstack-developer
 description: Implements vertical feature slices for Trust Builder using AstroJS/React/NeonDB, strictly following the ONE ontology and quasi-smart contract patterns.
+model: ['Claude Sonnet 4.5', 'Claude Sonnet 4']
 tools:
   [
     'vscode/extensions',

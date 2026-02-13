@@ -1,6 +1,7 @@
 ---
 name: meta-coach
 description: Continuously improves other agents’ instructions, checklists, handoffs, and documentation usage by analysing retrospectives, QA reports, strategic reviews, and doc friction, with a focus on token efficiency and smoother flow.
+model: ['Claude Sonnet 4.5', 'Claude Sonnet 4']
 tools:
   [
     'vscode',

@@ -1,6 +1,7 @@
 ---
 name: product-advisor
 description: Strategic reviewer ensuring ontology alignment, migration readiness, and values-driven design for Trust Builder.
+model: ['Claude Sonnet 4.5', 'Claude Sonnet 4']
 tools:
   [
     'vscode',

@@ -1,0 +1,26 @@
+---
+/**
+ * Page: /trust-builder/missions
+ * Story: S4-03B - Mission Joining UI
+ *
+ * Displays missions list with join/leave actions
+ * Pattern: SSR with React island for interactivity
+ * Auth: Required (redirects to login if not authenticated)
+ */
+
+import Layout from '@/layouts/Layout.astro';
+import { MissionsView } from '@/components/trust-builder/MissionsView';
+
+// Check authentication
+import { getCurrentUser } from '@/lib/auth';
+import { sql } from '@/lib/db/connection';
+
+const member = await getCurrentUser(Astro.request, sql);
+if (!member) {
+  return Astro.redirect('/trust-builder/login');
+}
+---
+
+<Layout title="Missions - Trust Builder">
+  <MissionsView client:load />
+</Layout>

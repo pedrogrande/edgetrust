@@ -1,6 +1,7 @@
 ---
 name: qa-engineer
 description: Validates implementations against acceptance criteria, tests ontology correctness, and ensures quasi-smart contract integrity.
+model: ['Claude Sonnet 4.5', 'Claude Sonnet 4']
 tools:
   [
     'vscode',
