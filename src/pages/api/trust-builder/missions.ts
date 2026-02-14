@@ -1,51 +1,38 @@
 /**
- * GET /api/trust-builder/missions
+ * API Route: GET /api/trust-builder/missions
+ * Story: S4-03B - Mission Joining UI
  *
- * Returns all active missions with task counts and total points available
- * Public endpoint — no authentication required
+ * Returns all active missions with metadata including:
+ * - Mission details (name, description, min_trust_score)
+ * - Member count, task count
+ * - is_member, is_eligible flags for current member
+ *
+ * Uses S4-03A helper: get_active_missions()
  */
 
 import type { APIRoute } from 'astro';
 import { sql } from '@/lib/db/connection';
-import { GroupType } from '@/types/trust-builder';
+import { getCurrentUser } from '@/lib/auth';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ request }) => {
   try {
-    const missions = await sql`
-      SELECT 
-        g.id,
-        g.name,
-        g.description,
-        COUNT(t.id) AS task_count,
-        COALESCE(SUM(ti_sum.total_points), 0) AS total_points_available
-      FROM groups g
-      LEFT JOIN tasks t ON g.id = t.group_id AND t.state = 'open'
-      LEFT JOIN LATERAL (
-        SELECT SUM(points) AS total_points
-        FROM task_incentives
-        WHERE task_id = t.id
-      ) ti_sum ON true
-      WHERE g.type = ${GroupType.MISSION}
-        AND g.status = 'active'
-      GROUP BY g.id, g.name, g.description
-      ORDER BY g.created_at DESC
-    `;
+    const member = await getCurrentUser(request, sql);
 
-    return new Response(
-      JSON.stringify({
-        missions: missions.map((m) => ({
-          id: m.id,
-          name: m.name,
-          description: m.description,
-          task_count: Number(m.task_count),
-          total_points_available: Number(m.total_points_available),
-        })),
-      }),
-      {
-        status: 200,
+    if (!member) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
         headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      });
+    }
+
+    // Use S4-03A helper function
+    const missions =
+      await sql`SELECT * FROM get_active_missions(${member.id}::UUID, ${member.trust_score_cached || 0}::INTEGER)`;
+
+    return new Response(JSON.stringify({ missions }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error fetching missions:', error);
     return new Response(JSON.stringify({ error: 'Failed to fetch missions' }), {

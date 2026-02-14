@@ -1,0 +1,29 @@
+---
+/**
+ * Page: /trust-builder/missions/[id]
+ * Story: S4-04 - Mission Task Management
+ *
+ * Mission detail page with tab navigation (Overview, Tasks, Members)
+ * Pattern: SSR with React island for interactivity
+ * Auth: Required (redirects to login if not authenticated)
+ */
+
+import Layout from '@/layouts/Layout.astro';
+import { MissionDetailView } from '@/components/trust-builder/MissionDetailView';
+
+// Check authentication
+import { getCurrentUser } from '@/lib/auth';
+import { sql } from '@/lib/db/connection';
+
+const member = await getCurrentUser(Astro.request, sql);
+if (!member) {
+  return Astro.redirect('/trust-builder/signin');
+}
+
+// Get mission ID from URL params
+const { id } = Astro.params;
+---
+
+<Layout title="Mission Details - Trust Builder">
+  <MissionDetailView client:load missionId={id} />
+</Layout>

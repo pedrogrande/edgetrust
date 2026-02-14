@@ -20,6 +20,7 @@ import ProgressToSteward from './ProgressToSteward';
 import DashboardEmptyState from './DashboardEmptyState';
 import RoleBadge from './RoleBadge';
 import PromotionToast from './PromotionToast';
+import { MyMissions } from './MyMissions'; // S4-04: Mission Task Management
 interface DashboardData {
   member: {
     id: string;
@@ -203,6 +204,11 @@ export default function MemberDashboard() {
 
         {/* S3-04: Promotion toast (AC11) */}
         <PromotionToast role={data.member.role} memberId={data.member.id} />
+
+        {/* S4-04: My Missions widget */}
+        <section aria-labelledby="missions-heading">
+          <MyMissions />
+        </section>
 
         {/* Trust Score & Progress */}
         <section

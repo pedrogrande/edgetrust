@@ -84,6 +84,8 @@
   },
   "peacock.color": "#bccb7c",
   "chat.tools.terminal.autoApprove": {
-    "bun": true
+    "bun": true,
+    "git push": true,
+    "gh": true
   }
 }
