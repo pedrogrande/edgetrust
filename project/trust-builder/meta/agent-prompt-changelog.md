@@ -6,6 +6,106 @@
 
 ---
 
+## [2026-02-13] Agent Foundry Best Practices → Comprehensive Agent Improvements
+
+**Analysis Source**: GitHub Custom Agent Foundry best practices + S4-04 retrospective insights  
+**Rationale**: Implement industry best practices for custom agents: argument hints, tool optimization, output specifications, concrete examples  
+**Status**: ✅ IMPLEMENTED (all 7 agent specs updated)
+
+### Changes Applied
+
+**All agents updated with**:
+
+1. **Argument Hints** (YAML frontmatter):
+   - Added `argument-hint` to guide user interaction
+   - Explains what information each agent needs
+   - Examples: "Tell me which story to implement", "Ask me to review a story"
+
+2. **Tool List Optimization**:
+   - Removed duplicate tools (fullstack-developer had neon/\* listed twice, github tools individually listed)
+   - Used wildcards for tool groups (`vscode/*`, `execute/*`, `memory/*`, etc.)
+   - Removed unnecessary tools from read-only agents (product-owner, retro-facilitator, doc-whisperer)
+   - Reduced fullstack-developer tools from 170+ individual entries to 16 streamlined groups
+
+3. **Clear Identity Statements**:
+   - Format: "You are a **[Role]** specialized in [purpose]"
+   - Added Core Identity section: Role, Mission, Output Format
+   - Provides clear scope and boundaries
+
+4. **Output Format Specifications**:
+   - Concrete examples of expected deliverables
+   - File naming conventions
+   - Markdown structure templates
+   - Examples for QA reports, strategic reviews, retrospectives, user stories
+
+5. **Concrete Pattern Examples**:
+   - fullstack-developer: CTE atomic transaction code example
+   - product-advisor: Pre/post-implementation review templates
+   - qa-engineer: QA report structure
+   - retro-facilitator: Story retrospective format
+
+### Agents Affected
+
+- **product-owner**:
+  - Tools reduced: Removed vscode, execute, web, context7, duplicate neon
+  - Added argument-hint, output formats for user stories
+  - Enhanced with story template examples
+
+- **fullstack-developer**:
+  - Tools optimized: 170+ individual tools → 16 wildcarded groups (vscode/_, execute/_, etc.)
+  - Added argument-hint for implementation requests
+  - Added CTE atomic transaction code example
+  - Added PR description template
+
+- **qa-engineer**:
+  - Tools reduced: Removed vscode, web, astro-docs, memory
+  - Added argument-hint for validation requests
+  - Added QA report output format with structure example
+
+- **product-advisor**:
+  - Tools reduced: Removed vscode, execute, web, astro-docs, context7
+  - Added argument-hint for review requests
+  - Added pre/post-implementation review templates
+
+- **retro-facilitator**:
+  - Tools reduced: Removed vscode, execute, web, context7
+  - Added argument-hint for retrospective requests
+  - Added story retrospective output format
+
+- **doc-whisperer**:
+  - Tools reduced: Removed vscode, execute, web
+  - Added argument-hint for documentation requests
+  - Added quickref format template
+
+- **meta-coach**:
+  - Tools reduced: Removed vscode, execute, web
+  - Added argument-hint for improvement requests
+  - Added changelog entry format template
+
+### Expected Impact
+
+- **Improved Discoverability**: Argument hints guide users on how to interact with each agent
+- **Reduced Token Usage**: Optimized tool lists (especially fullstack-developer: 90% reduction)
+- **Faster Onboarding**: Clear identity and output format examples accelerate learning
+- **Consistent Outputs**: Templates ensure deliverables follow established patterns
+- **Better Tool Efficiency**: Agents only load necessary capabilities
+
+### Token Efficiency Gains
+
+**Estimated savings per agent invocation**:
+
+- fullstack-developer: ~1500 tokens saved (tool list optimization)
+- Other agents: ~200-400 tokens each (unnecessary tool removal)
+- **Total**: ~2000-2500 tokens saved per typical story workflow
+
+### Quality Improvements
+
+- **Concrete Examples**: All agents now show what good output looks like
+- **Role Clarity**: Clear boundaries prevent scope creep
+- **Workflow Integration**: Output formats align with handoff expectations
+
+---
+
 ## [2026-02-12] Sprint 3 Learnings → Agent Spec Updates
 
 **Analysis Source**: Sprint 3 retrospectives (4 stories + sprint review) + learnings-and-guidelines.md  

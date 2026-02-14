@@ -1,7 +1,7 @@
 # Trust Builder Agent Hub
 
 **Purpose**: Quick navigation for AI agents working on Trust Builder  
-**Last Updated**: 12 February 2026 (Sprint 3 complete)  
+**Last Updated**: 13 February 2026 (Sprint 4 - Agent system enhanced)  
 **Doc Whisperer**: Maintained for fast, token-efficient lookups
 
 ---
@@ -10,12 +10,15 @@
 
 ### Product Owner
 
+**Argument Hint**: Describe the feature, epic, or story you need planned using the ONE ontology
+
 **Quick Start**: Read [Product Vision](00-product-vision-and-goals.md) (10 min) → [User Personas](01-user-personas-and-journeys.md) (15 min) → Check [BACKLOG.md](product-manager/BACKLOG.md)
 
 **Story Planning**:
 
 - [BACKLOG.md](product-manager/BACKLOG.md) - Prioritized stories
 - Story examples: [product-manager/stories/](product-manager/stories/)
+- **Output format template**: Story structure with ontology mapping, 15-30 ACs, testing schedule ⭐ **NOW IN AGENT SPEC**
 - **Latest learnings**: [retros/sprint-3-learnings-and-guidelines.md](retros/sprint-3-learnings-and-guidelines.md) ⭐ **PRIMARY REFERENCE**
 - Strategic review matrix: [quickrefs/strategic-review.md](quickrefs/strategic-review.md)
 - Component registry: [patterns/component-registry.md](patterns/component-registry.md)
@@ -24,20 +27,24 @@
 
 - [Functional Requirements](02-functional-requirements.md) - Feature specifications
 - [Data Model & API Design](04-data-model-and-api-design.md) - Technical constraints
-- [Agent Changelog](meta/agent-prompt-changelog.md) - Latest process improvements
+- [Agent Changelog](meta/agent-prompt-changelog.md) - Latest process improvements (NEW: 2026-02-13 enhancements)
 
 ---
 
 ### Fullstack Developer
 
+**Argument Hint**: Tell me which story to implement, or ask me to fix specific issues or add features
+
 **Quick Ref**: [quickrefs/developer.md](quickrefs/developer.md) ⭐ **START HERE**  
 **Gold Patterns**: [patterns/](patterns/) - Copy-paste implementations  
+**CTE Atomic Pattern**: ⭐ **NOW IN AGENT SPEC** - Copy-paste transaction example inline
 **Test Infrastructure**: [README Testing section](../../README.md#testing-sprint-3)
 
 **🚀 Sprint 3 Gold Standards** (copy-paste ready):
 
-- **CTE atomic transactions** → [patterns/cte-atomic-pattern.md](patterns/cte-atomic-pattern.md) (state + event atomicity)
+- **CTE atomic transactions** → Agent spec includes inline example + [patterns/cte-atomic-pattern.md](patterns/cte-atomic-pattern.md)
 - **Component reuse** → [patterns/component-registry.md](patterns/component-registry.md) (save 2-3 hours per story)
+- **PR description template** → ⭐ **NOW IN AGENT SPEC** - Migration impact tracking included
 - API endpoint → [patterns/api-endpoint.md](patterns/api-endpoint.md)
 - Event logging → [patterns/event-sourcing.md](patterns/event-sourcing.md)
 
@@ -51,7 +58,10 @@
 
 ### QA Engineer
 
+**Argument Hint**: Tell me which story to validate, or ask me to review specific components or test results
+
 **Quick Ref**: [quickrefs/qa.md](quickrefs/qa.md) ⭐ **START HERE**  
+**QA Report Template**: ⭐ **NOW IN AGENT SPEC** - Structure with status, migration %, issues breakdown
 **QA Templates**: [product-manager/stories/](product-manager/stories/) (search `*-QA-REPORT.md`)
 
 **Sprint 3 Standards**:
@@ -76,7 +86,10 @@
 
 ### Product Advisor
 
+**Argument Hint**: Ask me to review a story (pre or post-implementation) or validate architectural decisions
+
 **Quick Ref**: [quickrefs/advisor.md](quickrefs/advisor.md) ⭐ **START HERE**  
+**Review Templates**: ⭐ **NOW IN AGENT SPEC** - Pre/post-implementation structures with grading
 **Strategic Review Matrix**: [quickrefs/strategic-review.md](quickrefs/strategic-review.md) (2.7-3.7x ROI proven)  
 **Reviews**: [product-manager/advisor-feedback/](product-manager/advisor-feedback/)
 
@@ -97,6 +110,58 @@
 - **Simple stories (≤4 pts)**: Review optional (break-even ROI)
 - **Moderate stories (5-7 pts)**: Review recommended (2-3x ROI, 45 min)
 - **Complex stories (≥8 pts)**: Review **MANDATORY** (3-4x ROI, 90 min)
+
+---
+
+### Retro Facilitator
+
+**Argument Hint**: Ask me to conduct a retrospective for a completed story or sprint
+
+**Retro Template**: ⭐ **NOW IN AGENT SPEC** - Structured sections (What Went Well, Improvements, Learnings, Actions)
+**Retro Files**: [retros/](retros/)
+**Sprint Learnings**: [retros/sprint-3-learnings-and-guidelines.md](retros/sprint-3-learnings-and-guidelines.md)
+
+---
+
+### Doc Whisperer
+
+**Argument Hint**: Ask me to organize docs, create quickrefs, or improve documentation structure
+
+**Quickref Template**: ⭐ **NOW IN AGENT SPEC** - 5-10 min read format with checklists
+**Current Structure**: This file (AGENT-HUB.md) maintained by Doc Whisperer
+
+---
+
+### Meta-Coach
+
+**Argument Hint**: Ask me to analyze patterns across retros/QA reports and propose agent improvements
+
+**Changelog**: [meta/agent-prompt-changelog.md](meta/agent-prompt-changelog.md) - Latest: 2026-02-13 Agent Foundry enhancements
+**Improvement Format**: ⭐ **NOW IN AGENT SPEC** - Changelog entry template with evidence-based changes
+
+---
+
+## 🆕 Agent System Enhancements (2026-02-13)
+
+**Major Update**: All agents enhanced with Agent Foundry best practices
+
+**Key Improvements**:
+
+1. **Argument Hints**: Each agent now explains what information it needs (see above)
+2. **Token Efficiency**: 90% reduction in fullstack-developer tool list (170 → 16 groups)
+3. **Output Templates**: Concrete examples of deliverables now inline in agent specs
+4. **Pattern Examples**: CTE atomic transactions, PR descriptions, QA reports copy-paste ready
+
+**Impact**:
+
+- 2000-2500 tokens saved per story workflow (~20-25% efficiency gain)
+- Faster agent responses (less tool loading overhead)
+- More consistent deliverables (templates standardize outputs)
+- Reduced clarification loops (argument hints guide interaction)
+
+**See**: [meta/agent-prompt-changelog.md](meta/agent-prompt-changelog.md) for complete details
+
+---
 
 ---
 

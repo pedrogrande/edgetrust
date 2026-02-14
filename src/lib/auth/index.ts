@@ -86,7 +86,13 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 14; // 14 days in seconds
 export function createSessionCookie(memberId: string): string {
   // S1: Simple base64-encoded member ID
   // S2 enhancement: Use signed JWT with secret
-  const sessionData = btoa(JSON.stringify({ memberId, createdAt: Date.now() }));
+  const encode =
+    typeof btoa !== 'undefined'
+      ? btoa
+      : (str: string) => Buffer.from(str).toString('base64');
+  const sessionData = encode(
+    JSON.stringify({ memberId, createdAt: Date.now() })
+  );
 
   return `${SESSION_COOKIE_NAME}=${sessionData}; HttpOnly; Path=/; Max-Age=${SESSION_MAX_AGE}; SameSite=Lax`;
 }
@@ -109,7 +115,11 @@ export function parseSession(cookieHeader: string | null): string | null {
 
   try {
     const sessionData = sessionCookie.substring(SESSION_COOKIE_NAME.length + 1);
-    const decoded = JSON.parse(atob(sessionData));
+    const decode =
+      typeof atob !== 'undefined'
+        ? atob
+        : (str: string) => Buffer.from(str, 'base64').toString();
+    const decoded = JSON.parse(decode(sessionData));
 
     // Check expiration (14 days)
     const age = Date.now() - decoded.createdAt;

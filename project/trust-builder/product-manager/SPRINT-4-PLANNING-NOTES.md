@@ -1,8 +1,94 @@
 # Sprint 4 Planning Notes
 
-**Date**: 2026-02-12  
-**Context**: Sprint 3 complete (20/20 points, Grade A, State Machine Complete)  
-**Planning Status**: Integrating process improvements from S3 retros + meta-coach recommendations
+**Date**: 2026-02-13 (Updated)  
+**Context**: Sprint 3 complete (20/20 points, Grade A) + Agent system enhancements  
+**Planning Status**: Integrating S3 learnings + Agent Foundry best practices
+
+---
+
+## 🚀 NEW: Agent System Enhancements (2026-02-13)
+
+**Source**: [Agent Prompt Changelog](../meta/agent-prompt-changelog.md) - Agent Foundry best practices implementation
+
+### Key Improvements Affecting Sprint Planning
+
+#### 1. Argument Hints for User Guidance
+
+**Change**: All agents now have `argument-hint` fields explaining what information they need.
+
+**Planning Impact**:
+
+- **Faster handoffs**: Users know exactly what to tell each agent
+- **Reduced clarification loops**: Clear expectations upfront
+- **Better delegation**: Product owner can hand off stories more efficiently
+
+**Examples**:
+
+- fullstack-developer: "Tell me which story to implement, or ask me to fix specific issues"
+- qa-engineer: "Tell me which story to validate, or ask me to review specific components"
+- product-advisor: "Ask me to review a story (pre or post-implementation)"
+
+#### 2. Token Efficiency Gains (2000-2500 tokens per story)
+
+**Change**: Tool lists optimized, especially fullstack-developer (90% reduction: 170 → 16 tool groups)
+
+**Planning Impact**:
+
+- **Faster agent responses**: Less overhead loading unnecessary tools
+- **Cost reduction**: ~20-25% token savings per story workflow
+- **Better context windows**: More room for complex reasoning
+
+**Measurement**: Track average story completion time in S4 vs S3 baseline
+
+#### 3. Output Format Specifications
+
+**Change**: All agents now include concrete examples of expected deliverables.
+
+**Planning Impact**:
+
+- **Consistent deliverables**: Templates ensure format standardization
+- **Reduced review iterations**: Clear expectations from start
+- **Better handoff quality**: Next agent knows exactly what to expect
+
+**New Templates Available**:
+
+- **User Stories**: Clear structure with ontology mapping and AC format
+- **QA Reports**: Status, migration readiness, issues breakdown
+- **Strategic Reviews**: MUST/SHOULD items, dimensional analysis
+- **Retrospectives**: Structured sections (successes, improvements, learnings, actions)
+- **PR Descriptions**: Migration impact tracking, testing verification
+
+#### 4. Concrete Implementation Examples
+
+**Change**: fullstack-developer includes CTE atomic transaction code example inline.
+
+**Planning Impact**:
+
+- **Pattern adoption**: Gold standard patterns now copy-paste ready in agent instructions
+- **Reduced pattern discovery time**: No need to search prior implementations
+- **Quality consistency**: Examples ensure correct pattern usage
+
+### Integration Actions for Sprint 4
+
+**✅ Immediate (Already Done)**:
+
+- Agent specs updated with argument hints, tool optimization, output formats
+- Changelog documented with expected impacts
+- Meta-coach handoff to product-owner (this document)
+
+**📋 For Next Story Planning**:
+
+1. **Leverage output format templates** when creating S4-05+ stories
+2. **Reference concrete examples** in implementation notes (e.g., "Use CTE atomic pattern from fullstack-developer instructions")
+3. **Use argument hints** when handing stories to other agents for clarity
+4. **Monitor token efficiency** - expect ~20-25% reduction in agent invocation time
+
+**🎯 Success Metrics**:
+
+- Story handoffs require fewer clarification messages
+- Deliverable formats more consistent across stories
+- Developer references agent examples instead of searching prior code
+- Average story completion time decreases despite maintaining quality
 
 ---
 

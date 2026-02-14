@@ -390,6 +390,7 @@ async function getMemberTrustScore(
  * 7. If manual review: return submitted status
  *
  * CRITICAL: Uses logEventBatch for transaction-safe event logging
+ * S4-04: Enhanced to include mission context in events when task belongs to a mission
  */
 export async function processClaimSubmission(
   client: PoolClient,
@@ -397,6 +398,32 @@ export async function processClaimSubmission(
   taskId: string,
   proofs: ProofInput[]
 ): Promise<ClaimResult> {
+  // STEP 0: Fetch task with mission context (S4-04: AC16)
+  const taskResult = await client.query(
+    `SELECT t.group_id, g.stable_id as group_stable_id, g.name as group_name 
+     FROM tasks t
+     LEFT JOIN groups g ON t.group_id = g.id
+     WHERE t.id = $1`,
+    [taskId]
+  );
+
+  const taskData = taskResult.rows[0] as
+    | {
+        group_id: string | null;
+        group_stable_id: string | null;
+        group_name: string | null;
+      }
+    | undefined;
+
+  // Build mission context metadata if task belongs to a mission
+  const missionContext = taskData?.group_id
+    ? {
+        group_id: taskData.group_id,
+        group_stable_id: taskData.group_stable_id,
+        group_name: taskData.group_name,
+      }
+    : {};
+
   // STEP 1: Validate eligibility
   await validateClaimEligibility(client, memberId, taskId);
 
@@ -410,13 +437,18 @@ export async function processClaimSubmission(
   await createProofs(client, claimId, proofs);
 
   // STEP 5: Log claim.submitted event (transaction-safe)
+  // S4-04: AC16 - Include mission context when task belongs to a mission
   await logEventBatch(client, [
     {
       actorId: memberId,
       entityType: 'claim',
       entityId: claimId,
       eventType: EventType.CLAIM_SUBMITTED,
-      metadata: { task_id: taskId, proof_count: proofs.length },
+      metadata: {
+        task_id: taskId,
+        proof_count: proofs.length,
+        ...missionContext, // Add mission context if present
+      },
     },
   ]);
 
@@ -440,6 +472,7 @@ export async function processClaimSubmission(
   await updateMemberTrustScore(client, memberId, pointsEarned);
 
   // Log both approval events in a single batch (transaction-safe)
+  // S4-04: AC16 - Include mission context in approval and trust events
   await logEventBatch(client, [
     {
       actorId: memberId,
@@ -451,6 +484,7 @@ export async function processClaimSubmission(
         points_earned: pointsEarned,
         dimensions, // Dimension breakdown for blockchain migration
         auto_approved: true,
+        ...missionContext, // Add mission context if present
       },
     },
     {
@@ -462,6 +496,7 @@ export async function processClaimSubmission(
         claim_id: claimId,
         points_added: pointsEarned,
         dimensions, // Dimension-level attestation
+        ...missionContext, // Add mission context for attribution
       },
     },
   ]);
@@ -570,6 +605,31 @@ export async function approveClaimWithReview(
     status: string;
   };
 
+  // S4-04: AC16 - Fetch mission context for event logging
+  const taskResult = await client.query(
+    `SELECT t.group_id, g.stable_id as group_stable_id, g.name as group_name 
+     FROM tasks t
+     LEFT JOIN groups g ON t.group_id = g.id
+     WHERE t.id = $1`,
+    [claim.task_id]
+  );
+
+  const taskData = taskResult.rows[0] as
+    | {
+        group_id: string | null;
+        group_stable_id: string | null;
+        group_name: string | null;
+      }
+    | undefined;
+
+  const missionContext = taskData?.group_id
+    ? {
+        group_id: taskData.group_id,
+        group_stable_id: taskData.group_stable_id,
+        group_name: taskData.group_name,
+      }
+    : {};
+
   // Validation: Must be under review by this reviewer
   if (claim.reviewer_id !== reviewerId) {
     throw new Error('UNAUTHORIZED_REVIEWER');
@@ -618,6 +678,7 @@ export async function approveClaimWithReview(
   );
 
   // Log events
+  // S4-04: AC16 - Include mission context in peer review events
   await logEventBatch(client, [
     {
       actorId: reviewerId,
@@ -632,6 +693,7 @@ export async function approveClaimWithReview(
         trust_score_before: trustScoreBefore,
         trust_score_after: trustScoreAfter,
         peer_reviewed: true,
+        ...missionContext, // Add mission context if present
       },
     },
     {
@@ -643,6 +705,7 @@ export async function approveClaimWithReview(
         claim_id: claimId,
         points_added: pointsEarned,
         dimensions,
+        ...missionContext, // Add mission context for attribution
       },
     },
   ]);
